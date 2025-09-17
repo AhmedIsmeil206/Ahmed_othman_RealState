@@ -1,0 +1,379 @@
+/* Admin Dashboard Styles - Landing Page Design */
+.admin-dashboard {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 20% 20%, #f0f7ff 0%, transparent 60%), 
+              radial-gradient(800px 400px at 85% 25%, #fff7ed 0%, transparent 60%), 
+              #ffffff;
+}
+
+/* Hero Section */
+.admin-hero {
+  position: relative;
+  min-height: 60vh;
+  background-size: cover;
+  background-position: center;
+  border-bottom-left-radius: 28px;
+  border-bottom-right-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35) 40%, rgba(0,0,0,.55));
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-hero-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 24px;
+}
+
+/* Navigation */
+.admin-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-brand h1 {
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 1px;
+  margin: 0;
+  color: #fff;
+}
+
+.admin-portal-text {
+  font-size: 14px;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.admin-nav-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-welcome {
+  font-size: 14px;
+  color: #e5e7eb;
+}
+
+.rental-alerts-btn {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rental-alerts-btn:hover {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: rgba(245, 158, 11, 0.6);
+  transform: translateY(-1px);
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.5);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,.12);
+  border-color: #f59e0b;
+}
+
+.logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Dashboard Header */
+.admin-dashboard-header {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.dashboard-title {
+  font-size: clamp(32px, 6vw, 48px);
+  line-height: 1.05;
+  margin: 12px 0;
+  font-weight: 700;
+}
+
+/* Welcome Message */
+.welcome-message {
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 600;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #92400e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+  text-shadow: none;
+}
+
+.accent {
+  color: #f59e0b;
+  font-weight: 900;
+}
+
+.dashboard-subtitle {
+  color: #e5e7eb;
+  max-width: 70ch;
+  font-size: 18px;
+  margin-bottom: 32px;
+}
+
+.dashboard-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.cta-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  border: 0;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn--primary {
+  background: #f59e0b;
+  color: #111827;
+}
+
+.btn--primary:hover {
+  background: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(245, 158, 11, 0.3);
+}
+
+.btn--secondary {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.5);
+  color: #fff;
+}
+
+.btn--secondary:hover {
+  background: rgba(255,255,255,.12);
+  border-color: #f59e0b;
+  color: #f59e0b;
+  transform: translateY(-2px);
+}
+
+.btn--primary:disabled,
+.btn--secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn:disabled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Properties Section */
+.admin-properties-section {
+  padding: 40px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.properties-container {
+  width: 100%;
+}
+
+.apartments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+/* No Properties State */
+.no-properties {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 40px;
+}
+
+.no-properties-content {
+  text-align: center;
+  max-width: 400px;
+  padding: 40px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.no-properties-content h3 {
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.no-properties-content p {
+  color: #6b7280;
+  font-size: 16px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+/* Loading State */
+.admin-dashboard-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(1200px 600px at 20% 20%, #f0f7ff 0%, transparent 60%), 
+              radial-gradient(800px 400px at 85% 25%, #fff7ed 0%, transparent 60%), 
+              #ffffff;
+}
+
+.admin-dashboard-loading p {
+  font-size: 18px;
+  color: #6b7280;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-nav {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .admin-nav-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .admin-dashboard-header {
+    padding: 20px 0;
+  }
+
+  .dashboard-title {
+    font-size: 28px;
+  }
+
+  .dashboard-subtitle {
+    font-size: 16px;
+  }
+
+  .admin-properties-section {
+    padding: 20px 16px;
+  }
+
+  .apartments-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-hero-content {
+    padding: 0 16px;
+  }
+
+  .no-properties-content {
+    padding: 30px 20px;
+    margin: 0 16px;
+  }
+
+  .no-properties-content h3 {
+    font-size: 20px;
+  }
+
+  .no-properties-content p {
+    font-size: 14px;
+  }
+}
+
+/* Alerts Section */
+.admin-alerts-section {
+  padding: 40px 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.alerts-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+@media (max-width: 768px) {
+  .alerts-container {
+    padding: 0 16px;
+  }
+  
+  .admin-alerts-section {
+    padding: 20px 0;
+  }
+}
+
+/* Note: Sale apartment card styles moved to SaleApartmentCard component */

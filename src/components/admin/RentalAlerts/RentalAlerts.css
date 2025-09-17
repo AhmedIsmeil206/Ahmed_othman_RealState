@@ -1,0 +1,263 @@
+.rental-alerts {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e8ed;
+}
+
+.rental-alerts.no-alerts {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f8fffe 0%, #e8f9f5 100%);
+  border: 1px solid #d1f2eb;
+}
+
+.rental-alerts.no-alerts h3 {
+  color: #27ae60;
+  margin-bottom: 8px;
+}
+
+.rental-alerts.no-alerts p {
+  color: #7f8c8d;
+  margin: 0;
+}
+
+.alerts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f3f4;
+}
+
+.alerts-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-count {
+  background: #e74c3c;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.toggle-alerts-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-alerts-btn:hover {
+  background: #2980b9;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alert-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #bdc3c7;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.alert-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.alert-card.alert-overdue {
+  border-left-color: #e74c3c;
+  background: linear-gradient(135deg, #fdf2f2 0%, #fbeaea 100%);
+}
+
+.alert-card.alert-expiring {
+  border-left-color: #f39c12;
+  background: linear-gradient(135deg, #fdf9e9 0%, #fcf4dd 100%);
+}
+
+.alert-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.alert-content {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.alert-content:hover {
+  background: rgba(52, 152, 219, 0.1);
+  border-radius: 4px;
+  padding: 4px;
+  margin: -4px;
+}
+
+.alert-title h4 {
+  margin: 0 0 4px 0;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.studio-info {
+  color: #7f8c8d;
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
+.alert-message {
+  color: #34495e;
+  font-size: 0.9rem;
+  margin: 8px 0;
+  font-weight: 500;
+}
+
+.tenant-info {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #5d6d7e;
+}
+
+.tenant-info strong {
+  color: #2c3e50;
+}
+
+.tenant-contact {
+  color: #7f8c8d;
+}
+
+.alert-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.alert-actions .btn {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 90px;
+}
+
+.alert-actions .btn-sm {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+
+.alert-actions .btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.alert-actions .btn-primary:hover {
+  background: #2980b9;
+}
+
+.alert-actions .btn-success {
+  background: #27ae60;
+  color: white;
+}
+
+.alert-actions .btn-success:hover {
+  background: #229954;
+}
+
+.alert-actions .btn-secondary {
+  background: #95a5a6;
+  color: white;
+}
+
+.alert-actions .btn-secondary:hover {
+  background: #7f8c8d;
+}
+
+.alerts-summary {
+  margin-top: 16px;
+  padding: 12px;
+  background: #ecf0f1;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.alerts-summary p {
+  margin: 0;
+  color: #5d6d7e;
+  font-size: 0.9rem;
+}
+
+.alerts-summary strong {
+  color: #2c3e50;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .alerts-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .alert-card {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .alert-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .alert-actions .btn {
+    min-width: auto;
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .rental-alerts {
+    padding: 16px;
+  }
+  
+  .alert-actions {
+    flex-direction: column;
+  }
+  
+  .alert-actions .btn {
+    width: 100%;
+  }
+}
