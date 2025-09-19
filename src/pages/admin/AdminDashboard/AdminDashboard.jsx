@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth, useProperty } from '../../../hooks/useRedux';
+import { useInfiniteScroll } from '../../../hooks/usePagination';
 import ApartmentCard from '../../../components/admin/ApartmentCard';
 import SaleApartmentCard from '../../../components/admin/SaleApartmentCard';
 import AddStudioModal from '../../../components/admin/AddStudioModal';
@@ -233,46 +234,14 @@ const AdminDashboard = () => {
       <div className="admin-properties-section">
         <div className="properties-container">
           {adminRole === 'studio_rental' ? (
-            // Studio Rental Manager View
-            adminApartments.length === 0 ? (
-              <div className="no-properties">
-                <div className="no-properties-content">
-                  <h3>No Rental Properties Yet</h3>
-                  <p>Start by adding your first apartment to manage studios and rentals.</p>
-                </div>
-              </div>
-            ) : (
-              <div className="apartments-grid">
-                {adminApartments.map((apartment) => (
-                  <ApartmentCard
-                    key={apartment.id}
-                    apartment={apartment}
-                    onAddStudio={handleAddStudio}
-                    isAdminView={true}
-                  />
-                ))}
-              </div>
-            )
+            <AdminRentalPropertiesGrid 
+              apartments={adminApartments}
+              onAddStudio={handleAddStudio}
+            />
           ) : (
-            // Apartment Sales Manager View
-            adminSaleApartments.length === 0 ? (
-              <div className="no-properties">
-                <div className="no-properties-content">
-                  <h3>No Apartments Listed for Sale</h3>
-                  <p>Start by listing your first apartment for sale.</p>
-                </div>
-              </div>
-            ) : (
-              <div className="apartments-grid">
-                {adminSaleApartments.map((apartment) => (
-                  <SaleApartmentCard
-                    key={apartment.id}
-                    apartment={apartment}
-                    isAdminView={true}
-                  />
-                ))}
-              </div>
-            )
+            <AdminSalePropertiesGrid 
+              apartments={adminSaleApartments}
+            />
           )}
         </div>
       </div>
@@ -311,3 +280,157 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
+// Infinite Scroll Grid Components
+const AdminRentalPropertiesGrid = ({ apartments, onAddStudio }) => {
+  const {
+    displayedItems,
+    hasMore,
+    isLoading,
+    loadMore,
+    totalItems,
+    displayedCount
+  } = useInfiniteScroll(apartments, 6); // 6 cards per page
+
+  if (apartments.length === 0) {
+    return (
+      <div className="no-properties">
+        <div className="no-properties-content">
+          <h3>No Rental Properties Yet</h3>
+          <p>Start by adding your first apartment to manage studios and rentals.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="infinite-properties-container">
+      {/* Progress indicator */}
+      {totalItems > 6 && (
+        <div className="properties-progress">
+          <div className="progress-info">
+            Showing {displayedCount} of {totalItems} properties
+          </div>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${(displayedCount / totalItems) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
+      {/* Apartments grid */}
+      <div className="apartments-grid infinite-grid">
+        {displayedItems.map((apartment) => (
+          <ApartmentCard
+            key={apartment.id}
+            apartment={apartment}
+            onAddStudio={onAddStudio}
+            isAdminView={true}
+          />
+        ))}
+      </div>
+
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="grid-loading">
+          <LoadingSpinner size="small" />
+          <span>Loading more properties...</span>
+        </div>
+      )}
+
+      {/* Load more button */}
+      {hasMore && !isLoading && (
+        <div className="load-more-section">
+          <button onClick={loadMore} className="load-more-properties">
+            Load More Properties ({totalItems - displayedCount} remaining)
+          </button>
+        </div>
+      )}
+
+      {/* End message */}
+      {!hasMore && displayedCount > 6 && (
+        <div className="all-loaded">
+          All {totalItems} properties loaded
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AdminSalePropertiesGrid = ({ apartments }) => {
+  const {
+    displayedItems,
+    hasMore,
+    isLoading,
+    loadMore,
+    totalItems,
+    displayedCount
+  } = useInfiniteScroll(apartments, 6); // 6 cards per page
+
+  if (apartments.length === 0) {
+    return (
+      <div className="no-properties">
+        <div className="no-properties-content">
+          <h3>No Apartments Listed for Sale</h3>
+          <p>Start by listing your first apartment for sale.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="infinite-properties-container">
+      {/* Progress indicator */}
+      {totalItems > 6 && (
+        <div className="properties-progress">
+          <div className="progress-info">
+            Showing {displayedCount} of {totalItems} properties
+          </div>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${(displayedCount / totalItems) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
+      {/* Sale apartments grid */}
+      <div className="apartments-grid infinite-grid">
+        {displayedItems.map((apartment) => (
+          <SaleApartmentCard
+            key={apartment.id}
+            apartment={apartment}
+            isAdminView={true}
+          />
+        ))}
+      </div>
+
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="grid-loading">
+          <LoadingSpinner size="small" />
+          <span>Loading more properties...</span>
+        </div>
+      )}
+
+      {/* Load more button */}
+      {hasMore && !isLoading && (
+        <div className="load-more-section">
+          <button onClick={loadMore} className="load-more-properties">
+            Load More Properties ({totalItems - displayedCount} remaining)
+          </button>
+        </div>
+      )}
+
+      {/* End message */}
+      {!hasMore && displayedCount > 6 && (
+        <div className="all-loaded">
+          All {totalItems} properties loaded
+        </div>
+      )}
+    </div>
+  );
+};

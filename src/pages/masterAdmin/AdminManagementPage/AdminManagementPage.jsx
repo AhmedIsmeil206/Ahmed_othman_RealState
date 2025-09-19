@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../hooks/useRedux';
 import BackButton from '../../../components/common/BackButton';
+import InfiniteScrollTable from '../../../components/admin/InfiniteScrollTable';
 import './AdminManagementPage.css';
 
 const AdminManagementPage = () => {
@@ -253,69 +254,57 @@ const AdminManagementPage = () => {
           </div>
         )}
 
-        {/* Admin Accounts Table */}
+        {/* Admin Accounts Table with Infinite Scroll */}
         <div className="admin-table-section">
           <h2>Admin Accounts ({adminAccounts.length})</h2>
           
-          {adminAccounts.length === 0 ? (
-            <div className="no-admins">
-              <p>No admin accounts found.</p>
-              <button 
-                className="create-first-btn"
-                onClick={() => setShowCreateForm(true)}
-              >
-                Create First Admin Account
-              </button>
-            </div>
-          ) : (
-            <div className="admin-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Username</th>
-                    <th>Account</th>
-                    <th>Mobile Number</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adminAccounts.map(admin => (
-                    <tr key={admin.id}>
-                      <td>{admin.username}</td>
-                      <td>{admin.account}</td>
-                      <td>{admin.mobileNumber}</td>
-                      <td>
-                        <span className={`status-badge ${admin.isActive ? 'active' : 'inactive'}`}>
-                          {admin.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td>{new Date(admin.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        <div className="action-buttons">
-                          <button
-                            className={`toggle-btn ${admin.isActive ? 'deactivate' : 'activate'}`}
-                            onClick={() => handleToggleStatus(admin.id, admin.isActive)}
-                            title={admin.isActive ? 'Deactivate' : 'Activate'}
-                          >
-                            {admin.isActive ? '🔒' : '🔓'}
-                          </button>
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteAdmin(admin.id)}
-                            title="Delete Admin"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <InfiniteScrollTable
+            data={adminAccounts}
+            itemsPerPage={8}
+            emptyMessage="No admin accounts found. Create your first admin account to get started."
+            columns={[
+              { title: 'Username', className: 'username-col' },
+              { title: 'Account', className: 'account-col' },
+              { title: 'Mobile Number', className: 'mobile-col' },
+              { title: 'Status', className: 'status-col' },
+              { title: 'Created', className: 'date-col' },
+              { title: 'Actions', className: 'actions-col' }
+            ]}
+            renderRow={(admin, index) => (
+              <>
+                <td className="username-cell">{admin.username}</td>
+                <td className="account-cell">{admin.account}</td>
+                <td className="mobile-cell">{admin.mobileNumber}</td>
+                <td className="status-cell">
+                  <span className={`status-badge ${admin.isActive ? 'active' : 'inactive'}`}>
+                    {admin.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td className="date-cell">
+                  {new Date(admin.createdAt).toLocaleDateString()}
+                </td>
+                <td className="actions-cell">
+                  <div className="action-buttons">
+                    <button
+                      className={`action-btn ${admin.isActive ? 'deactivate' : 'activate'}`}
+                      onClick={() => handleToggleStatus(admin.id, admin.isActive)}
+                      title={admin.isActive ? 'Deactivate' : 'Activate'}
+                    >
+                      {admin.isActive ? '🔒' : '🔓'}
+                    </button>
+                    <button
+                      className="action-btn delete"
+                      onClick={() => handleDeleteAdmin(admin.id)}
+                      title="Delete Admin"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </>
+            )}
+            className="admin-management-table"
+          />
         </div>
       </div>
     </div>

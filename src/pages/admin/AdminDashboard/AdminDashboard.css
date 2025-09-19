@@ -377,3 +377,204 @@
 }
 
 /* Note: Sale apartment card styles moved to SaleApartmentCard component */
+
+/* Infinite Scroll Properties Grid */
+.infinite-properties-container {
+  width: 100%;
+}
+
+.properties-progress {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-info {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0ea5e9, #0284c7);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.infinite-grid {
+  animation: fadeInUp 0.5s ease;
+}
+
+.grid-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 12px;
+  color: #64748b;
+  font-size: 14px;
+  margin: 24px 0;
+}
+
+.load-more-section {
+  text-align: center;
+  padding: 32px 0;
+  margin: 24px 0;
+}
+
+.load-more-properties {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.25);
+}
+
+.load-more-properties:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.35);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+}
+
+.load-more-properties:active {
+  transform: translateY(0);
+}
+
+.all-loaded {
+  text-align: center;
+  padding: 24px;
+  color: #64748b;
+  font-size: 14px;
+  font-style: italic;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 24px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+/* Admin Management Table Customizations */
+.admin-management-table .username-col,
+.admin-management-table .account-col {
+  width: 20%;
+}
+
+.admin-management-table .mobile-col {
+  width: 18%;
+}
+
+.admin-management-table .status-col {
+  width: 15%;
+}
+
+.admin-management-table .date-col {
+  width: 15%;
+}
+
+.admin-management-table .actions-col {
+  width: 12%;
+}
+
+.admin-management-table .action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.admin-management-table .action-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-management-table .action-btn.activate {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-management-table .action-btn.deactivate {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin-management-table .action-btn.delete {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+.admin-management-table .action-btn:hover {
+  transform: scale(1.1);
+  opacity: 0.8;
+}
+
+/* Responsive Design for Infinite Scroll */
+@media (max-width: 768px) {
+  .properties-progress {
+    margin: 0 -16px 24px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .infinite-grid {
+    margin: 0 -16px;
+  }
+
+  .load-more-properties {
+    width: calc(100% - 32px);
+    margin: 0 16px;
+  }
+
+  .admin-management-table .mobile-col,
+  .admin-management-table .date-col {
+    display: none;
+  }
+
+  .admin-management-table .username-col,
+  .admin-management-table .account-col {
+    width: 30%;
+  }
+
+  .admin-management-table .status-col {
+    width: 25%;
+  }
+
+  .admin-management-table .actions-col {
+    width: 15%;
+  }
+}
+
+/* Animation for new cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
