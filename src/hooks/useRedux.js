@@ -63,12 +63,9 @@ import {
   selectCurrentUser,
   selectMasterLoading,
   selectMasterError,
-  selectAllUsers,
   selectIsMasterAuthenticated,
-  selectMasterAdminExists,
   selectIsFirstTimeSetup,
-  selectCurrentUserProfile,
-  selectStorageInfo
+  selectCurrentUserProfile
 } from '../store/slices/masterAuthSlice';
 
 import {
@@ -267,12 +264,9 @@ export const useMasterAuth = () => {
   const currentUser = useSelector(selectCurrentUser);
   const isLoading = useSelector(selectMasterLoading);
   const error = useSelector(selectMasterError);
-  const allUsers = useSelector(selectAllUsers);
   const isAuthenticated = useSelector(selectIsMasterAuthenticated);
-  const masterAdminExists = useSelector(selectMasterAdminExists);
   const isFirstTimeSetup = useSelector(selectIsFirstTimeSetup);
   const currentUserProfile = useSelector(selectCurrentUserProfile);
-  const storageInfo = useSelector(selectStorageInfo);
 
   const helpers = useMemo(() => ({
     signup: (email, mobilePhone, password) => dispatch(signupMasterAdmin(email, mobilePhone, password)),
@@ -284,21 +278,16 @@ export const useMasterAuth = () => {
     clearError: () => dispatch(clearMasterError()),
     initializeMasterAdmin: () => dispatch(initializeApp()),
     isAuthenticated: () => isAuthenticated,
-    getAllUsers: () => allUsers,
-    getCurrentUserProfile: () => currentUserProfile,
-    getStorageInfo: () => storageInfo
-  }), [dispatch, isAuthenticated, allUsers, currentUserProfile, storageInfo]);
+    getCurrentUserProfile: () => currentUserProfile
+  }), [dispatch, isAuthenticated, currentUserProfile]);
 
   return {
     currentUser,
     isLoading,
     error,
-    allUsers,
     isAuthenticated,
-    masterAdminExists,
     isFirstTimeSetup,
     currentUserProfile,
-    storageInfo,
     ...helpers
   };
 };
