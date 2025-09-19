@@ -17,6 +17,45 @@ const API_CONFIG = {
   MAX_RETRIES: parseInt(process.env.REACT_APP_MAX_RETRY_ATTEMPTS) || 3
 };
 
+// Token Management
+class TokenManager {
+  static TOKEN_KEY = process.env.REACT_APP_TOKEN_STORAGE_KEY || 'api_access_token';
+  
+  static getToken() {
+    // Ensure TOKEN_KEY is not null/undefined
+    if (!this.TOKEN_KEY) {
+      console.warn('TOKEN_KEY is not set, using default');
+      this.TOKEN_KEY = 'api_access_token';
+    }
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+  
+  static setToken(token) {
+    // Ensure TOKEN_KEY is not null/undefined
+    if (!this.TOKEN_KEY) {
+      console.warn('TOKEN_KEY is not set, using default');
+      this.TOKEN_KEY = 'api_access_token';
+    }
+    localStorage.setItem(this.TOKEN_KEY, token);
+    if (API_CONFIG.ENABLE_LOGGING) {
+      console.log('Token stored successfully');
+    }
+  }
+  
+  static removeToken() {
+    // Ensure TOKEN_KEY is not null/undefined
+    if (!this.TOKEN_KEY) {
+      console.warn('TOKEN_KEY is not set, using default');
+      this.TOKEN_KEY = 'api_access_token';
+    }
+    localStorage.removeItem(this.TOKEN_KEY);
+  }
+  
+  static isAuthenticated() {
+    return !!this.getToken();
+  }
+}
+
 // Validate API Configuration
 const validateConfig = () => {
   // Log environment variables status
@@ -97,45 +136,6 @@ export const API_CONSTANTS = {
     OTHER: 'other'
   }
 };
-
-// Token Management
-class TokenManager {
-  static TOKEN_KEY = process.env.REACT_APP_TOKEN_STORAGE_KEY || 'api_access_token';
-  
-  static getToken() {
-    // Ensure TOKEN_KEY is not null/undefined
-    if (!this.TOKEN_KEY) {
-      console.warn('TOKEN_KEY is not set, using default');
-      this.TOKEN_KEY = 'api_access_token';
-    }
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-  
-  static setToken(token) {
-    // Ensure TOKEN_KEY is not null/undefined
-    if (!this.TOKEN_KEY) {
-      console.warn('TOKEN_KEY is not set, using default');
-      this.TOKEN_KEY = 'api_access_token';
-    }
-    localStorage.setItem(this.TOKEN_KEY, token);
-    if (API_CONFIG.ENABLE_LOGGING) {
-      console.log('Token stored successfully');
-    }
-  }
-  
-  static removeToken() {
-    // Ensure TOKEN_KEY is not null/undefined
-    if (!this.TOKEN_KEY) {
-      console.warn('TOKEN_KEY is not set, using default');
-      this.TOKEN_KEY = 'api_access_token';
-    }
-    localStorage.removeItem(this.TOKEN_KEY);
-  }
-  
-  static isAuthenticated() {
-    return !!this.getToken();
-  }
-}
 
 // HTTP Client with interceptors
 class ApiClient {
