@@ -1,17 +1,58 @@
 /**
  * AO Real Estate API Service
  * Handles all backend communication with JWT authentication
- * Base URL: http://localhost:8000/api/v1
+ * Configuration loaded from environment variables
  */
 
-// API Configuration
+// API Configuration from environment variables
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:8000/api/v1',
-  TIMEOUT: 10000,
+  BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1',
+  TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT) || 10000,
   HEADERS: {
     'Content-Type': 'application/json'
+  },
+  ENVIRONMENT: process.env.REACT_APP_ENVIRONMENT || 'development',
+  ENABLE_LOGGING: process.env.REACT_APP_ENABLE_API_LOGGING === 'true',
+  ENABLE_RETRY: process.env.REACT_APP_ENABLE_RETRY_LOGIC !== 'false',
+  MAX_RETRIES: parseInt(process.env.REACT_APP_MAX_RETRY_ATTEMPTS) || 3
+};
+
+// Validate API Configuration
+const validateConfig = () => {
+  const issues = [];
+  
+  if (!API_CONFIG.BASE_URL) {
+    issues.push('REACT_APP_API_BASE_URL is required');
+  }
+  
+  if (isNaN(API_CONFIG.TIMEOUT) || API_CONFIG.TIMEOUT < 1000) {
+    issues.push('REACT_APP_API_TIMEOUT must be a number >= 1000');
+  }
+  
+  if (isNaN(API_CONFIG.MAX_RETRIES) || API_CONFIG.MAX_RETRIES < 0) {
+    issues.push('REACT_APP_MAX_RETRY_ATTEMPTS must be a number >= 0');
+  }
+  
+  if (issues.length > 0) {
+    console.error('API Configuration Issues:', issues);
+    if (API_CONFIG.ENVIRONMENT === 'production') {
+      throw new Error(`Invalid API configuration: ${issues.join(', ')}`);
+    }
+  }
+  
+  if (API_CONFIG.ENABLE_LOGGING) {
+    console.log('API Configuration loaded:', {
+      BASE_URL: API_CONFIG.BASE_URL,
+      TIMEOUT: API_CONFIG.TIMEOUT,
+      ENVIRONMENT: API_CONFIG.ENVIRONMENT,
+      ENABLE_RETRY: API_CONFIG.ENABLE_RETRY,
+      MAX_RETRIES: API_CONFIG.MAX_RETRIES
+    });
   }
 };
+
+// Validate configuration on module load
+validateConfig();
 
 // API Constants from backend documentation
 export const API_CONSTANTS = {
@@ -54,7 +95,7 @@ export const API_CONSTANTS = {
 
 // Token Management
 class TokenManager {
-  static TOKEN_KEY = 'api_access_token';
+  static TOKEN_KEY = process.env.REACT_APP_TOKEN_STORAGE_KEY || 'api_access_token';
   
   static getToken() {
     return localStorage.getItem(this.TOKEN_KEY);
@@ -62,6 +103,9 @@ class TokenManager {
   
   static setToken(token) {
     localStorage.setItem(this.TOKEN_KEY, token);
+    if (API_CONFIG.ENABLE_LOGGING) {
+      console.log('Token stored successfully');
+    }
   }
   
   static removeToken() {
@@ -131,6 +175,11 @@ class ApiClient {
       includeAuth = true,
       contentType = 'application/json'
     } = options;
+
+    // Log API requests in development
+    if (API_CONFIG.ENABLE_LOGGING) {
+      console.log(`API ${method} ${url}`, body ? { body } : '');
+    }
 
     const requestHeaders = {
       ...this.createHeaders(includeAuth, contentType),
@@ -657,12 +706,20 @@ export const getOperationErrorMessage = (operation, error) => {
 };
 
 // Helper function for retry logic
-export const createRetryFunction = (apiCall, maxRetries = 3, delay = 1000) => {
+export const createRetryFunction = (apiCall, maxRetries = API_CONFIG.MAX_RETRIES, delay = 1000) => {
   return async (...args) => {
+    // Skip retry logic if disabled
+    if (!API_CONFIG.ENABLE_RETRY) {
+      return apiCall(...args);
+    }
+    
     let lastError;
     
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
+        if (API_CONFIG.ENABLE_LOGGING && attempt > 0) {
+          console.log(`API retry attempt ${attempt}/${maxRetries}`);
+        }
         return await apiCall(...args);
       } catch (error) {
         lastError = error;
