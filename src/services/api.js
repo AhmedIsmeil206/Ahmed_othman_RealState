@@ -212,11 +212,65 @@ class ApiClient {
       const response = await fetch(url, config);
       return await this.handleResponse(response);
     } catch (error) {
+      // Check if it's a network error and backend is not available
+      if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
+        console.warn(`🔌 Backend not available at ${this.baseURL}. Using offline mode.`);
+        
+        // Return mock data based on endpoint for development
+        if (API_CONFIG.ENVIRONMENT === 'development') {
+          return this.getMockResponse(endpoint, method, body);
+        }
+      }
+      
       if (error instanceof ApiError) {
         throw error;
       }
       throw new ApiError('Network error', 0, { detail: error.message });
     }
+  }
+
+  // Mock response generator for offline development
+  getMockResponse(endpoint, method, body) {
+    if (API_CONFIG.ENABLE_LOGGING) {
+      console.log(`📄 Using mock data for ${method} ${endpoint}`);
+    }
+
+    // Return empty arrays for GET requests to list endpoints
+    if (method === 'GET') {
+      if (endpoint.includes('/apartments/rent')) return [];
+      if (endpoint.includes('/apartments/sale')) return [];
+      if (endpoint.includes('/apartments/parts')) return [];
+      if (endpoint.includes('/apartments/my-content')) return { 
+        rent_apartments: [], 
+        sale_apartments: [], 
+        total_studios: 0, 
+        available_studios: 0 
+      };
+      if (endpoint.includes('/rental-contracts')) return [];
+      if (endpoint.includes('/admins')) return [];
+    }
+
+    // Return success responses for POST/PUT/DELETE
+    if (method === 'POST') {
+      return { 
+        id: Date.now(), 
+        message: 'Mock: Created successfully',
+        ...body 
+      };
+    }
+
+    if (method === 'PUT') {
+      return { 
+        message: 'Mock: Updated successfully',
+        ...body 
+      };
+    }
+
+    if (method === 'DELETE') {
+      return { message: 'Mock: Deleted successfully' };
+    }
+
+    return { message: 'Mock response' };
   }
 
   // HTTP Methods

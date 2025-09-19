@@ -79,16 +79,19 @@ const StudiosListPage = () => {
 
   // Reset pagination when filters change
   useEffect(() => {
-    setDisplayedStudios([]);
-    setCurrentPage(1);
-    setHasMore(true);
+    if (sortedStudios.length === 0) {
+      setDisplayedStudios([]);
+      setCurrentPage(1);
+      setHasMore(false);
+      return;
+    }
     
     // Load first batch
     const firstBatch = sortedStudios.slice(0, STUDIOS_PER_PAGE);
     setDisplayedStudios(firstBatch);
     setCurrentPage(2);
     setHasMore(sortedStudios.length > STUDIOS_PER_PAGE);
-  }, [sortBy, priceRange, locationFilter, allStudios]);
+  }, [sortBy, priceRange, locationFilter]); // Remove allStudios from dependencies
 
   // Infinite scroll listener
   useEffect(() => {
