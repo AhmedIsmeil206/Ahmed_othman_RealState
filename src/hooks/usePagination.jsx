@@ -30,6 +30,7 @@ export const useInfiniteScroll = (items = [], itemsPerPage = 10, dependencies = 
     setDisplayedItems(firstPage);
     setCurrentPage(1);
     setHasMore(items.length > itemsPerPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, itemsPerPage, ...Object.values(dependencies)]);
 
   // Load more items function

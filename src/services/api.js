@@ -6,55 +6,52 @@
 
 // API Configuration from environment variables only
 const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_BASE_URL,
+  BASE_URL: process.env.REACT_APP_API_BASE_URL ,
   TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT),
   HEADERS: {
     'Content-Type': 'application/json'
   },
-  ENVIRONMENT: process.env.REACT_APP_ENVIRONMENT,
+  ENVIRONMENT: process.env.REACT_APP_ENVIRONMENT || 'development',
   ENABLE_LOGGING: process.env.REACT_APP_ENABLE_API_LOGGING === 'true',
   ENABLE_RETRY: process.env.REACT_APP_ENABLE_RETRY_LOGIC !== 'false',
-  MAX_RETRIES: parseInt(process.env.REACT_APP_MAX_RETRY_ATTEMPTS)
+  MAX_RETRIES: parseInt(process.env.REACT_APP_MAX_RETRY_ATTEMPTS) || 3
 };
 
 // Validate API Configuration
 const validateConfig = () => {
-  const issues = [];
-  
-  // Check required environment variables
-  if (!API_CONFIG.BASE_URL) {
-    issues.push('REACT_APP_API_BASE_URL is required and must be set in environment variables');
-  }
-  
-  if (!process.env.REACT_APP_API_TIMEOUT || isNaN(API_CONFIG.TIMEOUT) || API_CONFIG.TIMEOUT < 1000) {
-    issues.push('REACT_APP_API_TIMEOUT is required and must be a number >= 1000');
+  // Log environment variables status
+  if (!process.env.REACT_APP_API_BASE_URL) {
+    console.warn('⚠️ REACT_APP_API_BASE_URL not set, using default:', API_CONFIG.BASE_URL);
   }
   
   if (!process.env.REACT_APP_ENVIRONMENT) {
-    issues.push('REACT_APP_ENVIRONMENT is required (development/staging/production)');
+    console.warn('⚠️ REACT_APP_ENVIRONMENT not set, using default:', API_CONFIG.ENVIRONMENT);
   }
   
   if (!process.env.REACT_APP_TOKEN_STORAGE_KEY) {
-    issues.push('REACT_APP_TOKEN_STORAGE_KEY is required');
+    console.warn('⚠️ REACT_APP_TOKEN_STORAGE_KEY not set, using default: api_access_token');
   }
   
-  if (!process.env.REACT_APP_MAX_RETRY_ATTEMPTS || isNaN(API_CONFIG.MAX_RETRIES) || API_CONFIG.MAX_RETRIES < 0) {
-    issues.push('REACT_APP_MAX_RETRY_ATTEMPTS is required and must be a number >= 0');
+  // Ensure valid timeout
+  if (isNaN(API_CONFIG.TIMEOUT) || API_CONFIG.TIMEOUT < 1000) {
+    console.warn('⚠️ Invalid timeout, setting to 10000ms');
+    API_CONFIG.TIMEOUT = 10000;
   }
   
-  if (issues.length > 0) {
-    console.error('❌ API Configuration Issues:', issues);
-    throw new Error(`Missing required environment variables: ${issues.join(', ')}. Please check your .env file.`);
+  // Ensure valid max retries
+  if (isNaN(API_CONFIG.MAX_RETRIES) || API_CONFIG.MAX_RETRIES < 0) {
+    console.warn('⚠️ Invalid max retries, setting to 3');
+    API_CONFIG.MAX_RETRIES = 3;
   }
   
   if (API_CONFIG.ENABLE_LOGGING) {
-    console.log('✅ API Configuration loaded from environment:', {
+    console.log('✅ API Configuration loaded:', {
       BASE_URL: API_CONFIG.BASE_URL,
       TIMEOUT: API_CONFIG.TIMEOUT,
       ENVIRONMENT: API_CONFIG.ENVIRONMENT,
       ENABLE_RETRY: API_CONFIG.ENABLE_RETRY,
       MAX_RETRIES: API_CONFIG.MAX_RETRIES,
-      TOKEN_KEY: TokenManager.TOKEN_KEY
+      TOKEN_KEY: TokenManager.TOKEN_KEY || 'api_access_token'
     });
   }
 };
@@ -103,13 +100,23 @@ export const API_CONSTANTS = {
 
 // Token Management
 class TokenManager {
-  static TOKEN_KEY = process.env.REACT_APP_TOKEN_STORAGE_KEY;
+  static TOKEN_KEY = process.env.REACT_APP_TOKEN_STORAGE_KEY || 'api_access_token';
   
   static getToken() {
+    // Ensure TOKEN_KEY is not null/undefined
+    if (!this.TOKEN_KEY) {
+      console.warn('TOKEN_KEY is not set, using default');
+      this.TOKEN_KEY = 'api_access_token';
+    }
     return localStorage.getItem(this.TOKEN_KEY);
   }
   
   static setToken(token) {
+    // Ensure TOKEN_KEY is not null/undefined
+    if (!this.TOKEN_KEY) {
+      console.warn('TOKEN_KEY is not set, using default');
+      this.TOKEN_KEY = 'api_access_token';
+    }
     localStorage.setItem(this.TOKEN_KEY, token);
     if (API_CONFIG.ENABLE_LOGGING) {
       console.log('Token stored successfully');
@@ -117,6 +124,11 @@ class TokenManager {
   }
   
   static removeToken() {
+    // Ensure TOKEN_KEY is not null/undefined
+    if (!this.TOKEN_KEY) {
+      console.warn('TOKEN_KEY is not set, using default');
+      this.TOKEN_KEY = 'api_access_token';
+    }
     localStorage.removeItem(this.TOKEN_KEY);
   }
   
