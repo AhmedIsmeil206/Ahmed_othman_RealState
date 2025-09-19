@@ -25,7 +25,6 @@ import ProfileEditPage from './pages/masterAdmin/ProfileEditPage/ProfileEditPage
 import AdminManagementPage from './pages/masterAdmin/AdminManagementPage/AdminManagementPage';
 import MasterAdminRentalAlertsPage from './pages/masterAdmin/MasterAdminRentalAlertsPage/MasterAdminRentalAlertsPage';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
-import ApiTestComponent from './components/common/ApiTestComponent';
 
 // App content component to access Redux hooks
 function AppContent() {
@@ -44,7 +43,6 @@ function AppContent() {
           <div>
             <Routes>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/api-test" element={<ApiTestComponent />} />
               <Route path="/studios" element={<StudiosListPage />} />
               <Route path="/studio/:id" element={<StudioDetailsPage />} />
               <Route path="/buy-apartments" element={<BuyApartmentPage />} />

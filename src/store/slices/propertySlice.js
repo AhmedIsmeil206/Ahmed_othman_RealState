@@ -5,32 +5,10 @@ const generateId = (prefix = 'id') => {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
-// localStorage utilities
-const APARTMENTS_STORAGE_KEY = 'apartments_data';
-const SALE_APARTMENTS_STORAGE_KEY = 'sale_apartments_data';
-
-const loadFromLocalStorage = (key) => {
-  try {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
-  } catch (error) {
-    console.error(`Error loading ${key} from localStorage:`, error);
-    return [];
-  }
-};
-
-const saveToLocalStorage = (key, data) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (error) {
-    console.error(`Error saving ${key} to localStorage:`, error);
-  }
-};
-
-// Initial state - load from localStorage
+// Initial state - start with empty data (API will populate)
 const initialState = {
-  apartments: loadFromLocalStorage(APARTMENTS_STORAGE_KEY),
-  saleApartments: loadFromLocalStorage(SALE_APARTMENTS_STORAGE_KEY),
+  apartments: [],
+  saleApartments: [],
   loading: false,
   error: null
 };
@@ -54,7 +32,6 @@ const propertySlice = createSlice({
     // Apartments
     setApartments: (state, action) => {
       state.apartments = action.payload;
-      saveToLocalStorage(APARTMENTS_STORAGE_KEY, state.apartments);
     },
     addApartment: (state, action) => {
       const newApartment = {
@@ -64,18 +41,15 @@ const propertySlice = createSlice({
         totalStudios: action.payload.totalStudios || 0
       };
       state.apartments.push(newApartment);
-      saveToLocalStorage(APARTMENTS_STORAGE_KEY, state.apartments);
     },
     updateApartment: (state, action) => {
       const index = state.apartments.findIndex(apt => apt.id === action.payload.id);
       if (index !== -1) {
         state.apartments[index] = action.payload;
-        saveToLocalStorage(APARTMENTS_STORAGE_KEY, state.apartments);
       }
     },
     deleteApartment: (state, action) => {
       state.apartments = state.apartments.filter(apt => apt.id !== action.payload);
-      saveToLocalStorage(APARTMENTS_STORAGE_KEY, state.apartments);
     },
 
     // Studios
@@ -90,7 +64,6 @@ const propertySlice = createSlice({
         };
         state.apartments[apartmentIndex].studios.push(newStudio);
         state.apartments[apartmentIndex].totalStudios = state.apartments[apartmentIndex].studios.length;
-        saveToLocalStorage(APARTMENTS_STORAGE_KEY, state.apartments);
       }
     },
     updateStudio: (state, action) => {
@@ -100,7 +73,6 @@ const propertySlice = createSlice({
         const studioIndex = state.apartments[apartmentIndex].studios.findIndex(s => s.id === studio.id);
         if (studioIndex !== -1) {
           state.apartments[apartmentIndex].studios[studioIndex] = studio;
-          saveToLocalStorage(APARTMENTS_STORAGE_KEY, state.apartments);
         }
       }
     },
@@ -112,7 +84,6 @@ const propertySlice = createSlice({
           studio => studio.id !== studioId
         );
         state.apartments[apartmentIndex].totalStudios = state.apartments[apartmentIndex].studios.length;
-        saveToLocalStorage(APARTMENTS_STORAGE_KEY, state.apartments);
       }
     },
     toggleStudioAvailability: (state, action) => {
@@ -123,7 +94,6 @@ const propertySlice = createSlice({
         if (studioIndex !== -1) {
           state.apartments[apartmentIndex].studios[studioIndex].isAvailable = 
             !state.apartments[apartmentIndex].studios[studioIndex].isAvailable;
-          saveToLocalStorage(APARTMENTS_STORAGE_KEY, state.apartments);
         }
       }
     },
@@ -131,7 +101,6 @@ const propertySlice = createSlice({
     // Sale Apartments
     setSaleApartments: (state, action) => {
       state.saleApartments = action.payload;
-      saveToLocalStorage(SALE_APARTMENTS_STORAGE_KEY, state.saleApartments);
     },
     addSaleApartment: (state, action) => {
       const newSaleApartment = {
@@ -141,18 +110,15 @@ const propertySlice = createSlice({
         listedAt: new Date().toISOString()
       };
       state.saleApartments.push(newSaleApartment);
-      saveToLocalStorage(SALE_APARTMENTS_STORAGE_KEY, state.saleApartments);
     },
     updateSaleApartment: (state, action) => {
       const index = state.saleApartments.findIndex(apt => apt.id === action.payload.id);
       if (index !== -1) {
         state.saleApartments[index] = action.payload;
-        saveToLocalStorage(SALE_APARTMENTS_STORAGE_KEY, state.saleApartments);
       }
     },
     deleteSaleApartment: (state, action) => {
       state.saleApartments = state.saleApartments.filter(apt => apt.id !== action.payload);
-      saveToLocalStorage(SALE_APARTMENTS_STORAGE_KEY, state.saleApartments);
     },
 
     // Clear all data
@@ -160,8 +126,6 @@ const propertySlice = createSlice({
       state.apartments = [];
       state.saleApartments = [];
       state.error = null;
-      saveToLocalStorage(APARTMENTS_STORAGE_KEY, []);
-      saveToLocalStorage(SALE_APARTMENTS_STORAGE_KEY, []);
     }
   }
 });
