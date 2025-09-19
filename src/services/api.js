@@ -186,7 +186,7 @@ class ApiClient {
 
     // Log API requests in development
     if (API_CONFIG.ENABLE_LOGGING) {
-      console.log(`API ${method} ${url}`, body ? { body } : '');
+      console.log(`🌐 API ${method} ${url}`, body ? { body } : '');
     }
 
     const requestHeaders = {
@@ -212,14 +212,10 @@ class ApiClient {
       const response = await fetch(url, config);
       return await this.handleResponse(response);
     } catch (error) {
-      // Check if it's a network error and backend is not available
+      // Log network errors but don't use mock data
       if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
-        console.warn(`🔌 Backend not available at ${this.baseURL}. Using offline mode.`);
-        
-        // Return mock data based on endpoint for development
-        if (API_CONFIG.ENVIRONMENT === 'development') {
-          return this.getMockResponse(endpoint, method, body);
-        }
+        console.error(`❌ Backend connection failed at ${this.baseURL}`);
+        console.error('Please ensure your backend server is running and accessible.');
       }
       
       if (error instanceof ApiError) {
@@ -227,50 +223,6 @@ class ApiClient {
       }
       throw new ApiError('Network error', 0, { detail: error.message });
     }
-  }
-
-  // Mock response generator for offline development
-  getMockResponse(endpoint, method, body) {
-    if (API_CONFIG.ENABLE_LOGGING) {
-      console.log(`📄 Using mock data for ${method} ${endpoint}`);
-    }
-
-    // Return empty arrays for GET requests to list endpoints
-    if (method === 'GET') {
-      if (endpoint.includes('/apartments/rent')) return [];
-      if (endpoint.includes('/apartments/sale')) return [];
-      if (endpoint.includes('/apartments/parts')) return [];
-      if (endpoint.includes('/apartments/my-content')) return { 
-        rent_apartments: [], 
-        sale_apartments: [], 
-        total_studios: 0, 
-        available_studios: 0 
-      };
-      if (endpoint.includes('/rental-contracts')) return [];
-      if (endpoint.includes('/admins')) return [];
-    }
-
-    // Return success responses for POST/PUT/DELETE
-    if (method === 'POST') {
-      return { 
-        id: Date.now(), 
-        message: 'Mock: Created successfully',
-        ...body 
-      };
-    }
-
-    if (method === 'PUT') {
-      return { 
-        message: 'Mock: Updated successfully',
-        ...body 
-      };
-    }
-
-    if (method === 'DELETE') {
-      return { message: 'Mock: Deleted successfully' };
-    }
-
-    return { message: 'Mock response' };
   }
 
   // HTTP Methods
@@ -699,6 +651,8 @@ export const handleApiError = (error, defaultMessage = 'An error occurred') => {
     
     // Handle different HTTP status codes with user-friendly messages
     switch (error.status) {
+      case 0:
+        return 'Unable to connect to server. Please check if the backend is running and try again.';
       case 400:
         return 'Invalid request. Please check your input and try again.';
       case 401:
@@ -724,19 +678,19 @@ export const handleApiError = (error, defaultMessage = 'An error occurred') => {
     }
   }
   
-  // Handle network errors
+  // Handle network errors - more specific messages
   if (error.name === 'NetworkError' || error.message === 'Failed to fetch') {
-    return 'Network error. Please check your internet connection and try again.';
+    return 'Cannot connect to backend server. Please ensure your backend is running on the configured URL.';
   }
   
   // Handle timeout errors
   if (error.name === 'TimeoutError') {
-    return 'Request timed out. Please try again.';
+    return 'Request timed out. Please check your backend server and try again.';
   }
   
   // Handle other common errors
   if (error.message?.includes('CORS')) {
-    return 'Connection error. Please contact support if this persists.';
+    return 'CORS error. Please check your backend CORS configuration.';
   }
   
   return error.message || defaultMessage;
