@@ -38,7 +38,7 @@ class TokenManager {
     }
     localStorage.setItem(this.TOKEN_KEY, token);
     if (API_CONFIG.ENABLE_LOGGING) {
-      console.log('Token stored successfully');
+      console.log('Authentication token updated');
     }
   }
   
@@ -60,11 +60,11 @@ class TokenManager {
 const validateConfig = () => {
   // Log environment variables status
   if (!process.env.REACT_APP_API_BASE_URL) {
-    console.warn('⚠️ REACT_APP_API_BASE_URL not set, using default:', API_CONFIG.BASE_URL);
+    console.warn('⚠️ REACT_APP_API_BASE_URL not set, using default');
   }
   
   if (!process.env.REACT_APP_ENVIRONMENT) {
-    console.warn('⚠️ REACT_APP_ENVIRONMENT not set, using default:', API_CONFIG.ENVIRONMENT);
+    console.warn('⚠️ REACT_APP_ENVIRONMENT not set, using default');
   }
   
   if (!process.env.REACT_APP_TOKEN_STORAGE_KEY) {
@@ -84,14 +84,7 @@ const validateConfig = () => {
   }
   
   if (API_CONFIG.ENABLE_LOGGING) {
-    console.log('✅ API Configuration loaded:', {
-      BASE_URL: API_CONFIG.BASE_URL,
-      TIMEOUT: API_CONFIG.TIMEOUT,
-      ENVIRONMENT: API_CONFIG.ENVIRONMENT,
-      ENABLE_RETRY: API_CONFIG.ENABLE_RETRY,
-      MAX_RETRIES: API_CONFIG.MAX_RETRIES,
-      TOKEN_KEY: TokenManager.TOKEN_KEY || 'api_access_token'
-    });
+    console.log('✅ API Configuration loaded successfully');
   }
 };
 
@@ -198,7 +191,7 @@ class ApiClient {
 
     // Log API requests in development
     if (API_CONFIG.ENABLE_LOGGING) {
-      console.log(`🌐 API ${method} ${url}`, body ? { body } : '');
+      console.log(`🌐 API ${method} request initiated`);
     }
 
     const requestHeaders = {
@@ -226,7 +219,7 @@ class ApiClient {
     } catch (error) {
       // Log network errors but don't use mock data
       if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
-        console.error(`❌ Backend connection failed at ${this.baseURL}`);
+        console.error('❌ Backend connection failed');
         console.error('Please ensure your backend server is running and accessible.');
       }
       
@@ -651,7 +644,9 @@ export const dataTransformers = {
 
 // Enhanced error handler for UI with better user feedback
 export const handleApiError = (error, defaultMessage = 'An error occurred') => {
-  console.error('API Error:', error);
+  if (API_CONFIG.ENABLE_LOGGING) {
+    console.error('API request failed');
+  }
   
   if (error instanceof ApiError) {
     if (error.status === 422) {
@@ -746,7 +741,7 @@ export const createRetryFunction = (apiCall, maxRetries = API_CONFIG.MAX_RETRIES
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         if (API_CONFIG.ENABLE_LOGGING && attempt > 0) {
-          console.log(`API retry attempt ${attempt}/${maxRetries}`);
+          console.log('API retry attempt initiated');
         }
         return await apiCall(...args);
       } catch (error) {
