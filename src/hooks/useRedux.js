@@ -56,7 +56,6 @@ import {
   loginMasterAdmin,
   updateMasterProfile,
   logout as masterLogout,
-  deleteUser,
   clearError as clearMasterError,
   initializeApp,
   // Master auth selectors
@@ -274,7 +273,6 @@ export const useMasterAuth = () => {
     logout: () => dispatch(masterLogout()),
     updateProfile: (email, currentPassword, newPassword) => 
       dispatch(updateMasterProfile(email, currentPassword, newPassword)),
-    deleteUser: (userId) => dispatch(deleteUser(userId)),
     clearError: () => dispatch(clearMasterError()),
     initializeMasterAdmin: () => dispatch(initializeApp()),
     isAuthenticated: () => isAuthenticated,
