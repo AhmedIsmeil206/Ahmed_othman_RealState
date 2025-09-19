@@ -6,7 +6,7 @@ import { useProperty } from '../../../hooks/useRedux';
 import './StudiosListPage.css';
 
 const StudiosListPage = () => {
-  const { getAllAvailableStudios } = useProperty();
+  const { getAllAvailableStudios, fetchRentApartments } = useProperty();
   const allStudios = getAllAvailableStudios(); // Only get available studios for customers
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState('all');
@@ -18,6 +18,18 @@ const StudiosListPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const STUDIOS_PER_PAGE = 6;
+
+  // Fetch data from backend API on component mount
+  useEffect(() => {
+    const loadStudios = async () => {
+      try {
+        await fetchRentApartments(); // This will populate studios in apartments
+      } catch (error) {
+        console.error('Failed to load studios:', error);
+      }
+    };
+    loadStudios();
+  }, [fetchRentApartments]);
 
   // Filter and sort studios
   const filteredStudios = allStudios.filter(studio => {

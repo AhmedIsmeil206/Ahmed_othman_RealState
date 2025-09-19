@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth, useProperty } from '../../../hooks/useRedux';
 import { useInfiniteScroll } from '../../../hooks/usePagination';
@@ -13,14 +13,34 @@ import './AdminDashboard.css';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { currentAdmin, logoutAdmin } = useAdminAuth();
-  const { getApartmentsByCreator, addApartment, addStudio, 
-          getSaleApartmentsByCreator, addSaleApartment } = useProperty();
+  const { 
+    getApartmentsByCreator, 
+    addApartment, 
+    addStudio,
+    getSaleApartmentsByCreator, 
+    addSaleApartment,
+    fetchRentApartments,
+    fetchSaleApartments
+  } = useProperty();
   const [isAddStudioModalOpen, setIsAddStudioModalOpen] = useState(false);
   const [isAddApartmentModalOpen, setIsAddApartmentModalOpen] = useState(false);
   const [isAddSaleApartmentModalOpen, setIsAddSaleApartmentModalOpen] = useState(false);
   const [selectedApartmentId, setSelectedApartmentId] = useState(null);
   const [isProcessingStudio, setIsProcessingStudio] = useState(false);
   const [isProcessingApartment, setIsProcessingApartment] = useState(false);
+  
+  // Fetch data from backend API on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await fetchRentApartments();
+        await fetchSaleApartments();
+      } catch (error) {
+        console.error('Failed to load apartments:', error);
+      }
+    };
+    loadData();
+  }, [fetchRentApartments, fetchSaleApartments]);
   
   // Get admin role from current admin data
   const adminRole = currentAdmin?.role || 'studio_rental';

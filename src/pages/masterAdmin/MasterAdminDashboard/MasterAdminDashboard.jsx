@@ -15,7 +15,7 @@ const MasterAdminDashboard = () => {
   const { currentUser, logout, updateProfile } = useMasterAuth();
   const { createAdminAccount, getAllAdminAccounts, deleteAdminAccount } = useAdminAuth();
   const { apartments, addApartment, addStudio, verifyDataConsistency, clearAllData, getApartmentsByCreator,
-          saleApartments, addSaleApartment, getSaleApartmentsByCreator } = useProperty();
+          saleApartments, addSaleApartment, getSaleApartmentsByCreator, fetchRentApartments, fetchSaleApartments } = useProperty();
   const [isAddStudioModalOpen, setIsAddStudioModalOpen] = useState(false);
   const [isAddApartmentModalOpen, setIsAddApartmentModalOpen] = useState(false);
   const [isAddSaleApartmentModalOpen, setIsAddSaleApartmentModalOpen] = useState(false);
@@ -80,6 +80,19 @@ const MasterAdminDashboard = () => {
     };
     fetchAdmins();
   }, [getAllAdminAccounts]);
+
+  // Fetch property data from backend API on component mount
+  useEffect(() => {
+    const loadPropertyData = async () => {
+      try {
+        await fetchRentApartments();
+        await fetchSaleApartments();
+      } catch (error) {
+        console.error('Failed to load property data:', error);
+      }
+    };
+    loadPropertyData();
+  }, [fetchRentApartments, fetchSaleApartments]);
 
   // Get filtered properties based on selected admin and property type
   const getFilteredProperties = () => {

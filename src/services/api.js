@@ -6,8 +6,8 @@
 
 // API Configuration from environment variables only
 const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_BASE_URL ,
-  TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT),
+  BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1',
+  TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT) || 10000,
   HEADERS: {
     'Content-Type': 'application/json'
   },
@@ -85,6 +85,7 @@ const validateConfig = () => {
   
   if (API_CONFIG.ENABLE_LOGGING) {
     console.log('✅ API Configuration loaded successfully');
+    console.log('🔗 Backend URL:', API_CONFIG.BASE_URL);
   }
 };
 
@@ -191,7 +192,7 @@ class ApiClient {
 
     // Log API requests in development
     if (API_CONFIG.ENABLE_LOGGING) {
-      console.log(`🌐 API ${method} request initiated`);
+      console.log(`🌐 API ${method} -> ${url}`);
     }
 
     const requestHeaders = {
@@ -201,8 +202,7 @@ class ApiClient {
 
     const config = {
       method,
-      headers: requestHeaders,
-      timeout: this.timeout
+      headers: requestHeaders
     };
 
     if (body) {
@@ -214,13 +214,25 @@ class ApiClient {
     }
 
     try {
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      
+      config.signal = controller.signal;
+      
       const response = await fetch(url, config);
+      clearTimeout(timeoutId);
+      
       return await this.handleResponse(response);
     } catch (error) {
       // Log network errors but don't use mock data
-      if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
+      if (error.name === 'AbortError') {
+        console.error('❌ Request timeout - Backend server took too long to respond');
+        throw new ApiError('Request timeout', 408, { detail: 'Request timed out' });
+      } else if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
         console.error('❌ Backend connection failed');
         console.error('Please ensure your backend server is running and accessible.');
+        throw new ApiError('Network error', 0, { detail: 'Failed to connect to backend server' });
       }
       
       if (error instanceof ApiError) {

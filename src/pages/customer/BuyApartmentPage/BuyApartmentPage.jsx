@@ -6,7 +6,7 @@ import { useProperty } from '../../../hooks/useRedux';
 import './BuyApartmentPage.css';
 
 const BuyApartmentPage = () => {
-  const { getAllAvailableSaleApartments } = useProperty();
+  const { getAllAvailableSaleApartments, fetchSaleApartments } = useProperty();
   const allSaleApartments = getAllAvailableSaleApartments(); // Only get available sale apartments for customers
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState('all');
@@ -19,6 +19,18 @@ const BuyApartmentPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const APARTMENTS_PER_PAGE = 4;
+
+  // Fetch data from backend API on component mount
+  useEffect(() => {
+    const loadSaleApartments = async () => {
+      try {
+        await fetchSaleApartments();
+      } catch (error) {
+        console.error('Failed to load sale apartments:', error);
+      }
+    };
+    loadSaleApartments();
+  }, [fetchSaleApartments]);
 
   const filteredApartments = allSaleApartments.filter(apartment => {
     // Price range filter
