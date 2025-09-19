@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../hooks/useRedux';
 import BackButton from '../../../components/common/BackButton';
 import InfiniteScrollTable from '../../../components/admin/InfiniteScrollTable';
 import './AdminManagementPage.css';
 
 const AdminManagementPage = () => {
-  const navigate = useNavigate();
   const { 
     createAdminAccount, 
     getAllAdminAccounts, 

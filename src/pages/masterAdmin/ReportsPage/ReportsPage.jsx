@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterAuth, useProperty, useAdminAuth } from '../../../hooks/useRedux';
 import BackButton from '../../../components/common/BackButton';
@@ -9,7 +9,7 @@ import './ReportsPage.css';
 const ReportsPage = () => {
   const navigate = useNavigate();
   const { currentUser, logout } = useMasterAuth();
-  const { apartments } = useProperty();
+  const { apartments, saleApartments } = useProperty();
   const { getAllAdmins } = useAdminAuth();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -19,15 +19,7 @@ const ReportsPage = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('all'); // all, month, week
   const [sortBy, setSortBy] = useState('totalProperties'); // totalProperties, revenue, performance
 
-  useEffect(() => {
-    if (!currentUser) {
-      navigate('/auth/master-admin-login');
-      return;
-    }
-    loadReportsData();
-  }, [currentUser, navigate]);
-
-  const loadReportsData = async () => {
+  const loadReportsData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Get all admins
@@ -107,7 +99,15 @@ const ReportsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getAllAdmins, apartments, saleApartments]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/auth/master-admin-login');
+      return;
+    }
+    loadReportsData();
+  }, [currentUser, navigate, loadReportsData]);
 
   const sortStats = (data, criteria) => {
     return [...data].sort((a, b) => {

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useMasterAuth } from '../../../hooks/useRedux';
 import BackButton from '../../common/BackButton';
 import MasterAdminSignupForm from '../MasterAdminSignupForm/MasterAdminSignupForm';
-import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './MasterAdminLoginForm.css';
 
 const MasterAdminLoginForm = () => {

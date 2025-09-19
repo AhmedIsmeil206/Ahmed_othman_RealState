@@ -63,7 +63,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
 
     if (!formData.customerPhone.trim()) {
       newErrors.customerPhone = 'Phone number is required';
-    } else if (!/^[\+]?[0-9\s\-\(\)]{10,}$/.test(formData.customerPhone.trim())) {
+    } else if (!/^[+]?[0-9\s\-()]{10,}$/.test(formData.customerPhone.trim())) {
       newErrors.customerPhone = 'Please enter a valid phone number';
     }
 

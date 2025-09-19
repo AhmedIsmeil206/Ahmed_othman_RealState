@@ -201,7 +201,7 @@ export const useProperty = () => {
       
       return { totalApartments, totalStudios, availableStudios, apartments };
     }
-  }), [dispatch, apartments, saleApartments]);
+  }), [dispatch, apartments, getAllAvailableStudios, getAllStudios]);
 
   return {
     apartments,

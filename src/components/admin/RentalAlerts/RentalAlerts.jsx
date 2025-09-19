@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProperty } from '../../../hooks/useRedux';
 import { 
   getStudiosNeedingRenewal, 
-  formatAlertMessage, 
-  calculateDaysRemaining 
+  formatAlertMessage
 } from '../../../utils/helpers/rentalAlerts';
 import './RentalAlerts.css';
 

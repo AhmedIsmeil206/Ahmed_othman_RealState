@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterAuth } from '../../../hooks/useRedux';
 import BackButton from '../../common/BackButton';
-import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './MasterAdminSignupForm.css';
 
 const MasterAdminSignupForm = ({ onSignupComplete }) => {

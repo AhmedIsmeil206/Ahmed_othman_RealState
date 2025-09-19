@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../hooks/useRedux';
 import BackButton from '../../../components/common/BackButton';
-import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './AdminLoginPage.css';
 
 const AdminLoginPage = () => {

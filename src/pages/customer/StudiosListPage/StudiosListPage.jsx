@@ -6,7 +6,6 @@ import { useProperty } from '../../../hooks/useRedux';
 import './StudiosListPage.css';
 
 const StudiosListPage = () => {
-  const navigate = useNavigate();
   const { getAllAvailableStudios } = useProperty();
   const allStudios = getAllAvailableStudios(); // Only get available studios for customers
   const [sortBy, setSortBy] = useState('newest');
@@ -91,7 +90,7 @@ const StudiosListPage = () => {
     setDisplayedStudios(firstBatch);
     setCurrentPage(2);
     setHasMore(sortedStudios.length > STUDIOS_PER_PAGE);
-  }, [sortBy, priceRange, locationFilter]); // Remove allStudios from dependencies
+  }, [sortBy, priceRange, locationFilter, sortedStudios]); // Add sortedStudios to dependencies
 
   // Infinite scroll listener
   useEffect(() => {

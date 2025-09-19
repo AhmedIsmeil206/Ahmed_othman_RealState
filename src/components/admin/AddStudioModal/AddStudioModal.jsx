@@ -231,9 +231,7 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
           "24/7 Security",
           "Elevator Access"
         ].filter(Boolean),
-        // Inherit location from parent apartment
-        location: selectedApartment?.location,
-        coordinates: selectedApartment?.coordinates,
+        // Inherit location from parent apartment  
         locationUrl: selectedApartment?.mapUrl
       };
 

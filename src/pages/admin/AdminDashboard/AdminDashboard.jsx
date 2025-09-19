@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth, useProperty } from '../../../hooks/useRedux';
 import { useInfiniteScroll } from '../../../hooks/usePagination';
@@ -13,8 +13,8 @@ import './AdminDashboard.css';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { currentAdmin, logoutAdmin } = useAdminAuth();
-  const { getApartmentsByCreator, addApartment, addStudio, verifyDataConsistency, clearAllData, 
-          getSaleApartmentsByCreator, addSaleApartment, saleApartments } = useProperty();
+  const { getApartmentsByCreator, addApartment, addStudio, 
+          getSaleApartmentsByCreator, addSaleApartment } = useProperty();
   const [isAddStudioModalOpen, setIsAddStudioModalOpen] = useState(false);
   const [isAddApartmentModalOpen, setIsAddApartmentModalOpen] = useState(false);
   const [isAddSaleApartmentModalOpen, setIsAddSaleApartmentModalOpen] = useState(false);
@@ -108,21 +108,6 @@ const AdminDashboard = () => {
 
   const handleAddSaleApartment = () => {
     setIsAddSaleApartmentModalOpen(true);
-  };
-
-  // Debug function to verify data consistency (can be removed in production)
-  const handleVerifyData = () => {
-    console.log('🔍 Verifying data consistency...');
-    const result = verifyDataConsistency();
-    alert(`Data Check Complete!\nApartments: ${result.totalApartments}\nTotal Studios: ${result.totalStudios}\nAvailable Studios: ${result.availableStudios}\n\nCheck console for detailed information.`);
-  };
-
-  // Clear all mock data (for testing)
-  const handleClearAllData = () => {
-    if (window.confirm('Are you sure you want to clear ALL apartments and studios? This will remove all mock data and start fresh.')) {
-      clearAllData();
-      alert('All data cleared! You can now add fresh apartments and studios.');
-    }
   };
 
   if (!currentAdmin) {

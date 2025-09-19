@@ -225,7 +225,7 @@ const ApartmentSaleDetailsPage = () => {
               </div>
             </div>
 
-            {(apartment.amenities && apartment.amenities.length > 0) || (apartment.facilities && apartment.facilities.length > 0) && (
+            {((apartment.amenities && apartment.amenities.length > 0) || (apartment.facilities && apartment.facilities.length > 0)) && (
               <div className="amenities-section">
                 <h2>Facilities & Amenities</h2>
                 <div className="amenities-grid">
