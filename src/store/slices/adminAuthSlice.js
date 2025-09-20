@@ -1,6 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
 import CryptoJS from 'crypto-js';
-import { adminsData } from '../../mockData/admins.jsx';
 
 // Constants
 const ENCRYPTION_KEY = 'admin-renty-2025-secret-key';
@@ -74,15 +73,7 @@ const getStoredAdmins = () => {
       }
     }
     
-    // If no admins exist, initialize with test data for development
-    if (adminsData && adminsData.length > 0) {
-      const encryptedAdmins = encrypt(JSON.stringify(adminsData));
-      if (encryptedAdmins) {
-        localStorage.setItem(ADMIN_STORAGE_KEY, encryptedAdmins);
-      }
-      return adminsData;
-    }
-    
+    // Return empty array - no mock data, use API only
     return [];
   } catch (error) {
     console.error('Error getting stored admins:', error);

@@ -175,8 +175,8 @@ export const useAdminManagement = () => {
     deleteAdmin,
     clearError: clearAdminError,
     
-    // Legacy compatibility (keeping old method names)
-    getAllAdminAccounts: () => allAdmins,
+    // Legacy compatibility (now use API calls)
+    getAllAdminAccounts: fetchAllAdmins,
     createAdminAccount: createAdmin,
     deleteAdminAccount: deleteAdmin
   };

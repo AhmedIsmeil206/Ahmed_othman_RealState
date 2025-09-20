@@ -129,9 +129,16 @@ export const useAdminAuth = () => {
     }
   };
 
-  const getAllAdminAccounts = () => {
-    // This now returns the local state, but could be enhanced to fetch from API
-    return allAdminAccounts;
+  const getAllAdminAccounts = async () => {
+    // Make API call to fetch all admin accounts
+    try {
+      const response = await adminApi.getAll();
+      const transformedAdmins = response.map(transformAdminFromApi);
+      return transformedAdmins;
+    } catch (error) {
+      console.error('Failed to fetch admin accounts:', error);
+      return [];
+    }
   };
 
   const updateAdminStatus = async (adminId, isActive) => {

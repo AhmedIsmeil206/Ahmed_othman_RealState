@@ -490,23 +490,37 @@ export const usePropertyManagement = () => {
     dispatch(clearError());
   };
 
-  // ==================== LEGACY COMPATIBILITY METHODS ====================
+  // ==================== API FETCH FUNCTIONS ====================
 
-  // Legacy methods for backward compatibility
-  const getApartmentsByCreator = (createdBy) => {
-    return selectApartmentsByCreator(createdBy)({ property: { apartments } });
+  // These functions fetch fresh data from API and can be used to refresh data
+  const fetchApartmentsByCreatorFromApi = async (createdBy) => {
+    try {
+      const response = await rentApartmentsApi.getAll({ created_by: createdBy });
+      return response.map(transformRentApartmentFromApi);
+    } catch (error) {
+      console.error('Failed to fetch apartments by creator:', error);
+      return [];
+    }
   };
 
-  const getStudiosByCreator = (createdBy) => {
-    return selectStudiosByCreator(createdBy)({ property: { apartments } });
+  const fetchStudiosByCreatorFromApi = async (createdBy) => {
+    try {
+      const response = await apartmentPartsApi.getAll({ created_by: createdBy });
+      return response.map(transformStudioFromApi);
+    } catch (error) {
+      console.error('Failed to fetch studios by creator:', error);
+      return [];
+    }
   };
 
-  const getSaleApartmentsByCreator = (createdBy) => {
-    return selectSaleApartmentsByCreator(createdBy)({ property: { saleApartments } });
-  };
-
-  const getAllAdminCreators = () => {
-    return selectAllAdminCreators({ property: { apartments, saleApartments } });
+  const fetchSaleApartmentsByCreatorFromApi = async (createdBy) => {
+    try {
+      const response = await saleApartmentsApi.getAll({ created_by: createdBy });
+      return response.map(transformSaleApartmentFromApi);
+    } catch (error) {
+      console.error('Failed to fetch sale apartments by creator:', error);
+      return [];
+    }
   };
 
   return {
@@ -542,11 +556,34 @@ export const usePropertyManagement = () => {
     // Utilities
     clearError: clearPropertyError,
     
+    // Sync selectors (work with already loaded Redux data)
+    getApartmentsByCreator: (createdBy) => apartments.filter(apt => 
+      apt.createdBy === createdBy || apt.listed_by_admin_id === createdBy
+    ),
+    getSaleApartmentsByCreator: (createdBy) => saleApartments.filter(apt => 
+      apt.createdBy === createdBy || apt.listed_by_admin_id === createdBy  
+    ),
+    getStudiosByCreator: (createdBy) => {
+      return apartments
+        .filter(apt => apt.createdBy === createdBy || apt.listed_by_admin_id === createdBy)
+        .flatMap(apt => apt.studios || []);
+    },
+    getAllAvailableStudios: () => {
+      return apartments.flatMap(apt => apt.studios || []).filter(studio => studio.isAvailable);
+    },
+    getAllStudios: () => {
+      return apartments.flatMap(apt => apt.studios || []);
+    },
+    getAllAvailableSaleApartments: () => {
+      return saleApartments.filter(apt => apt.isAvailable !== false);
+    },
+    
+    // API-based fetch functions (use these to refresh data from backend)
+    fetchApartmentsByCreatorFromApi,
+    fetchStudiosByCreatorFromApi,
+    fetchSaleApartmentsByCreatorFromApi,
+    
     // Legacy compatibility
-    getApartmentsByCreator,
-    getStudiosByCreator,
-    getSaleApartmentsByCreator,
-    getAllAdminCreators,
     addApartment: createRentApartment,
     addStudio: createStudio,
     addSaleApartment: createSaleApartment,
