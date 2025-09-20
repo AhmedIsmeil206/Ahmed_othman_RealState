@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useMasterAuth } from '../../../hooks/useRedux';
+import { useMasterAuth, useProperty } from '../../../hooks/useRedux';
 import './AddSaleApartmentModal.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import useUniqueId from '../../../hooks/useUniqueId';
 
 const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const { currentUser } = useMasterAuth();
+  const { createSaleApartment } = useProperty();
   const { generateApartmentId } = useUniqueId();
   const [formData, setFormData] = useState({
     name: '',
@@ -206,16 +207,14 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    console.log('Form submission started');
-    console.log('Form data:', formData);
+
     
     if (!validateForm()) {
-      console.log('Form validation failed');
-      console.log('Validation errors:', errors);
+
       return;
     }
 
-    console.log('Form validation passed');
+
     setIsSubmitting(true);
 
     try {
@@ -241,11 +240,14 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         isAvailable: true
       };
 
-      console.log('New sale apartment object:', newSaleApartment);
+
       
-      // Call the onApartmentAdded function
-      await onApartmentAdded(newSaleApartment);
-      console.log('onApartmentAdded called successfully');
+      // Use real API call to create sale apartment
+      await createSaleApartment(newSaleApartment);
+      
+      // Notify parent component and close modal
+      onApartmentAdded?.(newSaleApartment);
+      onClose();
       
       // Reset form
       setFormData({

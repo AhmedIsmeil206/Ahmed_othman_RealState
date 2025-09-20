@@ -27,9 +27,14 @@ const AdminManagementPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load admin accounts on component mount
-  const loadAdminAccounts = useCallback(() => {
-    const accounts = getAllAdminAccounts();
-    setAdminAccounts(accounts);
+  const loadAdminAccounts = useCallback(async () => {
+    try {
+      const accounts = await getAllAdminAccounts(); // Now async API call
+      setAdminAccounts(accounts);
+    } catch (error) {
+      console.error('Failed to load admin accounts:', error);
+      setAdminAccounts([]);
+    }
   }, [getAllAdminAccounts]);
 
   useEffect(() => {

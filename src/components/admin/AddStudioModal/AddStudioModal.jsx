@@ -5,7 +5,7 @@ import LoadingSpinner from '../../common/LoadingSpinner/LoadingSpinner';
 import './AddStudioModal.css';
 
 const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
-  const { getApartmentById, getApartmentsByCreator } = useProperty();
+  const { getApartmentById, getApartmentsByCreator, createStudio } = useProperty();
   const { currentAdmin } = useAdminAuth();
   const { generateStudioId } = useUniqueId();
   
@@ -174,9 +174,6 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      // Simulate network delay for form processing
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       // Create new studio object
       const newStudio = {
         id: generateStudioId(), // Use unique ID generation
@@ -235,7 +232,31 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
         locationUrl: selectedApartment?.mapUrl
       };
 
-      onStudioAdded(newStudio);
+      // Use real API call to create studio
+      await createStudio(formData.selectedApartmentId, newStudio);
+      
+      // Notify parent and close modal
+      onStudioAdded?.(newStudio);
+      onClose();
+      
+      // Reset form
+      setFormData({
+        selectedApartmentId: apartmentId || '',
+        title: '',
+        area: '',
+        unitNumber: '',
+        price: '',
+        pricePerMonth: '',
+        bedrooms: '',
+        bathrooms: '1',
+        furnished: 'Yes',
+        description: '',
+        balcony: 'Yes',
+        parking: 'Available', 
+        isAvailable: true,
+        photos: []
+      });
+      setErrors({});
     } catch (error) {
       console.error('Error adding studio:', error);
       setErrors({ general: 'An error occurred while adding the studio. Please try again.' });

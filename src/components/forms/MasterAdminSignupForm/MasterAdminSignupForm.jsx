@@ -97,100 +97,102 @@ const MasterAdminSignupForm = ({ onSignupComplete }) => {
   };
 
   return (
-    <div className="master-signup-container">
-      <div className="master-signup-background">
-        <div className="master-signup-overlay">
-          <div className="master-signup-content">
-            
-            <div className="master-signup-form-wrapper">
+    <div className="master-signup-page">
+      <div className="master-signup-container">
+        <div className="signup-card">
+          <div className="signup-header">
+            <h1>Master Admin Setup</h1>
+            <p>Create your master administrator account</p>
+          </div>
+
+          <div className="setup-notice-card">
+            <div className="notice-icon">⚠️</div>
+            <div className="notice-content">
+              <strong>One-time Setup:</strong>
+              <p>This form will only appear once. Please save your credentials securely.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="signup-form">
+            {errors.general && (
+              <div className="error-message">
+                {errors.general}
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="email">Email Address *</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className={errors.email ? 'error' : ''}
+                placeholder="admin@ahmedothmangroup.com"
+                autoComplete="username"
+              />
+              {errors.email && <span className="error-text">{errors.email}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="mobilePhone">Mobile Phone *</label>
+              <input
+                type="tel"
+                id="mobilePhone"
+                name="mobilePhone"
+                value={formData.mobilePhone}
+                onChange={handleInputChange}
+                className={errors.mobilePhone ? 'error' : ''}
+                placeholder="+20 100 123 4567"
+                autoComplete="tel"
+              />
+              {errors.mobilePhone && <span className="error-text">{errors.mobilePhone}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password *</label>
+              <div className="password-input-container">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={errors.password ? 'error' : ''}
+                  placeholder="Create a strong password"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={togglePasswordVisibility}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  👁️
+                </button>
+              </div>
+              {errors.password && <span className="error-text">{errors.password}</span>}
+              <div className="password-requirements">
+                <small>Password must contain at least 6 characters, uppercase, lowercase, and a number</small>
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              className="signup-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating Account...' : 'Sign Up'}
+            </button>
+          </form>
+
+          <div className="signup-footer">
+            <div className="signup-links">
               <BackButton 
                 text="← Back to Admin Portal"
                 onClick={() => navigate('/admin')}
-                variant="transparent"
               />
-              
-              <div className="master-signup-header">
-                <h1>Master Admin Setup</h1>
-                <p>Create your master administrator account</p>
-                <div className="setup-notice">
-                  <strong>One-time Setup:</strong>
-                  This form will only appear once. Please save your credentials securely.
-                </div>
-              </div>
-
-              <form className="master-signup-form" onSubmit={handleSubmit}>
-                {errors.general && (
-                  <div className="error-message general-error">
-                    {errors.general}
-                  </div>
-                )}
-
-                <div className="form-group">
-                  <label htmlFor="email">Email Address *</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={errors.email ? 'error' : ''}
-                    placeholder="admin@ahmedothmangroup.com"
-                    autoComplete="username"
-                  />
-                  {errors.email && <span className="error-message">{errors.email}</span>}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="mobilePhone">Mobile Phone *</label>
-                  <input
-                    type="tel"
-                    id="mobilePhone"
-                    name="mobilePhone"
-                    value={formData.mobilePhone}
-                    onChange={handleInputChange}
-                    className={errors.mobilePhone ? 'error' : ''}
-                    placeholder="+20 100 123 4567"
-                    autoComplete="tel"
-                  />
-                  {errors.mobilePhone && <span className="error-message">{errors.mobilePhone}</span>}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="password">Password *</label>
-                  <div className="password-input-wrapper">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className={errors.password ? 'error' : ''}
-                      placeholder="Create a strong password"
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle-btn"
-                      onClick={togglePasswordVisibility}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? '�' : '👁️'}
-                    </button>
-                  </div>
-                  {errors.password && <span className="error-message">{errors.password}</span>}
-                  <div className="password-requirements">
-                    <small>Password must contain at least 6 characters, uppercase, lowercase, and a number</small>
-                  </div>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="signup-btn"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Creating Account...' : 'Sign Up'}
-                </button>
-              </form>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import ApartmentSaleCard from '../../../components/customer/ApartmentSaleCard/ApartmentSaleCard';
@@ -12,19 +12,14 @@ const BuyApartmentPage = () => {
   const [priceRange, setPriceRange] = useState('all');
   const [bedroomFilter, setBedroomFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
-  
-  // Pagination state
-  const [displayedApartments, setDisplayedApartments] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const APARTMENTS_PER_PAGE = 4;
 
   // Fetch data from backend API on component mount
   useEffect(() => {
     const loadSaleApartments = async () => {
       try {
-        await fetchSaleApartments();
+        if (fetchSaleApartments && typeof fetchSaleApartments === 'function') {
+          await fetchSaleApartments();
+        }
       } catch (error) {
         console.error('Failed to load sale apartments:', error);
       }

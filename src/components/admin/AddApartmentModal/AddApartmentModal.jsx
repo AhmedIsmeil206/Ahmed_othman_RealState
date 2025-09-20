@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import './AddApartmentModal.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import useUniqueId from '../../../hooks/useUniqueId';
+import { useProperty } from '../../../hooks/useRedux';
 
 const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const { generateApartmentId } = useUniqueId();
+  const { createRentApartment } = useProperty(); // Use real API call
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -181,7 +183,25 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         studios: []
       };
 
-      onApartmentAdded(newApartment);
+      // Use real API call to create apartment
+      await createRentApartment(newApartment);
+      
+      // Notify parent component and close modal
+      onApartmentAdded?.(newApartment);
+      onClose();
+      
+      // Reset form
+      setFormData({
+        name: '',
+        location: '',
+        address: '',
+        description: '',
+        mapUrl: '',
+        facilities: [],
+        floor: '',
+        photos: []
+      });
+      setErrors({});
     } catch (error) {
       console.error('Error adding apartment:', error);
       setErrors({ general: 'An error occurred while adding the apartment. Please try again.' });

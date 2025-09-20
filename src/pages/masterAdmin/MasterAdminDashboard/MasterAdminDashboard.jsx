@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterAuth, useAdminAuth, useProperty } from '../../../hooks/useRedux';
-import BackButton from '../../../components/common/BackButton';
 import ApartmentCard from '../../../components/admin/ApartmentCard';
 import SaleApartmentCard from '../../../components/admin/SaleApartmentCard';
 import AddStudioModal from '../../../components/admin/AddStudioModal';
@@ -72,7 +71,7 @@ const MasterAdminDashboard = () => {
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
-        const admins = getAllAdminAccounts();
+        const admins = await getAllAdminAccounts(); // Now async API call
         setExistingAdmins(admins || []);
       } catch (error) {
         console.error('Error fetching admins:', error);

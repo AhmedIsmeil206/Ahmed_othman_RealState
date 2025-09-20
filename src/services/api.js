@@ -85,7 +85,6 @@ const validateConfig = () => {
   
   if (API_CONFIG.ENABLE_LOGGING) {
     console.log('✅ API Configuration loaded successfully');
-    console.log('🔗 Backend URL:', API_CONFIG.BASE_URL);
   }
 };
 
@@ -189,11 +188,6 @@ class ApiClient {
       includeAuth = true,
       contentType = 'application/json'
     } = options;
-
-    // Log API requests in development
-    if (API_CONFIG.ENABLE_LOGGING) {
-      console.log(`🌐 API ${method} -> ${url}`);
-    }
 
     const requestHeaders = {
       ...this.createHeaders(includeAuth, contentType),
