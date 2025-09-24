@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import StudioCard from '../../../components/customer/StudioCard/StudioCard';
 import { useProperty } from '../../../hooks/useRedux';
@@ -17,13 +17,15 @@ const StudiosListPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const STUDIOS_PER_PAGE = 6;
+  const STUDIOS_PER_PAGE = 10;
 
   // Fetch data from backend API on component mount
   useEffect(() => {
     const loadStudios = async () => {
       try {
-        await fetchRentApartments(); // This will populate studios in apartments
+        if (fetchRentApartments && typeof fetchRentApartments === 'function') {
+          await fetchRentApartments(); // This will populate studios in apartments
+        }
       } catch (error) {
         console.error('Failed to load studios:', error);
       }
@@ -31,28 +33,32 @@ const StudiosListPage = () => {
     loadStudios();
   }, [fetchRentApartments]);
 
-  // Filter and sort studios
-  const filteredStudios = allStudios.filter(studio => {
-    // Price filter
-    if (priceRange !== 'all') {
-      if (priceRange === 'low' && studio.pricePerMonth > 15000) return false;
-      if (priceRange === 'medium' && (studio.pricePerMonth <= 15000 || studio.pricePerMonth > 20000)) return false;
-      if (priceRange === 'high' && studio.pricePerMonth <= 20000) return false;
-    }
-    
-    // Location filter
-    if (locationFilter !== 'all') {
-      if (!studio.location || !studio.location.toLowerCase().includes(locationFilter.toLowerCase())) return false;
-    }
-    
-    return true;
-  });
+  // Filter and sort studios - memoized to prevent infinite loops
+  const filteredStudios = React.useMemo(() => {
+    return allStudios.filter(studio => {
+      // Price filter
+      if (priceRange !== 'all') {
+        if (priceRange === 'low' && studio.pricePerMonth > 15000) return false;
+        if (priceRange === 'medium' && (studio.pricePerMonth <= 15000 || studio.pricePerMonth > 20000)) return false;
+        if (priceRange === 'high' && studio.pricePerMonth <= 20000) return false;
+      }
+      
+      // Location filter
+      if (locationFilter !== 'all') {
+        if (!studio.location || !studio.location.toLowerCase().includes(locationFilter.toLowerCase())) return false;
+      }
+      
+      return true;
+    });
+  }, [allStudios, priceRange, locationFilter]);
 
-  const sortedStudios = [...filteredStudios].sort((a, b) => {
-    if (sortBy === 'price-low') return a.pricePerMonth - b.pricePerMonth;
-    if (sortBy === 'price-high') return b.pricePerMonth - a.pricePerMonth;
-    return 0; // Default newest
-  });
+  const sortedStudios = React.useMemo(() => {
+    return [...filteredStudios].sort((a, b) => {
+      if (sortBy === 'price-low') return a.pricePerMonth - b.pricePerMonth;
+      if (sortBy === 'price-high') return b.pricePerMonth - a.pricePerMonth;
+      return 0; // Default newest
+    });
+  }, [filteredStudios, sortBy]);
 
   // Load more studios function
   const loadMoreStudios = useCallback(() => {
@@ -102,7 +108,7 @@ const StudiosListPage = () => {
     setDisplayedStudios(firstBatch);
     setCurrentPage(2);
     setHasMore(sortedStudios.length > STUDIOS_PER_PAGE);
-  }, [sortBy, priceRange, locationFilter, sortedStudios]); // Add sortedStudios to dependencies
+  }, [sortBy, priceRange, locationFilter]); // Remove sortedStudios from dependencies
 
   // Infinite scroll listener
   useEffect(() => {

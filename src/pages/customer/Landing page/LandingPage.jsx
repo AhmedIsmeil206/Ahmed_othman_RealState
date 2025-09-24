@@ -23,7 +23,7 @@ function LandingPage() {
         </nav>
 
         <div className="hero__inner">
-          <p className="subtitle" style={{display:"flex" ,flexDirection:"column", justifyContent:"center", alignItems:"center", fontSize:"18px", fontWeight:"400"}}>
+          <p className="subtitle" style={{display:"flex" ,flexDirection:"column", justifyContent:"center", alignItems:"center", fontSize:"18px", fontWeight:"700"}}>
             <span>We help individuals and businesses find the right place to live and invest.</span>
             <span>Discover modern studios for rent and premium apartments for sale with transparent</span>
             <span>pricing, clear processes, and dedicated support.</span>
