@@ -23,11 +23,10 @@ function LandingPage() {
         </nav>
 
         <div className="hero__inner">
-          <h1 className="title">Smart Real Estate Management</h1>
-          <p className="subtitle">
-            We help individuals and businesses find the right place to live and invest.
-            Discover modern studios for rent and premium apartments for sale with transparent
-            pricing, clear processes, and dedicated support.
+          <p className="subtitle" style={{display:"flex" ,flexDirection:"column", justifyContent:"center", alignItems:"center", fontSize:"18px", fontWeight:"400"}}>
+            <span>We help individuals and businesses find the right place to live and invest.</span>
+            <span>Discover modern studios for rent and premium apartments for sale with transparent</span>
+            <span>pricing, clear processes, and dedicated support.</span>
           </p>
 
           <div className="cta-group" style={{display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', marginTop: '5%'}}>
