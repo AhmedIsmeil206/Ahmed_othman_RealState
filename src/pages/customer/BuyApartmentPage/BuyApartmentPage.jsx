@@ -2,30 +2,77 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import ApartmentSaleCard from '../../../components/customer/ApartmentSaleCard/ApartmentSaleCard';
-import { useProperty } from '../../../hooks/useRedux';
+import { saleApartmentsApi, handleApiError } from '../../../services/api';
 import './BuyApartmentPage.css';
 
 const BuyApartmentPage = () => {
-  const { getAllAvailableSaleApartments, fetchSaleApartments } = useProperty();
-  const allSaleApartments = getAllAvailableSaleApartments(); // Only get available sale apartments for customers
+  const [allSaleApartments, setAllSaleApartments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState('all');
   const [bedroomFilter, setBedroomFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
 
-  // Fetch data from backend API on component mount
+  // Transform API apartment data to frontend format
+  const transformSaleApartmentData = (apiApartment) => ({
+    id: apiApartment.id,
+    title: apiApartment.name,
+    name: apiApartment.name,
+    location: apiApartment.location,
+    address: apiApartment.address,
+    price: parseFloat(apiApartment.price) || 0,
+    area: parseFloat(apiApartment.area) || 0,
+    bedrooms: apiApartment.bedrooms,
+    bathrooms: apiApartment.bathrooms === 'private' ? 1 : 0.5,
+    description: apiApartment.description,
+    images: apiApartment.photos_url || [],
+    contactNumber: apiApartment.contact_number,
+    floor: apiApartment.floor,
+    unitNumber: apiApartment.number,
+    amenities: apiApartment.facilities_amenities?.split(', ') || [],
+    mapLocation: apiApartment.location_on_map,
+    createdAt: apiApartment.created_at,
+    updatedAt: apiApartment.updated_at,
+    listedByAdminId: apiApartment.listed_by_admin_id,
+    // Frontend compatibility
+    type: 'sale',
+    ownership: 'Sale',
+    postedDate: new Date(apiApartment.created_at).toLocaleDateString() || 'Recently',
+    isAvailable: true,
+    completionStatus: 'Ready',
+    coordinates: { lat: 30.0444, lng: 31.2357 } // Default Cairo coordinates
+  });
+
+  // Fetch sale apartments from API
+  const fetchSaleApartments = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      console.log('Fetching sale apartments from API...');
+      const response = await saleApartmentsApi.getAll();
+      console.log('Sale apartments API response:', response);
+
+      const transformedApartments = response.map(transformSaleApartmentData);
+      console.log('Transformed sale apartments:', transformedApartments);
+      
+      setAllSaleApartments(transformedApartments);
+      return { success: true, apartments: transformedApartments };
+    } catch (error) {
+      console.error('Failed to fetch sale apartments:', error);
+      const errorMessage = handleApiError(error, 'Failed to load apartments for sale');
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch data on component mount
   useEffect(() => {
-    const loadSaleApartments = async () => {
-      try {
-        if (fetchSaleApartments && typeof fetchSaleApartments === 'function') {
-          await fetchSaleApartments();
-        }
-      } catch (error) {
-        console.error('Failed to load sale apartments:', error);
-      }
-    };
-    loadSaleApartments();
-  }, [fetchSaleApartments]);
+    fetchSaleApartments();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredApartments = allSaleApartments.filter(apartment => {
     // Price range filter
@@ -65,93 +112,133 @@ const BuyApartmentPage = () => {
     if (sortBy === 'price-high') return (b.price || 0) - (a.price || 0);
     if (sortBy === 'area-low') return (a.area || 0) - (b.area || 0);
     if (sortBy === 'area-high') return (b.area || 0) - (a.area || 0);
-    return new Date(b.listedAt || b.createdAt) - new Date(a.listedAt || a.createdAt); // Default newest
+    return new Date(b.createdAt) - new Date(a.createdAt); // Default newest
   });
+
+  // Retry function for error state
+  const handleRetry = () => {
+    fetchSaleApartments();
+  };
 
   return (
     <div className="buy-apartment-page">
       <nav className="apartments-nav">
-        <BackButton 
-          text="← Back"
-        />
+        <BackButton text="← Back" />
         <Link to="/admin" className="brand">Ahmed Othman Group</Link>
       </nav>
 
       <div className="apartments-container">
         <header className="apartments-header">
           <h1>Apartments for Sale</h1>
-          <p>{sortedApartments.length} properties found</p>
+          {!isLoading && !error && (
+            <p>{sortedApartments.length} properties found</p>
+          )}
         </header>
 
-        <div className="filters-section">
-          <div className="filter-group">
-            <label htmlFor="location">Location:</label>
-            <select 
-              id="location"
-              value={locationFilter} 
-              onChange={(e) => setLocationFilter(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Locations</option>
-              <option value="maadi">Maadi</option>
-              <option value="mokkattam">Mokkattam</option>
-            </select>
+        {/* Error State */}
+        {error && (
+          <div className="error-state">
+            <div className="error-content">
+              <h3>Failed to Load Apartments</h3>
+              <p>{error}</p>
+              <button className="retry-btn" onClick={handleRetry}>
+                Try Again
+              </button>
+            </div>
           </div>
-          
-          <div className="filter-group">
-            <label htmlFor="sort">Sort by:</label>
-            <select 
-              id="sort"
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value)}
-              className="filter-select"
-            >
-              <option value="newest">Newest Listed</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="area-low">Area: Small to Large</option>
-              <option value="area-high">Area: Large to Small</option>
-            </select>
+        )}
+
+        {/* Loading State */}
+        {isLoading && !error && (
+          <div className="loading-state">
+            <div className="loading-spinner"></div>
+            <p>Loading apartments for sale from database...</p>
           </div>
+        )}
 
-          <div className="filter-group">
-            <label htmlFor="price">Price Range:</label>
-            <select 
-              id="price"
-              value={priceRange} 
-              onChange={(e) => setPriceRange(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Prices</option>
-              <option value="low">Under 5M EGP</option>
-              <option value="medium">5M - 10M EGP</option>
-              <option value="high">Above 10M EGP</option>
-            </select>
+        {/* Filters Section - Only show when not loading and no error */}
+        {!isLoading && !error && (
+          <div className="filters-section">
+            <div className="filter-group">
+              <label htmlFor="location">Location:</label>
+              <select 
+                id="location"
+                value={locationFilter} 
+                onChange={(e) => setLocationFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Locations</option>
+                <option value="maadi">Maadi</option>
+                <option value="mokkattam">Mokkattam</option>
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label htmlFor="sort">Sort by:</label>
+              <select 
+                id="sort"
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="filter-select"
+              >
+                <option value="newest">Newest Listed</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="area-low">Area: Small to Large</option>
+                <option value="area-high">Area: Large to Small</option>
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label htmlFor="price">Price Range:</label>
+              <select 
+                id="price"
+                value={priceRange} 
+                onChange={(e) => setPriceRange(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Prices</option>
+                <option value="low">Under 5M EGP</option>
+                <option value="medium">5M - 10M EGP</option>
+                <option value="high">Above 10M EGP</option>
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label htmlFor="bedrooms">Bedrooms:</label>
+              <select 
+                id="bedrooms"
+                value={bedroomFilter} 
+                onChange={(e) => setBedroomFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All</option>
+                <option value="1">1 Bedroom</option>
+                <option value="2">2 Bedrooms</option>
+                <option value="3+">3+ Bedrooms</option>
+              </select>
+            </div>
           </div>
+        )}
 
-          <div className="filter-group">
-            <label htmlFor="bedrooms">Bedrooms:</label>
-            <select 
-              id="bedrooms"
-              value={bedroomFilter} 
-              onChange={(e) => setBedroomFilter(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All</option>
-              <option value="1">1 Bedroom</option>
-              <option value="2">2 Bedrooms</option>
-              <option value="3+">3+ Bedrooms</option>
-            </select>
+        {/* Apartments Grid - Only show when not loading and no error */}
+        {!isLoading && !error && (
+          <div className="apartments-grid">
+            {sortedApartments.map(apartment => (
+              <ApartmentSaleCard key={apartment.id} apartment={apartment} />
+            ))}
           </div>
-        </div>
+        )}
 
-        <div className="apartments-grid">
-          {sortedApartments.map(apartment => (
-            <ApartmentSaleCard key={apartment.id} apartment={apartment} />
-          ))}
-        </div>
+        {/* No results states */}
+        {!isLoading && !error && sortedApartments.length === 0 && allSaleApartments.length === 0 && (
+          <div className="no-results">
+            <h3>No apartments available</h3>
+            <p>There are currently no apartments listed for sale. Please check back later.</p>
+          </div>
+        )}
 
-        {sortedApartments.length === 0 && (
+        {!isLoading && !error && sortedApartments.length === 0 && allSaleApartments.length > 0 && (
           <div className="no-results">
             <h3>No apartments found</h3>
             <p>Try adjusting your filters to see more options.</p>

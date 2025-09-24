@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth, useProperty } from '../../../hooks/useRedux';
+import { useAdminAuth } from '../../../hooks/useAdminAuth';
+import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import { useInfiniteScroll } from '../../../hooks/usePagination';
 import ApartmentCard from '../../../components/admin/ApartmentCard';
 import SaleApartmentCard from '../../../components/admin/SaleApartmentCard';
 import AddStudioModal from '../../../components/admin/AddStudioModal';
 import AddApartmentModal from '../../../components/admin/AddApartmentModal';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
+import { myContentApi, handleApiError } from '../../../services/api';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { currentAdmin, logoutAdmin } = useAdminAuth();
-  const { 
-    getApartmentsByCreator, 
-    addApartment, 
-    addStudio,
-    getSaleApartmentsByCreator, 
-    addSaleApartment,
-    fetchRentApartments,
-    fetchSaleApartments
-  } = useProperty();
+  const propertyManager = usePropertyManagement();
+  const [adminApartments, setAdminApartments] = useState([]);
+  const [adminSaleApartments, setAdminSaleApartments] = useState([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dataError, setDataError] = useState(null);
   const [isAddStudioModalOpen, setIsAddStudioModalOpen] = useState(false);
   const [isAddApartmentModalOpen, setIsAddApartmentModalOpen] = useState(false);
   const [isAddSaleApartmentModalOpen, setIsAddSaleApartmentModalOpen] = useState(false);
@@ -29,31 +27,102 @@ const AdminDashboard = () => {
   const [isProcessingStudio, setIsProcessingStudio] = useState(false);
   const [isProcessingApartment, setIsProcessingApartment] = useState(false);
   
-  // Fetch data from backend API on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await fetchRentApartments();
-        await fetchSaleApartments();
-      } catch (error) {
-        console.error('Failed to load apartments:', error);
-      }
-    };
-    loadData();
-  }, [fetchRentApartments, fetchSaleApartments]);
-  
   // Get admin role from current admin data
   const adminRole = currentAdmin?.role || 'studio_rental';
-  
-  // Regular admins only see their own apartments
-  const adminApartments = currentAdmin ? 
-    getApartmentsByCreator(currentAdmin.email || currentAdmin.accountOrMobile) : 
-    [];
-    
-  // Get sale apartments for apartment sales managers
-  const adminSaleApartments = currentAdmin && adminRole === 'apartment_sales' ? 
-    getSaleApartmentsByCreator(currentAdmin.email || currentAdmin.accountOrMobile) : 
-    [];
+
+  // Transform API data for frontend compatibility
+  const transformRentApartmentData = (apiApartment) => ({
+    id: apiApartment.id,
+    title: apiApartment.name,
+    name: apiApartment.name,
+    location: apiApartment.location,
+    address: apiApartment.address,
+    price: parseFloat(apiApartment.price) || 0,
+    area: parseFloat(apiApartment.area) || 0,
+    bedrooms: apiApartment.bedrooms,
+    bathrooms: apiApartment.bathrooms,
+    description: apiApartment.description,
+    images: apiApartment.photos_url || [],
+    contactNumber: apiApartment.contact_number,
+    floor: apiApartment.floor,
+    totalStudios: apiApartment.total_parts || 0,
+    createdBy: apiApartment.listed_by_admin_id,
+    createdAt: apiApartment.created_at,
+    updatedAt: apiApartment.updated_at,
+    // Add studios if they exist in the response
+    studios: (apiApartment.apartment_parts || []).map(part => ({
+      id: part.id,
+      apartmentId: part.apartment_id,
+      studioNumber: part.studio_number,
+      rentValue: parseFloat(part.rent_value) || 0,
+      price: parseFloat(part.rent_value) || 0,
+      status: part.status,
+      isAvailable: part.status === 'available',
+      floor: part.floor,
+      createdBy: part.created_by_admin_id,
+      createdAt: part.created_at
+    }))
+  });
+
+  const transformSaleApartmentData = (apiApartment) => ({
+    id: apiApartment.id,
+    title: apiApartment.name,
+    name: apiApartment.name,
+    location: apiApartment.location,
+    address: apiApartment.address,
+    price: parseFloat(apiApartment.price) || 0,
+    area: parseFloat(apiApartment.area) || 0,
+    bedrooms: apiApartment.bedrooms,
+    bathrooms: apiApartment.bathrooms,
+    description: apiApartment.description,
+    images: apiApartment.photos_url || [],
+    contactNumber: apiApartment.contact_number,
+    floor: apiApartment.floor,
+    unitNumber: apiApartment.number,
+    createdBy: apiApartment.listed_by_admin_id,
+    createdAt: apiApartment.created_at,
+    updatedAt: apiApartment.updated_at,
+    type: 'sale',
+    isAvailable: true
+  });
+
+  // Fetch admin's own content from API
+  const fetchAdminContent = async () => {
+    try {
+      setIsLoadingData(true);
+      setDataError(null);
+
+      console.log('Fetching admin content from API...');
+      const response = await myContentApi.getMyContent();
+      console.log('Admin content API response:', response);
+
+      // Transform the data
+      const rentApartments = (response.rent_apartments || []).map(transformRentApartmentData);
+      const saleApartments = (response.sale_apartments || []).map(transformSaleApartmentData);
+
+      console.log('Transformed rent apartments:', rentApartments);
+      console.log('Transformed sale apartments:', saleApartments);
+
+      setAdminApartments(rentApartments);
+      setAdminSaleApartments(saleApartments);
+
+      return { success: true, rentApartments, saleApartments };
+    } catch (error) {
+      console.error('Failed to fetch admin content:', error);
+      const errorMessage = handleApiError(error, 'Failed to load your properties');
+      setDataError(errorMessage);
+      return { success: false, message: errorMessage };
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  // Load admin's content on component mount
+  useEffect(() => {
+    if (currentAdmin) {
+      fetchAdminContent();
+    }
+  }, [currentAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogout = async () => {
     try {
@@ -78,16 +147,22 @@ const AdminDashboard = () => {
   const handleStudioAdded = async (studioData) => {
     setIsProcessingStudio(true);
     try {
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      console.log('Adding studio with data:', studioData);
       
-      addStudio(studioData.apartmentId, {
-        ...studioData,
-        createdBy: currentAdmin?.email || currentAdmin?.accountOrMobile,
-        createdAt: new Date().toISOString()
-      });
-      setIsAddStudioModalOpen(false);
-      setSelectedApartmentId(null);
+      // Use the real API to create studio
+      const result = await propertyManager.createStudio(studioData.apartmentId, studioData);
+      
+      if (result.success) {
+        console.log('Studio added successfully:', result.studio);
+        setIsAddStudioModalOpen(false);
+        setSelectedApartmentId(null);
+        
+        // Refresh admin's content to show the new studio
+        await fetchAdminContent();
+      } else {
+        console.error('Failed to add studio:', result.message);
+        // Could show error toast here
+      }
     } catch (error) {
       console.error('Error adding studio:', error);
     } finally {
@@ -98,26 +173,27 @@ const AdminDashboard = () => {
   const handleApartmentAdded = async (apartmentData) => {
     setIsProcessingApartment(true);
     try {
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Adding apartment with data:', apartmentData);
       
+      let result;
       if (adminRole === 'studio_rental') {
-        // Add rental apartment with studios
-        addApartment({
-          ...apartmentData,
-          createdBy: currentAdmin?.email || currentAdmin?.accountOrMobile,
-          createdAt: new Date().toISOString()
-        });
+        // Add rental apartment
+        result = await propertyManager.createRentApartment(apartmentData);
         setIsAddApartmentModalOpen(false);
-      } else if (adminRole === 'apartment_sales') {
+      } else if (adminRole === 'apartment_sale') {
         // Add sale apartment
-        addSaleApartment({
-          ...apartmentData,
-          createdBy: currentAdmin?.email || currentAdmin?.accountOrMobile,
-          createdAt: new Date().toISOString(),
-          type: 'sale'
-        });
+        result = await propertyManager.createSaleApartment(apartmentData);
         setIsAddSaleApartmentModalOpen(false);
+      }
+
+      if (result?.success) {
+        console.log('Apartment added successfully:', result.apartment);
+        
+        // Refresh admin's content to show the new apartment
+        await fetchAdminContent();
+      } else {
+        console.error('Failed to add apartment:', result?.message);
+        // Could show error toast here
       }
     } catch (error) {
       console.error('Error adding apartment:', error);
@@ -130,10 +206,15 @@ const AdminDashboard = () => {
     setIsAddSaleApartmentModalOpen(true);
   };
 
+  const handleRetryLoadData = () => {
+    fetchAdminContent();
+  };
+
   if (!currentAdmin) {
     return (
       <div className="admin-dashboard-loading">
-        <p>Loading...</p>
+        <LoadingSpinner size="large" />
+        <p>Loading admin dashboard...</p>
       </div>
     );
   }
@@ -238,15 +319,41 @@ const AdminDashboard = () => {
       {/* Properties Section */}
       <div className="admin-properties-section">
         <div className="properties-container">
-          {adminRole === 'studio_rental' ? (
-            <AdminRentalPropertiesGrid 
-              apartments={adminApartments}
-              onAddStudio={handleAddStudio}
-            />
-          ) : (
-            <AdminSalePropertiesGrid 
-              apartments={adminSaleApartments}
-            />
+          {/* Loading State */}
+          {isLoadingData && !dataError && (
+            <div className="loading-state">
+              <LoadingSpinner size="large" />
+              <p>Loading your properties from database...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {dataError && (
+            <div className="error-state">
+              <div className="error-content">
+                <h3>Failed to Load Properties</h3>
+                <p>{dataError}</p>
+                <button className="retry-btn" onClick={handleRetryLoadData}>
+                  Try Again
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Properties Grid - Only show when not loading and no error */}
+          {!isLoadingData && !dataError && (
+            <>
+              {adminRole === 'studio_rental' ? (
+                <AdminRentalPropertiesGrid 
+                  apartments={adminApartments}
+                  onAddStudio={handleAddStudio}
+                />
+              ) : (
+                <AdminSalePropertiesGrid 
+                  apartments={adminSaleApartments}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

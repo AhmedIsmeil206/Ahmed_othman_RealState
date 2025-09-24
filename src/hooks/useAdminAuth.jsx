@@ -2,7 +2,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { authApi, adminApi, handleApiError } from '../services/api';
 import {
   setLoading,
-  setError,
   clearError,
   loginSuccess,
   loginFailure,

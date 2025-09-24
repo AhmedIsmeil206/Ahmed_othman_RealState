@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import ImageGallery from '../../../components/customer/ImageGallery/ImageGallery';
 import WhatsAppButton from '../../../components/customer/WhatsAppButton/WhatsAppButton';
 import MapViewer from '../../../components/common/MapViewer';
-import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import { useProperty } from '../../../hooks/useRedux';
 import './ApartmentSaleDetailsPage.css';
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMasterAuth, useAdminAuth, useProperty } from '../../../hooks/useRedux';
+import { useAdminAuth } from '../../../hooks/useAdminAuth';
+import { rentApartmentsApi, saleApartmentsApi, adminApi, apartmentPartsApi } from '../../../services/api';
 import ApartmentCard from '../../../components/admin/ApartmentCard';
 import SaleApartmentCard from '../../../components/admin/SaleApartmentCard';
 import AddStudioModal from '../../../components/admin/AddStudioModal';
@@ -11,14 +12,17 @@ import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 
 const MasterAdminDashboard = () => {
   const navigate = useNavigate();
-  const { currentUser, logout, updateProfile } = useMasterAuth();
-  const { createAdminAccount, getAllAdminAccounts, deleteAdminAccount } = useAdminAuth();
-  const { apartments, addApartment, addStudio, verifyDataConsistency, clearAllData, getApartmentsByCreator,
-          saleApartments, addSaleApartment, getSaleApartmentsByCreator, fetchRentApartments, fetchSaleApartments } = useProperty();
+  const { currentAdmin, logout, updateProfile, createAdminAccount, deleteAdminAccount, getAllAdminAccounts } = useAdminAuth();
   const [isAddStudioModalOpen, setIsAddStudioModalOpen] = useState(false);
   const [isAddApartmentModalOpen, setIsAddApartmentModalOpen] = useState(false);
   const [isAddSaleApartmentModalOpen, setIsAddSaleApartmentModalOpen] = useState(false);
   const [selectedApartmentId, setSelectedApartmentId] = useState(null);
+  
+  // Data states
+  const [apartments, setApartments] = useState([]);
+  const [saleApartments, setSaleApartments] = useState([]);
+  const [allAdmins, setAllAdmins] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   // Admin management states
   const [selectedAdminFilter, setSelectedAdminFilter] = useState('all');
@@ -67,40 +71,45 @@ const MasterAdminDashboard = () => {
   // Password visibility states for Manage Admins
   const [showAdminPassword, setShowAdminPassword] = useState(false);
 
-  // Fetch existing admins on component mount
+  // Fetch all data from API
   useEffect(() => {
-    const fetchAdmins = async () => {
+    const fetchAllData = async () => {
+      setLoading(true);
       try {
-        const admins = await getAllAdminAccounts(); // Now async API call
-        setExistingAdmins(admins || []);
-      } catch (error) {
-        console.error('Error fetching admins:', error);
-      }
-    };
-    fetchAdmins();
-  }, [getAllAdminAccounts]);
+        // Fetch rental apartments
+        const rentApartmentsResponse = await rentApartmentsApi.getAll();
+        if (rentApartmentsResponse.success) {
+          setApartments(rentApartmentsResponse.data);
+        }
 
-  // Fetch property data from backend API on component mount
-  useEffect(() => {
-    const loadPropertyData = async () => {
-      try {
-        await fetchRentApartments();
-        await fetchSaleApartments();
+        // Fetch sale apartments
+        const saleApartmentsResponse = await saleApartmentsApi.getAll();
+        if (saleApartmentsResponse.success) {
+          setSaleApartments(saleApartmentsResponse.data);
+        }
+
+        // Fetch all admins
+        const adminsResponse = await adminApi.getAll();
+        if (adminsResponse.success) {
+          setAllAdmins(adminsResponse.data);
+          setExistingAdmins(adminsResponse.data);
+        }
       } catch (error) {
-        console.error('Failed to load property data:', error);
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    loadPropertyData();
-  }, [fetchRentApartments, fetchSaleApartments]);
+
+    fetchAllData();
+  }, []);
 
   // Get filtered properties based on selected admin and property type
   const getFilteredProperties = () => {
-    let properties;
+    let properties = propertyTypeFilter === 'rental' ? apartments : saleApartments;
     
-    if (propertyTypeFilter === 'rental') {
-      properties = selectedAdminFilter === 'all' ? apartments : getApartmentsByCreator(selectedAdminFilter);
-    } else {
-      properties = selectedAdminFilter === 'all' ? saleApartments : getSaleApartmentsByCreator(selectedAdminFilter);
+    if (selectedAdminFilter !== 'all') {
+      properties = properties.filter(property => property.created_by === selectedAdminFilter);
     }
     
     return properties;
@@ -116,7 +125,7 @@ const MasterAdminDashboard = () => {
       setEditType(parsed.editType || 'email');
       setProfileForm(prev => ({
         ...prev,
-        email: parsed.email || currentUser?.email || '',
+        email: parsed.email || currentAdmin?.email || '',
         // Don't restore passwords for security
       }));
     }
@@ -131,7 +140,7 @@ const MasterAdminDashboard = () => {
         // Don't restore password for security
       }));
     }
-  }, [currentUser]);
+  }, [currentAdmin]);
 
   // Save form data to localStorage whenever forms change
   useEffect(() => {
@@ -171,7 +180,7 @@ const MasterAdminDashboard = () => {
     console.log('Opening Edit Profile Modal');
     setEditType('email'); // Default to email editing
     setProfileForm({
-      email: currentUser?.email || '',
+      email: currentAdmin?.email || '',
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
@@ -249,21 +258,21 @@ const MasterAdminDashboard = () => {
 
     try {
       // Check if user is authenticated
-      if (!currentUser) {
+      if (!currentAdmin) {
         setProfileMessage({ type: 'error', text: 'You are not authenticated. Please login again.' });
         setIsProfileSubmitting(false);
         return;
       }
 
       // Prepare update parameters based on edit type
-      let emailToUpdate = currentUser.email; // Keep current email by default
+      let emailToUpdate = currentAdmin.email; // Keep current email by default
       let passwordToUpdate = null; // Don't change password by default
       
       if (editType === 'email') {
         emailToUpdate = profileForm.email;
         passwordToUpdate = null; // Don't change password when updating email
       } else if (editType === 'password') {
-        emailToUpdate = currentUser.email; // Keep current email
+        emailToUpdate = currentAdmin.email; // Keep current email
         passwordToUpdate = profileForm.newPassword;
       }
 
@@ -403,8 +412,8 @@ const MasterAdminDashboard = () => {
     setAdminMessage({ type: '', text: '' });
 
     try {
-      // Use the AdminAuth context to create admin account
-      const result = await createAdminAccount({
+      // Create admin account via API
+      const response = await createAdminAccount({
         name: adminForm.name,
         email: adminForm.email,
         password: adminForm.password,
@@ -412,7 +421,7 @@ const MasterAdminDashboard = () => {
         role: adminForm.role
       });
 
-      if (result.success) {
+      if (response.success) {
         // Show success toast
         showToast('Admin created successfully!', 'success');
         
@@ -427,6 +436,13 @@ const MasterAdminDashboard = () => {
         setAdminErrors({});
         setAdminMessage({ type: '', text: '' });
         
+        // Refresh admins list
+        const adminsResponse = await getAllAdminAccounts();
+        if (adminsResponse) {
+          setAllAdmins(adminsResponse);
+          setExistingAdmins(adminsResponse);
+        }
+        
         // Clear saved form data
         localStorage.removeItem('masterAdminAdminForm');
         
@@ -437,7 +453,7 @@ const MasterAdminDashboard = () => {
       } else {
         setAdminMessage({ 
           type: 'error', 
-          text: result.message || 'Failed to create admin account. Please try again.' 
+          text: response.error || 'Failed to create admin account. Please try again.' 
         });
       }
 
@@ -460,24 +476,27 @@ const MasterAdminDashboard = () => {
 
     try {
       // Find the admin by email to get the ID
-      const adminToDelete = existingAdmins.find(admin => admin.account === selectedAdminToDelete);
+      const adminToDelete = existingAdmins.find(admin => admin.email === selectedAdminToDelete);
       if (!adminToDelete) {
         setDeleteAdminMessage({ type: 'error', text: 'Admin not found.' });
         setIsDeletingAdmin(false);
         return;
       }
 
-      const result = deleteAdminAccount(adminToDelete.id);
+      const response = await deleteAdminAccount(adminToDelete.id);
       
-      if (result) {
+      if (response && response.success) {
         setDeleteAdminMessage({ 
           type: 'success', 
           text: 'Admin account deleted successfully!' 
         });
         
         // Refresh the admin list
-        const updatedAdmins = getAllAdminAccounts();
-        setExistingAdmins(updatedAdmins || []);
+        const adminsResponse = await getAllAdminAccounts();
+        if (adminsResponse) {
+          setAllAdmins(adminsResponse);
+          setExistingAdmins(adminsResponse);
+        }
         
         // Reset selection
         setSelectedAdminToDelete('');
@@ -493,7 +512,7 @@ const MasterAdminDashboard = () => {
       } else {
         setDeleteAdminMessage({ 
           type: 'error', 
-          text: 'Failed to delete admin account.' 
+          text: (response && response.error) || 'Failed to delete admin account.' 
         });
       }
     } catch (error) {
@@ -509,36 +528,79 @@ const MasterAdminDashboard = () => {
     setIsAddStudioModalOpen(true);
   };
 
-  const handleStudioAdded = (newStudio) => {
-    addStudio(selectedApartmentId, newStudio);
-    setIsAddStudioModalOpen(false);
-    setSelectedApartmentId(null);
-  };
-
-  const handleApartmentAdded = (newApartment) => {
-    if (propertyTypeFilter === 'rental') {
-      addApartment(newApartment);
-      setIsAddApartmentModalOpen(false);
-    } else {
-      addSaleApartment(newApartment);
-      setIsAddSaleApartmentModalOpen(false);
+  const handleStudioAdded = async (newStudio) => {
+    try {
+      const response = await apartmentPartsApi.create(newStudio);
+      if (response.success) {
+        // Refresh apartments data
+        const rentApartmentsResponse = await rentApartmentsApi.getAll();
+        if (rentApartmentsResponse.success) {
+          setApartments(rentApartmentsResponse.data);
+        }
+        setIsAddStudioModalOpen(false);
+        setSelectedApartmentId(null);
+      }
+    } catch (error) {
+      console.error('Error adding studio:', error);
     }
   };
 
-  const handleSaleApartmentAdded = (newSaleApartment) => {
-    addSaleApartment(newSaleApartment);
-    setIsAddSaleApartmentModalOpen(false);
+  const handleApartmentAdded = async (newApartment) => {
+    try {
+      if (propertyTypeFilter === 'rental') {
+        const response = await rentApartmentsApi.create(newApartment);
+        if (response.success) {
+          setApartments(prev => [...prev, response.data]);
+          setIsAddApartmentModalOpen(false);
+        }
+      } else {
+        const response = await saleApartmentsApi.create(newApartment);
+        if (response.success) {
+          setSaleApartments(prev => [...prev, response.data]);
+          setIsAddSaleApartmentModalOpen(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding apartment:', error);
+    }
   };
 
-  const totalStudios = apartments.reduce((total, apartment) => total + apartment.totalStudios, 0);
-  const availableStudios = apartments.reduce((total, apartment) => 
-    total + apartment.studios.filter(studio => studio.isAvailable).length, 0
-  );
+  const handleSaleApartmentAdded = async (newSaleApartment) => {
+    try {
+      const response = await saleApartmentsApi.create(newSaleApartment);
+      if (response.success) {
+        setSaleApartments(prev => [...prev, response.data]);
+        setIsAddSaleApartmentModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error adding sale apartment:', error);
+    }
+  };
+
+  // Calculate statistics
+  const totalStudios = apartments.reduce((total, apartment) => {
+    return total + (apartment.studios?.length || 0);
+  }, 0);
+  
+  const availableStudios = apartments.reduce((total, apartment) => {
+    return total + (apartment.studios?.filter(studio => studio.is_available)?.length || 0);
+  }, 0);
+
+  if (loading) {
+    return (
+      <div className="master-admin-dashboard loading">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   console.log('Render - Modal States:', {
     isEditProfileModalOpen,
     isManageAdminsModalOpen,
-    currentUser
+    currentAdmin
   });
 
   return (
@@ -637,8 +699,8 @@ const MasterAdminDashboard = () => {
                 >
                   <option value="all">All Admins</option>
                   {existingAdmins.map(admin => (
-                    <option key={admin.id} value={admin.account}>
-                      {admin.username} ({admin.account}) - {admin.role === 'studio_rental' ? 'Studio Rental' : 'Apartment Sales'}
+                    <option key={admin.id} value={admin.email}>
+                      {admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : 'Apartment Sales'}
                     </option>
                   ))}
                 </select>
@@ -1023,8 +1085,8 @@ const MasterAdminDashboard = () => {
                   >
                     <option value="">-- Select Admin --</option>
                     {existingAdmins.map(admin => (
-                      <option key={admin.id} value={admin.account}>
-                        {admin.username} ({admin.account}) - {admin.role === 'studio_rental' ? 'Studio Rental' : 'Apartment Sales'}
+                      <option key={admin.id} value={admin.email}>
+                        {admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : 'Apartment Sales'}
                       </option>
                     ))}
                   </select>

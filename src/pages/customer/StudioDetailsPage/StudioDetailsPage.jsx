@@ -6,14 +6,13 @@ import WhatsAppButton from '../../../components/customer/WhatsAppButton/WhatsApp
 import BookingModal from '../../../components/admin/BookingModal';
 import EditStudioModal from '../../../components/admin/EditStudioModal';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
-import { useProperty } from '../../../hooks/useRedux';
+import { apartmentPartsApi, rentApartmentsApi, rentalContractsApi } from '../../../services/api';
 import './StudioDetailsPage.css';
 
 const StudioDetailsPage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { getStudioById, updateStudio, getApartmentById } = useProperty();
   const [navigationSource, setNavigationSource] = useState('customer-studios');
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -21,9 +20,52 @@ const StudioDetailsPage = () => {
   const [isBookingLoading, setIsBookingLoading] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
   const [isDeletingBooking, setIsDeletingBooking] = useState(false);
-  
-  const studio = getStudioById(id);
-  const parentApartment = studio ? getApartmentById(studio.apartmentId) : null;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [studio, setStudio] = useState(null);
+  const [parentApartment, setParentApartment] = useState(null);
+
+  // Fetch studio details from API
+  useEffect(() => {
+    const fetchStudioDetails = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Get studio part details
+        const studioResponse = await apartmentPartsApi.getById(id);
+        
+        if (studioResponse.success && studioResponse.data) {
+          const studioData = studioResponse.data;
+          setStudio(studioData);
+          
+          // Also try to get parent apartment info if apartmentId exists
+          if (studioData.apartment_id) {
+            try {
+              const apartmentResponse = await rentApartmentsApi.getById(studioData.apartment_id);
+              if (apartmentResponse.success && apartmentResponse.data) {
+                setParentApartment(apartmentResponse.data);
+              }
+            } catch (apartmentError) {
+              // Parent apartment fetch failed - not critical
+              console.warn('Failed to fetch parent apartment:', apartmentError);
+            }
+          }
+        } else {
+          setError('Studio not found');
+        }
+      } catch (err) {
+        console.error('Error fetching studio details:', err);
+        setError('Failed to load studio details');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (id) {
+      fetchStudioDetails();
+    }
+  }, [id]);
 
   useEffect(() => {
     // Get the navigation source from URL parameters
@@ -36,75 +78,66 @@ const StudioDetailsPage = () => {
       setNavigationSource('customer-studios');
     }
 
-    // Check for existing booking for this studio
-    const existingBooking = localStorage.getItem(`studio_booking_${id}`);
-    if (existingBooking) {
-      const bookingData = JSON.parse(existingBooking);
-      setStudioBooking(bookingData);
-    }
+    // Check for existing booking for this studio using rental contracts API
+    const fetchExistingBooking = async () => {
+      try {
+        if (id) {
+          const contractsResponse = await rentalContractsApi.getAll();
+          if (contractsResponse.success && contractsResponse.data) {
+            const existingContract = contractsResponse.data.find(contract => 
+              contract.apartment_part_id === parseInt(id) && contract.status === 'active'
+            );
+            
+            if (existingContract) {
+              setStudioBooking(existingContract);
+            }
+          }
+        }
+      } catch (error) {
+        // Not critical - just log the error
+        console.warn('Failed to fetch existing booking:', error);
+      }
+    };
+    
+    fetchExistingBooking();
   }, [id, searchParams]);
 
-  // Separate effect to sync existing booking data with studio rental info
-  useEffect(() => {
-    if (studio && studioBooking && (!studio.rental || !studio.rental.isRented)) {
-      const updatedStudio = {
-        ...studio,
-        isAvailable: false, // Mark as rented
-        rental: {
-          isRented: true,
-          tenantName: studioBooking.customerName,
-          tenantContact: studioBooking.customerPhone,
-          startDate: studioBooking.startDate,
-          endDate: studioBooking.endDate,
-          bookingDate: studioBooking.bookingDate,
-          customerId: studioBooking.customerId,
-          paidDeposit: studioBooking.paidDeposit,
-          warranty: studioBooking.warranty,
-          rentPeriod: studioBooking.rentPeriod,
-          platformSource: studioBooking.platformSource,
-          needsRenewal: false
-        }
-      };
-      
-      // Update the studio in the PropertyContext
-      updateStudio(studio.apartmentId, updatedStudio);
-    }
-  }, [studio, studioBooking, updateStudio]);
-
+  // Remove the sync effect as we're now managing data through API
   const handleBookingSubmit = async (bookingData) => {
     setIsBookingLoading(true);
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Save booking to localStorage
-      localStorage.setItem(`studio_booking_${id}`, JSON.stringify(bookingData));
-      setStudioBooking(bookingData);
-      
-      // Update studio with rental information for alert system
-      const updatedStudio = {
-        ...studio,
-        isAvailable: false, // Mark as rented
-        rental: {
-          isRented: true,
-          tenantName: bookingData.customerName,
-          tenantContact: bookingData.customerPhone,
-          startDate: bookingData.startDate,
-          endDate: bookingData.endDate,
-          bookingDate: bookingData.bookingDate,
-          customerId: bookingData.customerId,
-          paidDeposit: bookingData.paidDeposit,
-          warranty: bookingData.warranty,
-          rentPeriod: bookingData.rentPeriod,
-          platformSource: bookingData.platformSource,
-          needsRenewal: false
-        }
+      // Create rental contract via API
+      const contractData = {
+        apartment_part_id: parseInt(id),
+        tenant_name: bookingData.customerName,
+        tenant_phone: bookingData.customerPhone,
+        tenant_email: bookingData.customerEmail || '',
+        tenant_national_id: bookingData.customerId,
+        start_date: bookingData.startDate,
+        end_date: bookingData.endDate,
+        monthly_rent: parseFloat(bookingData.monthlyRent) || 0,
+        deposit: parseFloat(bookingData.paidDeposit) || 0,
+        warranty: parseFloat(bookingData.warranty) || 0,
+        platform_source: bookingData.platformSource || 'direct',
+        rent_period: bookingData.rentPeriod || 'monthly',
+        status: 'active',
+        notes: bookingData.notes || ''
       };
       
-      // Update the studio in the PropertyContext
-      updateStudio(studio.apartmentId, updatedStudio);
+      const response = await rentalContractsApi.create(contractData);
       
-      setIsBookingModalOpen(false);
+      if (response.success) {
+        setStudioBooking(response.data);
+        setIsBookingModalOpen(false);
+        
+        // Refresh studio data to reflect booking status
+        const updatedStudioResponse = await apartmentPartsApi.getById(id);
+        if (updatedStudioResponse.success) {
+          setStudio(updatedStudioResponse.data);
+        }
+      } else {
+        console.error('Failed to create rental contract:', response.error);
+      }
     } catch (error) {
       console.error('Error submitting booking:', error);
     } finally {
@@ -115,13 +148,14 @@ const StudioDetailsPage = () => {
   const handleStudioUpdate = async (updatedStudioData) => {
     setIsEditLoading(true);
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await apartmentPartsApi.update(id, updatedStudioData);
       
-      // Update the studio in the PropertyContext
-      updateStudio(studio.apartmentId, updatedStudioData);
-      setIsEditModalOpen(false);
-      // The studio data will automatically update through context
+      if (response.success) {
+        setStudio(response.data);
+        setIsEditModalOpen(false);
+      } else {
+        console.error('Failed to update studio:', response.error);
+      }
     } catch (error) {
       console.error('Error updating studio:', error);
     } finally {
@@ -133,12 +167,21 @@ const StudioDetailsPage = () => {
     if (window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) {
       setIsDeletingBooking(true);
       try {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Remove booking from localStorage
-        localStorage.removeItem(`studio_booking_${id}`);
-        setStudioBooking(null);
+        if (studioBooking && studioBooking.id) {
+          const response = await rentalContractsApi.delete(studioBooking.id);
+          
+          if (response.success) {
+            setStudioBooking(null);
+            
+            // Refresh studio data to reflect booking status change
+            const updatedStudioResponse = await apartmentPartsApi.getById(id);
+            if (updatedStudioResponse.success) {
+              setStudio(updatedStudioResponse.data);
+            }
+          } else {
+            console.error('Failed to delete booking:', response.error);
+          }
+        }
       } catch (error) {
         console.error('Error deleting booking:', error);
       } finally {
@@ -183,20 +226,47 @@ const StudioDetailsPage = () => {
   };
 
   const openGoogleMaps = () => {
-    if (parentApartment?.coordinates && parentApartment.coordinates.lat && parentApartment.coordinates.lng) {
-      const mapsUrl = `https://www.google.com/maps?q=${parentApartment.coordinates.lat},${parentApartment.coordinates.lng}`;
+    if (parentApartment?.location_coordinates && parentApartment.location_coordinates.lat && parentApartment.location_coordinates.lng) {
+      const mapsUrl = `https://www.google.com/maps?q=${parentApartment.location_coordinates.lat},${parentApartment.location_coordinates.lng}`;
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
-    } else if (studio?.coordinates && studio.coordinates.lat && studio.coordinates.lng) {
-      const mapsUrl = `https://www.google.com/maps?q=${studio.coordinates.lat},${studio.coordinates.lng}`;
+    } else if (studio?.location_coordinates && studio.location_coordinates.lat && studio.location_coordinates.lng) {
+      const mapsUrl = `https://www.google.com/maps?q=${studio.location_coordinates.lat},${studio.location_coordinates.lng}`;
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
-    } else if (parentApartment?.mapUrl || studio?.locationUrl) {
-      window.open(parentApartment?.mapUrl || studio?.locationUrl, '_blank', 'noopener,noreferrer');
     } else if (parentApartment?.location || studio?.location) {
       const searchQuery = encodeURIComponent(parentApartment?.location || studio?.location);
       const mapsUrl = `https://www.google.com/maps/search/${searchQuery}`;
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="studio-details-page">
+        <div className="container">
+          <div className="loading-container">
+            <LoadingSpinner size="large" />
+            <p>Loading studio details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="studio-details-page">
+        <div className="container">
+          <div className="error-container">
+            <h1>Error Loading Studio</h1>
+            <p className="error-message">{error}</p>
+            <BackButton onClick={() => navigate(-1)} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!studio) {
     return (
@@ -210,7 +280,7 @@ const StudioDetailsPage = () => {
   }
 
   // If studio is not available, redirect based on source
-  if (!studio.isAvailable && navigationSource === 'customer') {
+  if (!studio.is_available && navigationSource === 'customer') {
     return <Navigate to="/studios" replace />;
   }
 
@@ -231,20 +301,20 @@ const StudioDetailsPage = () => {
 
       <div className="studio-container">
         <div className="studio-gallery-section">
-          <ImageGallery images={studio.images} title={studio.title} />
+          <ImageGallery images={studio.images || []} title={studio.title || studio.name} />
         </div>
 
         <div className="studio-content">
           <div className="studio-main-info">
             <div className="studio-header">
-              <h1 className="studio-title">{studio.title}</h1>
-              <div className="studio-price">{studio.price}</div>
+              <h1 className="studio-title">{studio.title || studio.name}</h1>
+              <div className="studio-price">{studio.price || `EGP ${studio.monthly_rent?.toLocaleString()}/month`}</div>
             </div>
 
-            <div className="studio-posted">Posted {studio.postedDate}</div>
+            <div className="studio-posted">Posted {studio.created_at ? new Date(studio.created_at).toLocaleDateString() : 'Recently'}</div>
 
             {/* Google Maps Link */}
-            {(parentApartment?.mapUrl || studio?.locationUrl || parentApartment?.coordinates || studio?.coordinates || parentApartment?.location || studio?.location) && (
+            {(parentApartment?.location || studio?.location || parentApartment?.location_coordinates || studio?.location_coordinates) && (
               <div className="studio-location-section">
                 <h3>📍 Location</h3>
                 <button 
@@ -256,23 +326,23 @@ const StudioDetailsPage = () => {
                 </button>
                 {parentApartment && (
                   <small className="location-note">
-                    Location shared from {parentApartment.name}
+                    Location shared from {parentApartment.name || parentApartment.title}
                   </small>
                 )}
               </div>
             )}
 
             {/* Master Admin - Show Creator Info - ONLY for Master Admin */}
-            {navigationSource === 'master-admin-dashboard' && studio.createdBy && (
+            {navigationSource === 'master-admin-dashboard' && studio.created_by && (
               <div className="creator-info-section">
                 <div className="creator-info">
                   <span className="creator-label">👤 Created by Admin:</span>
-                  <span className="creator-value">{studio.createdBy}</span>
+                  <span className="creator-value">{studio.created_by}</span>
                 </div>
                 <div className="creator-date">
                   <span className="creator-label">📅 Created on:</span>
                   <span className="creator-value">
-                    {studio.createdAt ? new Date(studio.createdAt).toLocaleDateString() : 'N/A'}
+                    {studio.created_at ? new Date(studio.created_at).toLocaleDateString() : 'N/A'}
                   </span>
                 </div>
               </div>
@@ -332,42 +402,42 @@ const StudioDetailsPage = () => {
                   <div className="highlight-icon">🏠</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Type</div>
-                    <div className="highlight-value">{studio.highlights.type}</div>
+                    <div className="highlight-value">{studio.type || 'Studio'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
                   <div className="highlight-icon">🔑</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Ownership</div>
-                    <div className="highlight-value">{studio.highlights.ownership}</div>
+                    <div className="highlight-value">{studio.ownership_type || 'Rental'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
                   <div className="highlight-icon">📏</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Area (m²)</div>
-                    <div className="highlight-value">{studio.highlights.area}</div>
+                    <div className="highlight-value">{studio.area || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
                   <div className="highlight-icon">🛏️</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bedrooms</div>
-                    <div className="highlight-value">{studio.highlights.bedrooms}</div>
+                    <div className="highlight-value">{studio.bedrooms || studio.number_of_bedrooms || '1'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
                   <div className="highlight-icon">🚿</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bathrooms</div>
-                    <div className="highlight-value">{studio.highlights.bathrooms}</div>
+                    <div className="highlight-value">{studio.bathrooms || studio.number_of_bathrooms || '1'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
                   <div className="highlight-icon">🪑</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Furnished</div>
-                    <div className="highlight-value">{studio.highlights.furnished}</div>
+                    <div className="highlight-value">{studio.is_furnished ? 'Yes' : 'No'}</div>
                   </div>
                 </div>
               </div>
@@ -378,26 +448,26 @@ const StudioDetailsPage = () => {
               <div className="details-table">
                 <div className="detail-row">
                   <span className="detail-label">Payment Option</span>
-                  <span className="detail-value">{studio.details.paymentOption}</span>
+                  <span className="detail-value">{studio.payment_options || 'Monthly'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Completion Status</span>
-                  <span className="detail-value">{studio.details.completionStatus}</span>
+                  <span className="detail-value">{studio.completion_status || 'Ready'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Furnished</span>
-                  <span className="detail-value">{studio.details.furnished}</span>
+                  <span className="detail-value">{studio.is_furnished ? 'Yes' : 'No'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Parking</span>
-                  <span className="detail-value">{studio.details.parking}</span>
+                  <span className="detail-value">{studio.parking_available ? 'Available' : 'Not Available'}</span>
                 </div>
               </div>
             </div>
 
             <div className="description-section">
               <h2>Description</h2>
-              <p className="description-text">{studio.description}</p>
+              <p className="description-text">{studio.description || 'No description available'}</p>
             </div>
 
             {/* Booking Display Section - Only visible if booking exists and from admin or master admin - HIDDEN for customers */}
@@ -431,35 +501,39 @@ const StudioDetailsPage = () => {
                     <div className="detail-grid">
                       <div className="detail-item">
                         <span className="detail-label">Customer Name:</span>
-                        <span className="detail-value">{studioBooking.customerName}</span>
+                        <span className="detail-value">{studioBooking.tenant_name}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Phone:</span>
-                        <span className="detail-value">{studioBooking.customerPhone}</span>
+                        <span className="detail-value">{studioBooking.tenant_phone}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Email:</span>
+                        <span className="detail-value">{studioBooking.tenant_email || 'N/A'}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Customer ID:</span>
-                        <span className="detail-value">{studioBooking.customerId}</span>
+                        <span className="detail-value">{studioBooking.tenant_national_id}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Platform Source:</span>
-                        <span className="detail-value">{studioBooking.platformSource}</span>
+                        <span className="detail-value">{studioBooking.platform_source}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Rent Period:</span>
-                        <span className="detail-value">{studioBooking.rentPeriod}</span>
+                        <span className="detail-value">{studioBooking.rent_period}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Start Date:</span>
-                        <span className="detail-value">{new Date(studioBooking.startDate).toLocaleDateString()}</span>
+                        <span className="detail-value">{new Date(studioBooking.start_date).toLocaleDateString()}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">End Date:</span>
-                        <span className="detail-value">{new Date(studioBooking.endDate).toLocaleDateString()}</span>
+                        <span className="detail-value">{new Date(studioBooking.end_date).toLocaleDateString()}</span>
                       </div>
                       <div className="detail-item">
-                        <span className="detail-label">Booking Date:</span>
-                        <span className="detail-value">{new Date(studioBooking.bookingDate).toLocaleDateString()}</span>
+                        <span className="detail-label">Contract Date:</span>
+                        <span className="detail-value">{new Date(studioBooking.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
 
@@ -467,30 +541,28 @@ const StudioDetailsPage = () => {
                       <h4>💰 Financial Summary</h4>
                       <div className="financial-grid">
                         <div className="financial-item">
-                          <span className="financial-label">Studio Price:</span>
-                          <span className="financial-value">{studioBooking.studioPrice}</span>
+                          <span className="financial-label">Monthly Rent:</span>
+                          <span className="financial-value">EGP {studioBooking.monthly_rent?.toLocaleString()}</span>
                         </div>
                         <div className="financial-item">
-                          <span className="financial-label">Paid Deposit:</span>
-                          <span className="financial-value">EGP {studioBooking.paidDeposit.toLocaleString()}</span>
+                          <span className="financial-label">Deposit:</span>
+                          <span className="financial-value">EGP {studioBooking.deposit?.toLocaleString()}</span>
                         </div>
                         <div className="financial-item">
                           <span className="financial-label">Warranty:</span>
-                          <span className="financial-value">EGP {studioBooking.warranty.toLocaleString()}</span>
+                          <span className="financial-value">EGP {studioBooking.warranty?.toLocaleString()}</span>
                         </div>
                         <div className="financial-item total">
-                          <span className="financial-label">Total Paid:</span>
-                          <span className="financial-value">EGP {studioBooking.totalAmount.toLocaleString()}</span>
+                          <span className="financial-label">Total Initial:</span>
+                          <span className="financial-value">EGP {((studioBooking.deposit || 0) + (studioBooking.warranty || 0)).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
 
-                    {studioBooking.contract && (
+                    {studioBooking.notes && (
                       <div className="contract-info">
-                        <h4>📄 Contract</h4>
-                        <div className="contract-file">
-                          <span>📎 {studioBooking.contract.name}</span>
-                        </div>
+                        <h4>� Notes</h4>
+                        <p>{studioBooking.notes}</p>
                       </div>
                     )}
                   </div>
@@ -510,8 +582,8 @@ const StudioDetailsPage = () => {
               
               <div className="contact-actions">
                 <WhatsAppButton 
-                  phoneNumber={studio.contactNumber}
-                  message={`Hello, I'm interested in ${studio.title} for ${studio.price}`}
+                  phoneNumber={studio.contact_number || '+201000000000'}
+                  message={`Hello, I'm interested in ${studio.title || studio.name} for ${studio.price || `EGP ${studio.monthly_rent?.toLocaleString()}/month`}`}
                 />
               </div>
             </div>
@@ -535,7 +607,7 @@ const StudioDetailsPage = () => {
         <EditStudioModal
           onClose={() => setIsEditModalOpen(false)}
           studio={studio}
-          apartmentId={studio?.apartmentId}
+          apartmentId={studio?.apartment_id}
           onStudioUpdated={handleStudioUpdate}
           isLoading={isEditLoading}
         />

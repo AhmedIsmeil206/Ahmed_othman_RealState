@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth, useProperty } from '../../../hooks/useRedux';
+import { useAdminAuth } from '../../../hooks/useAdminAuth';
+import { apartmentPartsApi, rentalContractsApi, rentApartmentsApi } from '../../../services/api';
 import BackButton from '../../../components/common/BackButton';
 import RentalAlerts from '../../../components/admin/RentalAlerts/RentalAlerts';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
@@ -10,7 +11,6 @@ import './RentalAlertsPage.css';
 const RentalAlertsPage = () => {
   const navigate = useNavigate();
   const { currentAdmin } = useAdminAuth();
-  const { getApartmentsByCreator, getStudiosByCreator } = useProperty();
   const [isLoading, setIsLoading] = useState(true);
   const [adminStats, setAdminStats] = useState({
     totalApartments: 0,
@@ -20,23 +20,55 @@ const RentalAlertsPage = () => {
   });
 
   useEffect(() => {
-    if (currentAdmin?.email) {
-      // Get statistics for current admin
-      const adminApartments = getApartmentsByCreator(currentAdmin.email);
-      const adminStudios = getStudiosByCreator(currentAdmin.email);
-      const rentedStudios = adminStudios.filter(studio => !studio.isAvailable).length;
-      const availableStudios = adminStudios.filter(studio => studio.isAvailable).length;
+    const fetchAdminStats = async () => {
+      if (currentAdmin?.id || currentAdmin?.email) {
+        setIsLoading(true);
+        try {
+          // Fetch apartments created by this admin
+          const apartmentsResponse = await rentApartmentsApi.getAll();
+          const adminApartments = apartmentsResponse.success ? 
+            apartmentsResponse.data.filter(apt => apt.created_by === currentAdmin.email) : [];
 
-      setAdminStats({
-        totalApartments: adminApartments.length,
-        totalStudios: adminStudios.length,
-        rentedStudios,
-        availableStudios
-      });
-      
-      setIsLoading(false);
-    }
-  }, [currentAdmin, getApartmentsByCreator, getStudiosByCreator]);
+          // Fetch studios created by this admin
+          const studiosResponse = await apartmentPartsApi.getAll();
+          const adminStudios = studiosResponse.success ? 
+            studiosResponse.data.filter(studio => studio.created_by === currentAdmin.email) : [];
+
+          // Get rental contracts to determine rented/available status
+          const contractsResponse = await rentalContractsApi.getAll();
+          const activeContracts = contractsResponse.success ? 
+            contractsResponse.data.filter(contract => contract.status === 'active') : [];
+
+          // Calculate statistics
+          const rentedStudios = adminStudios.filter(studio => 
+            activeContracts.some(contract => contract.apartment_part_id === studio.id)
+          ).length;
+          
+          const availableStudios = adminStudios.length - rentedStudios;
+
+          setAdminStats({
+            totalApartments: adminApartments.length,
+            totalStudios: adminStudios.length,
+            rentedStudios,
+            availableStudios
+          });
+        } catch (error) {
+          console.error('Error fetching admin stats:', error);
+          // Set default stats on error
+          setAdminStats({
+            totalApartments: 0,
+            totalStudios: 0,
+            rentedStudios: 0,
+            availableStudios: 0
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchAdminStats();
+  }, [currentAdmin]);
 
   if (!currentAdmin) {
     return (

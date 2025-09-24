@@ -1,43 +1,83 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import ImageGallery from '../../../components/customer/ImageGallery/ImageGallery';
 import WhatsAppButton from '../../../components/customer/WhatsAppButton/WhatsAppButton';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
-import { useProperty } from '../../../hooks/useRedux';
+import { saleApartmentsApi } from '../../../services/api';
 import './ApartmentSaleDetailsPage.css';
 
 const ApartmentSaleDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { saleApartments } = useProperty();
+  const [apartment, setApartment] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [inquirySubmitted, setInquirySubmitted] = useState(false);
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
-  
-  const apartment = saleApartments.find(apt => apt.id === id);
+
+  // Fetch apartment details from API
+  useEffect(() => {
+    const fetchApartmentDetails = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await saleApartmentsApi.getById(id);
+        
+        if (response.success && response.data) {
+          setApartment(response.data);
+        } else {
+          setError('Apartment not found');
+        }
+      } catch (err) {
+        console.error('Error fetching apartment details:', err);
+        setError('Failed to load apartment details');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (id) {
+      fetchApartmentDetails();
+    }
+  }, [id]);
 
   useEffect(() => {
     // Check if inquiry was already submitted for this apartment
-    const existingInquiry = localStorage.getItem(`apartment_inquiry_${id}`);
-    if (existingInquiry) {
-      setInquirySubmitted(true);
-    }
+    const checkExistingInquiry = async () => {
+      try {
+        if (id) {
+          // Check via API if inquiries endpoint exists
+          // For now, check localStorage as fallback
+          const existingInquiry = localStorage.getItem(`apartment_inquiry_${id}`);
+          if (existingInquiry) {
+            setInquirySubmitted(true);
+          }
+        }
+      } catch (error) {
+        // Not critical - just use localStorage
+        const existingInquiry = localStorage.getItem(`apartment_inquiry_${id}`);
+        if (existingInquiry) {
+          setInquirySubmitted(true);
+        }
+      }
+    };
+    
+    checkExistingInquiry();
   }, [id]);
 
   const handleInquirySubmit = async () => {
     setIsSubmittingInquiry(true);
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Save inquiry to localStorage
-      const inquiryData = {
+      // Save inquiry to localStorage as fallback
+      const localInquiryData = {
         apartmentId: id,
-        apartmentTitle: apartment.name,
+        apartmentTitle: apartment.name || apartment.title,
         submittedAt: new Date().toISOString(),
         inquiryType: 'purchase'
       };
-      localStorage.setItem(`apartment_inquiry_${id}`, JSON.stringify(inquiryData));
+      localStorage.setItem(`apartment_inquiry_${id}`, JSON.stringify(localInquiryData));
       setInquirySubmitted(true);
     } catch (error) {
       console.error('Error submitting inquiry:', error);
@@ -45,6 +85,35 @@ const ApartmentSaleDetailsPage = () => {
       setIsSubmittingInquiry(false);
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="apartment-details-page">
+        <div className="container">
+          <div className="loading-container">
+            <LoadingSpinner size="large" />
+            <p>Loading apartment details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="apartment-details-page">
+        <div className="container">
+          <div className="error-container">
+            <h1>Error Loading Apartment</h1>
+            <p className="error-message">{error}</p>
+            <BackButton onClick={() => navigate(-1)} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!apartment) {
     return (
@@ -59,20 +128,13 @@ const ApartmentSaleDetailsPage = () => {
 
   const formatPrice = (price) => {
     if (!price) return 'Contact for price';
-    return price.toLocaleString('en-EG', {
-      style: 'currency',
-      currency: 'EGP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
+    return `EGP ${price.toLocaleString()}`;
   };
 
   const openGoogleMaps = () => {
-    if (apartment.coordinates && apartment.coordinates.lat && apartment.coordinates.lng) {
-      const mapsUrl = `https://www.google.com/maps?q=${apartment.coordinates.lat},${apartment.coordinates.lng}`;
+    if (apartment.location_coordinates && apartment.location_coordinates.lat && apartment.location_coordinates.lng) {
+      const mapsUrl = `https://www.google.com/maps?q=${apartment.location_coordinates.lat},${apartment.location_coordinates.lng}`;
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
-    } else if (apartment.mapUrl) {
-      window.open(apartment.mapUrl, '_blank', 'noopener,noreferrer');
     } else if (apartment.location) {
       const searchQuery = encodeURIComponent(apartment.location);
       const mapsUrl = `https://www.google.com/maps/search/${searchQuery}`;
@@ -91,7 +153,7 @@ const ApartmentSaleDetailsPage = () => {
         <div className="apartment-gallery-section">
           <ImageGallery 
             images={apartment.images || []} 
-            title={apartment.name}
+            title={apartment.name || apartment.title}
             fallbackImage="/api/placeholder/800/600"
           />
         </div>
@@ -100,32 +162,32 @@ const ApartmentSaleDetailsPage = () => {
           <div className="apartment-main-info">
             <div className="apartment-header">
               <div className="apartment-title-section">
-                <h1 className="apartment-title">{apartment.name}</h1>
+                <h1 className="apartment-title">{apartment.name || apartment.title}</h1>
                 <div className="apartment-subtitle">
-                  {apartment.apartmentNumber && (
-                    <span className="apartment-number">{apartment.apartmentNumber}</span>
+                  {apartment.apartment_number && (
+                    <span className="apartment-number">{apartment.apartment_number}</span>
                   )}
                 </div>
               </div>
               <div className="apartment-price-section">
-                <div className="apartment-price">{formatPrice(apartment.price)}</div>
+                <div className="apartment-price">{formatPrice(apartment.price || apartment.sale_price)}</div>
                 <div className="apartment-availability">
-                  <span className={`status ${apartment.isAvailable ? 'available' : 'sold'}`}>
-                    {apartment.isAvailable ? '✅ Available' : '❌ Sold'}
+                  <span className={`status ${apartment.is_available ? 'available' : 'sold'}`}>
+                    {apartment.is_available ? '✅ Available' : '❌ Sold'}
                   </span>
                 </div>
               </div>
             </div>
 
             <div className="apartment-posted">
-              Listed {apartment.listedAt ? 
-                new Date(apartment.listedAt).toLocaleDateString() : 
-                new Date(apartment.createdAt).toLocaleDateString()
+              Listed {apartment.created_at ? 
+                new Date(apartment.created_at).toLocaleDateString() : 
+                'Recently'
               }
             </div>
 
             {/* Google Maps Link */}
-            {(apartment.mapUrl || apartment.coordinates || apartment.location) && (
+            {(apartment.location_coordinates || apartment.location) && (
               <div className="apartment-location-section">
                 <h3>📍 Location</h3>
                 <button 
@@ -159,28 +221,28 @@ const ApartmentSaleDetailsPage = () => {
                   <div className="highlight-icon">📏</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Area</div>
-                    <div className="highlight-value">{apartment.area ? `${apartment.area} sq ft` : 'N/A'}</div>
+                    <div className="highlight-value">{apartment.area ? `${apartment.area} m²` : 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">�️</div>
+                  <div className="highlight-icon">🛏️</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bedrooms</div>
-                    <div className="highlight-value">{apartment.bedrooms || 'N/A'}</div>
+                    <div className="highlight-value">{apartment.bedrooms || apartment.number_of_bedrooms || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">�</div>
+                  <div className="highlight-icon">🚿</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bathrooms</div>
-                    <div className="highlight-value">{apartment.bathrooms || 'N/A'}</div>
+                    <div className="highlight-value">{apartment.bathrooms || apartment.number_of_bathrooms || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
                   <div className="highlight-icon">💰</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Price</div>
-                    <div className="highlight-value">{formatPrice(apartment.price)}</div>
+                    <div className="highlight-value">{formatPrice(apartment.price || apartment.sale_price)}</div>
                   </div>
                 </div>
               </div>
@@ -198,17 +260,17 @@ const ApartmentSaleDetailsPage = () => {
               <div className="details-table">
                 <div className="detail-row">
                   <span className="detail-label">Apartment Number</span>
-                  <span className="detail-value">{apartment.apartmentNumber || 'N/A'}</span>
+                  <span className="detail-value">{apartment.apartment_number || 'N/A'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Listing Date</span>
-                  <span className="detail-value">{apartment.listedAt ? 
-                    new Date(apartment.listedAt).toLocaleDateString() : 
-                    new Date(apartment.createdAt).toLocaleDateString()}</span>
+                  <span className="detail-value">{apartment.created_at ? 
+                    new Date(apartment.created_at).toLocaleDateString() : 
+                    'Recently'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Listed By</span>
-                  <span className="detail-value">{apartment.createdBy || 'Ahmed Othman Group'}</span>
+                  <span className="detail-value">{apartment.created_by || 'Ahmed Othman Group'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Property Type</span>
@@ -262,8 +324,8 @@ const ApartmentSaleDetailsPage = () => {
               )}
               
               <WhatsAppButton 
-                phone="+201234567890"
-                message={`Hi! I'm interested in the apartment "${apartment.name}" listed for ${formatPrice(apartment.price)}. Could you provide more details?`}
+                phone={apartment.contact_number || "+201234567890"}
+                message={`Hi! I'm interested in the apartment "${apartment.name || apartment.title}" listed for ${formatPrice(apartment.price || apartment.sale_price)}. Could you provide more details?`}
                 buttonText="💬 Contact via WhatsApp"
                 className="whatsapp-btn"
               />
