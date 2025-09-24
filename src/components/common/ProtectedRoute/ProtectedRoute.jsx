@@ -8,7 +8,7 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation();
 
   if (isLoading) {
-    return <LoadingSpinner message="Checking authentication..." />;
+    return <LoadingSpinner />;
   }
 
   if (!currentUser) {

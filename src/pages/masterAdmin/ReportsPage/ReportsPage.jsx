@@ -159,7 +159,6 @@ const ReportsPage = () => {
     return (
       <div className="reports-loading">
         <LoadingSpinner size="large" color="primary" />
-        <p>Loading admin reports and analytics...</p>
       </div>
     );
   }

@@ -478,10 +478,6 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
                 {isUploadingPhotos ? (
                   <div className="upload-loading">
                     <LoadingSpinner size="small" color="primary" inline />
-                    <div className="upload-text">
-                      <strong>Uploading photos...</strong>
-                      <span>Please wait</span>
-                    </div>
                   </div>
                 ) : (
                   <>

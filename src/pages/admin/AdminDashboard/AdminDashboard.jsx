@@ -214,7 +214,6 @@ const AdminDashboard = () => {
     return (
       <div className="admin-dashboard-loading">
         <LoadingSpinner size="large" />
-        <p>Loading admin dashboard...</p>
       </div>
     );
   }
@@ -323,7 +322,6 @@ const AdminDashboard = () => {
           {isLoadingData && !dataError && (
             <div className="loading-state">
               <LoadingSpinner size="large" />
-              <p>Loading your properties from database...</p>
             </div>
           )}
 
@@ -448,7 +446,6 @@ const AdminRentalPropertiesGrid = ({ apartments, onAddStudio }) => {
       {isLoading && (
         <div className="grid-loading">
           <LoadingSpinner size="small" />
-          <span>Loading more properties...</span>
         </div>
       )}
 
@@ -524,7 +521,6 @@ const AdminSalePropertiesGrid = ({ apartments }) => {
       {isLoading && (
         <div className="grid-loading">
           <LoadingSpinner size="small" />
-          <span>Loading more properties...</span>
         </div>
       )}
 

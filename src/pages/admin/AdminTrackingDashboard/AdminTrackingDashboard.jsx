@@ -39,9 +39,8 @@ const AdminTrackingDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="admin-tracking-dashboard loading-container">
-        <LoadingSpinner size="large" />
-        <p>Loading admin performance data...</p>
+            <div className="tracking-dashboard-loading">
+        <LoadingSpinner />
       </div>
     );
   }

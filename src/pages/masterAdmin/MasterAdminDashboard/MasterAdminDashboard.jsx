@@ -78,21 +78,22 @@ const MasterAdminDashboard = () => {
       try {
         // Fetch rental apartments
         const rentApartmentsResponse = await rentApartmentsApi.getAll();
-        if (rentApartmentsResponse.success) {
-          setApartments(rentApartmentsResponse.data);
+        if (rentApartmentsResponse) {
+          setApartments(Array.isArray(rentApartmentsResponse) ? rentApartmentsResponse : []);
         }
 
         // Fetch sale apartments
         const saleApartmentsResponse = await saleApartmentsApi.getAll();
-        if (saleApartmentsResponse.success) {
-          setSaleApartments(saleApartmentsResponse.data);
+        if (saleApartmentsResponse) {
+          setSaleApartments(Array.isArray(saleApartmentsResponse) ? saleApartmentsResponse : []);
         }
 
         // Fetch all admins
         const adminsResponse = await adminApi.getAll();
-        if (adminsResponse.success) {
-          setAllAdmins(adminsResponse.data);
-          setExistingAdmins(adminsResponse.data);
+        if (adminsResponse) {
+          const adminsList = Array.isArray(adminsResponse) ? adminsResponse : [];
+          setAllAdmins(adminsList);
+          setExistingAdmins(adminsList);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -531,11 +532,11 @@ const MasterAdminDashboard = () => {
   const handleStudioAdded = async (newStudio) => {
     try {
       const response = await apartmentPartsApi.create(newStudio);
-      if (response.success) {
+      if (response) {
         // Refresh apartments data
         const rentApartmentsResponse = await rentApartmentsApi.getAll();
-        if (rentApartmentsResponse.success) {
-          setApartments(rentApartmentsResponse.data);
+        if (rentApartmentsResponse) {
+          setApartments(Array.isArray(rentApartmentsResponse) ? rentApartmentsResponse : []);
         }
         setIsAddStudioModalOpen(false);
         setSelectedApartmentId(null);
@@ -549,14 +550,14 @@ const MasterAdminDashboard = () => {
     try {
       if (propertyTypeFilter === 'rental') {
         const response = await rentApartmentsApi.create(newApartment);
-        if (response.success) {
-          setApartments(prev => [...prev, response.data]);
+        if (response) {
+          setApartments(prev => [...prev, response]);
           setIsAddApartmentModalOpen(false);
         }
       } else {
         const response = await saleApartmentsApi.create(newApartment);
-        if (response.success) {
-          setSaleApartments(prev => [...prev, response.data]);
+        if (response) {
+          setSaleApartments(prev => [...prev, response]);
           setIsAddSaleApartmentModalOpen(false);
         }
       }
@@ -568,8 +569,8 @@ const MasterAdminDashboard = () => {
   const handleSaleApartmentAdded = async (newSaleApartment) => {
     try {
       const response = await saleApartmentsApi.create(newSaleApartment);
-      if (response.success) {
-        setSaleApartments(prev => [...prev, response.data]);
+      if (response) {
+        setSaleApartments(prev => [...prev, response]);
         setIsAddSaleApartmentModalOpen(false);
       }
     } catch (error) {
@@ -591,7 +592,6 @@ const MasterAdminDashboard = () => {
       <div className="master-admin-dashboard loading">
         <div className="loading-container">
           <div className="spinner"></div>
-          <p>Loading dashboard...</p>
         </div>
       </div>
     );

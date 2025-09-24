@@ -25,8 +25,8 @@ const ApartmentSaleDetailsPage = () => {
       try {
         const response = await saleApartmentsApi.getById(id);
         
-        if (response.success && response.data) {
-          setApartment(response.data);
+        if (response) {
+          setApartment(response);
         } else {
           setError('Apartment not found');
         }
@@ -93,7 +93,6 @@ const ApartmentSaleDetailsPage = () => {
         <div className="container">
           <div className="loading-container">
             <LoadingSpinner size="large" />
-            <p>Loading apartment details...</p>
           </div>
         </div>
       </div>

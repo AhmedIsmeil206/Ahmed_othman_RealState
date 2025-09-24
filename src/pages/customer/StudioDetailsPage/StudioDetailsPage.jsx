@@ -35,16 +35,16 @@ const StudioDetailsPage = () => {
         // Get studio part details
         const studioResponse = await apartmentPartsApi.getById(id);
         
-        if (studioResponse.success && studioResponse.data) {
-          const studioData = studioResponse.data;
+        if (studioResponse) {
+          const studioData = studioResponse;
           setStudio(studioData);
           
           // Also try to get parent apartment info if apartmentId exists
           if (studioData.apartment_id) {
             try {
               const apartmentResponse = await rentApartmentsApi.getById(studioData.apartment_id);
-              if (apartmentResponse.success && apartmentResponse.data) {
-                setParentApartment(apartmentResponse.data);
+              if (apartmentResponse) {
+                setParentApartment(apartmentResponse);
               }
             } catch (apartmentError) {
               // Parent apartment fetch failed - not critical
@@ -83,8 +83,8 @@ const StudioDetailsPage = () => {
       try {
         if (id) {
           const contractsResponse = await rentalContractsApi.getAll();
-          if (contractsResponse.success && contractsResponse.data) {
-            const existingContract = contractsResponse.data.find(contract => 
+          if (contractsResponse && Array.isArray(contractsResponse)) {
+            const existingContract = contractsResponse.find(contract => 
               contract.apartment_part_id === parseInt(id) && contract.status === 'active'
             );
             
@@ -126,14 +126,14 @@ const StudioDetailsPage = () => {
       
       const response = await rentalContractsApi.create(contractData);
       
-      if (response.success) {
-        setStudioBooking(response.data);
+      if (response) {
+        setStudioBooking(response);
         setIsBookingModalOpen(false);
         
         // Refresh studio data to reflect booking status
         const updatedStudioResponse = await apartmentPartsApi.getById(id);
-        if (updatedStudioResponse.success) {
-          setStudio(updatedStudioResponse.data);
+        if (updatedStudioResponse) {
+          setStudio(updatedStudioResponse);
         }
       } else {
         console.error('Failed to create rental contract:', response.error);
@@ -150,8 +150,8 @@ const StudioDetailsPage = () => {
     try {
       const response = await apartmentPartsApi.update(id, updatedStudioData);
       
-      if (response.success) {
-        setStudio(response.data);
+      if (response) {
+        setStudio(response);
         setIsEditModalOpen(false);
       } else {
         console.error('Failed to update studio:', response.error);
@@ -170,13 +170,13 @@ const StudioDetailsPage = () => {
         if (studioBooking && studioBooking.id) {
           const response = await rentalContractsApi.delete(studioBooking.id);
           
-          if (response.success) {
+          if (response !== false) {  // API delete typically returns empty or success indication
             setStudioBooking(null);
             
             // Refresh studio data to reflect booking status change
             const updatedStudioResponse = await apartmentPartsApi.getById(id);
-            if (updatedStudioResponse.success) {
-              setStudio(updatedStudioResponse.data);
+            if (updatedStudioResponse) {
+              setStudio(updatedStudioResponse);
             }
           } else {
             console.error('Failed to delete booking:', response.error);
@@ -246,7 +246,6 @@ const StudioDetailsPage = () => {
         <div className="container">
           <div className="loading-container">
             <LoadingSpinner size="large" />
-            <p>Loading studio details...</p>
           </div>
         </div>
       </div>
@@ -385,7 +384,6 @@ const StudioDetailsPage = () => {
                     {isEditLoading ? (
                       <>
                         <LoadingSpinner size="small" color="white" inline />
-                        Loading...
                       </>
                     ) : (
                       '✏️ Edit Studio'

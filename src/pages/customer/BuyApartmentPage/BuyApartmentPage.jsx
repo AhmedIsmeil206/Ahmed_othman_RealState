@@ -152,7 +152,6 @@ const BuyApartmentPage = () => {
         {isLoading && !error && (
           <div className="loading-state">
             <div className="loading-spinner"></div>
-            <p>Loading apartments for sale from database...</p>
           </div>
         )}
 

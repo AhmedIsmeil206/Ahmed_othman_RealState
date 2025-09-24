@@ -26,18 +26,18 @@ const RentalAlertsPage = () => {
         try {
           // Fetch apartments created by this admin
           const apartmentsResponse = await rentApartmentsApi.getAll();
-          const adminApartments = apartmentsResponse.success ? 
-            apartmentsResponse.data.filter(apt => apt.created_by === currentAdmin.email) : [];
+          const adminApartments = Array.isArray(apartmentsResponse) ? 
+            apartmentsResponse.filter(apt => apt.created_by === currentAdmin.email) : [];
 
           // Fetch studios created by this admin
           const studiosResponse = await apartmentPartsApi.getAll();
-          const adminStudios = studiosResponse.success ? 
-            studiosResponse.data.filter(studio => studio.created_by === currentAdmin.email) : [];
+          const adminStudios = Array.isArray(studiosResponse) ? 
+            studiosResponse.filter(studio => studio.created_by === currentAdmin.email) : [];
 
           // Get rental contracts to determine rented/available status
           const contractsResponse = await rentalContractsApi.getAll();
-          const activeContracts = contractsResponse.success ? 
-            contractsResponse.data.filter(contract => contract.status === 'active') : [];
+          const activeContracts = Array.isArray(contractsResponse) ? 
+            contractsResponse.filter(contract => contract.status === 'active') : [];
 
           // Calculate statistics
           const rentedStudios = adminStudios.filter(studio => 
@@ -74,7 +74,6 @@ const RentalAlertsPage = () => {
     return (
       <div className="rental-alerts-page-loading">
         <LoadingSpinner />
-        <p>Loading...</p>
       </div>
     );
   }
@@ -83,7 +82,6 @@ const RentalAlertsPage = () => {
     return (
       <div className="rental-alerts-page-loading">
         <LoadingSpinner />
-        <p>Loading rental alerts...</p>
       </div>
     );
   }

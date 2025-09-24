@@ -9,7 +9,7 @@ const InfiniteScrollTable = ({
   renderRow,
   itemsPerPage = 10,
   emptyMessage = "No data available",
-  loadingMessage = "Loading more...",
+  loadingMessage = "",
   className = "",
   dependencies = {}
 }) => {

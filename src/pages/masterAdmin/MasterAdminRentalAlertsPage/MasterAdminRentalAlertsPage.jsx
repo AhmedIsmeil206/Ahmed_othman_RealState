@@ -78,7 +78,6 @@ const MasterAdminRentalAlertsPage = () => {
     return (
       <div className="master-admin-alerts-loading">
         <LoadingSpinner />
-        <p>Loading...</p>
       </div>
     );
   }
@@ -87,7 +86,6 @@ const MasterAdminRentalAlertsPage = () => {
     return (
       <div className="master-admin-alerts-loading">
         <LoadingSpinner />
-        <p>Loading rental alerts...</p>
       </div>
     );
   }

@@ -245,7 +245,6 @@ const StudiosListPage = () => {
         {isLoading && !error && (
           <div className="loading-state">
             <div className="loading-spinner"></div>
-            <p>Loading studios from database...</p>
           </div>
         )}
 
@@ -310,7 +309,6 @@ const StudiosListPage = () => {
         {!isLoading && !error && isLoadingMore && (
           <div className="loading-indicator">
             <div className="loading-spinner"></div>
-            <p>Loading more studios...</p>
           </div>
         )}
 
