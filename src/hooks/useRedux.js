@@ -63,7 +63,6 @@ import {
   selectMasterLoading,
   selectMasterError,
   selectIsMasterAuthenticated,
-  selectIsFirstTimeSetup,
   selectCurrentUserProfile
 } from '../store/slices/masterAuthSlice';
 
@@ -264,16 +263,13 @@ export const useMasterAuth = () => {
   const isLoading = useSelector(selectMasterLoading);
   const error = useSelector(selectMasterError);
   const isAuthenticated = useSelector(selectIsMasterAuthenticated);
-  const isFirstTimeSetup = useSelector(selectIsFirstTimeSetup);
   const currentUserProfile = useSelector(selectCurrentUserProfile);
 
   const helpers = useMemo(() => ({
-    signup: (signupData) => dispatch(signupMasterAdmin(signupData)),
     login: (loginData) => dispatch(loginMasterAdmin(loginData)),
     logout: () => dispatch(masterLogout()),
     updateProfile: (updateData) => dispatch(updateMasterProfile(updateData)),
     clearError: () => dispatch(clearMasterError()),
-    initialize: () => dispatch(initializeMasterAuth()),
     isAuthenticated: () => isAuthenticated,
     getCurrentUserProfile: () => currentUserProfile
   }), [dispatch, isAuthenticated, currentUserProfile]);
@@ -283,7 +279,6 @@ export const useMasterAuth = () => {
     isLoading,
     error,
     isAuthenticated,
-    isFirstTimeSetup,
     currentUserProfile,
     ...helpers
   };

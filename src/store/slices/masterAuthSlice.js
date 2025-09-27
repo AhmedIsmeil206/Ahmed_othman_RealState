@@ -6,7 +6,6 @@ const initialState = {
   currentUser: null,
   isLoading: false,
   error: null,
-  isFirstTimeSetup: true,
   initialized: false
 };
 
@@ -37,48 +36,6 @@ const masterAuthSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Initialize Auth
-      .addCase(initializeMasterAuth.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(initializeMasterAuth.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.currentUser = action.payload.currentUser;
-        state.isFirstTimeSetup = action.payload.isFirstTimeSetup;
-        state.initialized = true;
-      })
-      .addCase(initializeMasterAuth.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-        state.currentUser = null;
-        state.isFirstTimeSetup = true;
-        state.initialized = true;
-      })
-      
-      // Signup
-      .addCase(signupMasterAdmin.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(signupMasterAdmin.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.currentUser = {
-          id: action.payload.user.id,
-          email: action.payload.user.email,
-          full_name: action.payload.user.full_name,
-          phone: action.payload.user.phone,
-          role: action.payload.user.role,
-          loginTime: new Date().toISOString()
-        };
-        state.isFirstTimeSetup = false;
-      })
-      .addCase(signupMasterAdmin.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-        state.currentUser = null;
-      })
-      
       // Login
       .addCase(loginMasterAdmin.pending, (state) => {
         state.isLoading = true;
@@ -94,6 +51,7 @@ const masterAuthSlice = createSlice({
           role: action.payload.user.role,
           loginTime: new Date().toISOString()
         };
+        state.initialized = true;
       })
       .addCase(loginMasterAdmin.rejected, (state, action) => {
         state.isLoading = false;
@@ -175,43 +133,36 @@ export const initializeMasterAuth = createAsyncThunk(
   }
 );
 
-export const signupMasterAdmin = createAsyncThunk(
-  'masterAuth/signup',
-  async ({ full_name, email, phone, password }, { rejectWithValue }) => {
-    try {
-      const userData = {
-        full_name,
-        email: email.toLowerCase().trim(),
-        phone: phone.trim(),
-        password,
-        master_password: "MASTER_ADMIN_SETUP_2024"
-      };
-      
-      const user = await authApi.createMasterAdmin(userData);
-      
-      // After successful creation, login to get token
-      await authApi.login(email, password);
-      
-      return { user };
-    } catch (error) {
-      return rejectWithValue(handleApiError(error, 'Signup failed. Please try again.'));
-    }
-  }
-);
-
+// Only export login thunk, remove signup
 export const loginMasterAdmin = createAsyncThunk(
   'masterAuth/login',
-  async ({ email, password }, { rejectWithValue }) => {
+  async (loginData, { rejectWithValue }) => {
     try {
-      // Login to get access token
-      await authApi.login(email, password);
+      const { email, username, password } = loginData;
+      const identifier = email || username; // Use either email or username (phone)
       
-      // Get current user info
+      console.log('📊 Redux: Master admin login attempt with:', { identifier: identifier, type: email ? 'email' : 'phone' });
+      
+      // Login to get access token using static database credentials
+      console.log('🔗 API Call: POST /auth/login');
+      await authApi.login(identifier, password);
+      console.log('✅ Login API call successful');
+      
+      // Get current user info from static database
+      console.log('🔗 API Call: GET /admins/me');
       const user = await adminApi.getMe();
+      console.log('✅ Master admin profile retrieved from database:', user);
+      
+      // Verify user is master admin role
+      if (user.role !== 'super_admin' && user.role !== 'master_admin') {
+        throw new Error('Access denied: Master admin role required');
+      }
       
       return { user };
     } catch (error) {
-      return rejectWithValue(handleApiError(error, 'Invalid email or password'));
+      console.error('❌ Master admin login failed:', error);
+      const errorMessage = error.message || 'Invalid credentials';
+      return rejectWithValue(errorMessage);
     }
   }
 );

@@ -1,123 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMasterAuth } from '../../../hooks/useRedux';
 import { loginMasterAdmin } from '../../../store/slices/masterAuthSlice';
 import BackButton from '../../common/BackButton';
-import MasterAdminSignupForm from '../MasterAdminSignupForm/MasterAdminSignupForm';
 import './MasterAdminLoginForm.css';
 
 const MasterAdminLoginForm = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login, isFirstTimeSetup, initialize, isAuthenticated, isLoading: authLoading } = useMasterAuth();
+  const { login } = useMasterAuth();
   
   const [formData, setFormData] = useState({
-    email: '',
+    emailOrPhone: '', // Accept both email and mobile phone
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [showSignupForm, setShowSignupForm] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
 
-  // Initialize app and check if first-time setup is needed
-  useEffect(() => {
-    const initializeApp = async () => {
-      if (initialize && typeof initialize === 'function') {
-        try {
-          await initialize();
-        } catch (error) {
-          console.error('Initialization error:', error);
-        } finally {
-          setIsInitializing(false);
-        }
-      } else {
-        setIsInitializing(false);
-      }
-    };
-    initializeApp();
-  }, [initialize]);
-
-  // Update signup form visibility when isFirstTimeSetup changes
-  useEffect(() => {
-    if (isFirstTimeSetup) {
-      setShowSignupForm(true);
-    } else {
-      setShowSignupForm(false);
-    }
-  }, [isFirstTimeSetup]);
-
-  // Handle authentication state changes - only redirect after successful login
-  useEffect(() => {
-    // Only redirect if user is authenticated AND we're not showing signup form
-    if (isAuthenticated && !showSignupForm && !isFirstTimeSetup) {
-      const searchParams = new URLSearchParams(location.search);
-      const originalPath = searchParams.get('path');
-      
-      // If they were trying to access a specific path, redirect there
-      if (originalPath && originalPath !== '/master-admin/login') {
-        navigate(originalPath, { replace: true });
-      } else {
-        navigate('/master-admin/dashboard', { replace: true });
-      }
-    }
-  }, [isAuthenticated, showSignupForm, isFirstTimeSetup, navigate, location.search]);
-
-  // Check if user came from protected route and handle back navigation
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const from = searchParams.get('from');
-    
-    // If this was accessed directly (not from protected route), no special handling needed
-    if (!from) return;
-    
-    // Set up a timeout to detect if user might have used back button
-    const backButtonTimer = setTimeout(() => {
-      // If user is still on login page after a short delay and came from protected route,
-      // they might have used back button - provide clear navigation
-      if (location.pathname === '/master-admin/login' && from === 'protected') {
-        // User can click the back button component to go to admin portal
-      }
-    }, 100);
-    
-    return () => clearTimeout(backButtonTimer);
-  }, [location.pathname, location.search]);
-
-  const handleSignupComplete = async () => {
-    // After successful signup, refresh initialization to get updated state
-    setShowSignupForm(false);
-    
-    // Re-initialize to check the updated first-time setup status
-    if (initialize && typeof initialize === 'function') {
-      try {
-        await initialize();
-      } catch (error) {
-        console.error('Re-initialization error:', error);
-      }
-    }
-  };
-
-  // Show loading spinner while initializing
-  if (isInitializing || authLoading) {
-    return (
-      <div className="login-container">
-        <div className="login-overlay">
-          <div className="login-card">
-            <div className="text-center">
-              <div className="loading-spinner"></div>
-              <p>Initializing...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If it's first-time setup, show signup form
-  if (showSignupForm) {
-    return <MasterAdminSignupForm onSignupComplete={handleSignupComplete} />;
-  }
+  // Only redirect after successful login (not on mount)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -137,12 +37,14 @@ const MasterAdminLoginForm = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Email validation
+    // Email or Mobile phone validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    const phoneRegex = /^(\+20|0)?1[0-9]{9}$/;
+    
+    if (!formData.emailOrPhone) {
+      newErrors.emailOrPhone = 'Email or mobile phone is required';
+    } else if (!emailRegex.test(formData.emailOrPhone) && !phoneRegex.test(formData.emailOrPhone.replace(/\s/g, ''))) {
+      newErrors.emailOrPhone = 'Please enter a valid email address or Egyptian mobile number';
     }
 
     // Password validation
@@ -164,19 +66,34 @@ const MasterAdminLoginForm = () => {
     }
 
     setIsLoading(true);
+    console.log('🔐 Starting Master Admin Login...', { emailOrPhone: formData.emailOrPhone });
 
     try {
-      const resultAction = await login({ email: formData.email, password: formData.password });
+      // Determine if input is email or phone
+      const isEmail = formData.emailOrPhone.includes('@');
+      const loginData = {
+        [isEmail ? 'email' : 'username']: formData.emailOrPhone, // Backend expects 'username' for phone
+        password: formData.password
+      };
+      
+      console.log('📤 Sending login data to API:', { 
+        [isEmail ? 'email' : 'username']: loginData[isEmail ? 'email' : 'username'], 
+        password: '[HIDDEN]' 
+      });
+      
+      const resultAction = await login(loginData);
       
       if (loginMasterAdmin.fulfilled.match(resultAction)) {
-        // Success - navigate to dashboard
-        navigate('/master-admin/dashboard');
+        console.log('✅ Master Admin Login Successful!', resultAction.payload);
+        // Success - redirect to dashboard only after successful login
+        navigate('/master-admin/dashboard', { replace: true });
       } else if (loginMasterAdmin.rejected.match(resultAction)) {
+        console.error('❌ Master Admin Login Failed:', resultAction.payload);
         // Failed - show error
-        setErrors({ general: resultAction.payload || 'Invalid email or password' });
+        setErrors({ general: resultAction.payload || 'Invalid credentials' });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('💥 Login error:', error);
       setErrors({ general: 'An error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
@@ -198,7 +115,7 @@ const MasterAdminLoginForm = () => {
               
               <div className="master-login-header">
                 <h1>Master Admin Login</h1>
-                <p>Access the complete studio management system</p>
+                <p>Sign in with your email or mobile phone</p>
               </div>
 
               <form className="master-login-form" onSubmit={handleSubmit}>
@@ -209,18 +126,18 @@ const MasterAdminLoginForm = () => {
                 )}
 
                 <div className="form-group">
-                  <label htmlFor="email">Email Address</label>
+                  <label htmlFor="emailOrPhone">Email or Mobile Phone</label>
                   <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
+                    type="text"
+                    id="emailOrPhone"
+                    name="emailOrPhone"
+                    value={formData.emailOrPhone}
                     onChange={handleInputChange}
-                    className={errors.email ? 'error' : ''}
-                    placeholder="Enter your email address"
+                    className={errors.emailOrPhone ? 'error' : ''}
+                    placeholder="Enter your email or mobile phone"
                     autoComplete="username"
                   />
-                  {errors.email && <span className="error-message">{errors.email}</span>}
+                  {errors.emailOrPhone && <span className="error-message">{errors.emailOrPhone}</span>}
                 </div>
 
                 <div className="form-group">

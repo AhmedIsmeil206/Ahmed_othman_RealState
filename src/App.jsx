@@ -1,10 +1,9 @@
 import './App.css';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from './store';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { initializeApp } from './store/slices/masterAuthSlice';
 import { detectSystemTheme } from './store/slices/themeSlice';
 import { ToastProvider } from './contexts/ToastContext';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
@@ -31,8 +30,7 @@ function AppContent() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Initialize the app with master admin and detect system theme
-    dispatch(initializeApp());
+    // Initialize theme detection only
     dispatch(detectSystemTheme());
   }, [dispatch]);
 
@@ -53,7 +51,7 @@ function AppContent() {
               <Route path="/admin/rental-alerts" element={<RentalAlertsPage />} />
               <Route path="/admin/apartment-sale/:id" element={<AdminApartmentSaleDetailsPage />} />
               <Route path="/master-admin/login" element={<MasterAdminLoginForm />} />
-              <Route path="/master-admin" element={<MasterAdminDashboard />} />
+              <Route path="/master-admin" element={<Navigate to="/master-admin/login" replace />} />
               <Route 
                 path="/master-admin/dashboard" 
                 element={

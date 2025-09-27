@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import StudioCard from '../../../components/customer/StudioCard/StudioCard';
-import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
+import { apartmentPartsApi, handleApiError } from '../../../services/api';
 import './StudiosListPage.css';
 
 const StudiosListPage = () => {
-  const { fetchRentApartments, getAllAvailableStudios } = usePropertyManagement();
-  
   // State management
   const [allStudios, setAllStudios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,38 +21,85 @@ const StudiosListPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const STUDIOS_PER_PAGE = 10;
 
-  // Transform apartment data to studio format
-  const transformApartmentToStudio = (apartment) => ({
-    id: apartment._id || apartment.id,
-    title: apartment.name || apartment.title,
-    location: apartment.location || 'Location not specified',
-    pricePerMonth: apartment.price || 0,
-    area: apartment.area || 'N/A',
-    bedrooms: apartment.bedrooms || 0,
-    bathrooms: apartment.bathrooms || 0,
-    amenities: apartment.amenities || [],
-    images: apartment.images || [],
-    description: apartment.description || 'No description available',
-    createdBy: apartment.createdBy || null,
-    createdAt: apartment.createdAt || new Date(),
-    status: apartment.status || 'available'
-  });
+  // Transform apartment parts data to studio format to match StudioCard component expectations
+  const transformApartmentPartToStudio = (part) => {
+    // Format price for display
+    const monthlyPrice = part.monthly_price || part.price || part.rent_price || 0;
+    const formattedPrice = `EGP ${parseFloat(monthlyPrice).toLocaleString()}/month`;
+    
+    // Format area for display
+    const areaValue = part.area || part.size || '0';
+    const formattedArea = `${areaValue} sqm`;
+    
+    // Format posted date
+    const createdDate = part.created_at || part.createdAt || new Date();
+    const postedDate = new Date(createdDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    
+    // Ensure images array exists and has fallback
+    const imageUrls = part.photos_url || part.images || [];
+    const images = Array.isArray(imageUrls) && imageUrls.length > 0 
+      ? imageUrls 
+      : ['https://via.placeholder.com/300x200?text=No+Image'];
+    
+    // Handle location - might come from parent apartment data
+    let location = 'Location not specified';
+    if (part.location) {
+      location = part.location.charAt(0).toUpperCase() + part.location.slice(1);
+    } else if (part.apartment && part.apartment.location) {
+      location = part.apartment.location.charAt(0).toUpperCase() + part.apartment.location.slice(1);
+    }
+    
+    return {
+      id: part.id || part._id,
+      title: part.title || part.name || 'Studio',
+      location: location,
+      price: formattedPrice,
+      pricePerMonth: parseFloat(monthlyPrice),
+      area: formattedArea,
+      bedrooms: part.bedrooms || 1,
+      bathrooms: part.bathrooms || 'Private',
+      amenities: part.facilities_amenities?.split(', ') || [],
+      images: images,
+      description: part.description || 'No description available',
+      createdBy: part.created_by_admin_id || part.createdBy || null,
+      createdAt: createdDate,
+      postedDate: postedDate,
+      status: part.status || 'available',
+      furnished: part.furnished === 'yes',
+      balcony: part.balcony || 'no',
+      floor: part.floor || 1,
+      apartment_id: part.apartment_id
+    };
+  };
 
-  // Fetch studios data using the hook
+  // Fetch studios data from apartment parts API
   const fetchAllStudios = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // Use the hook to fetch all available studios
-      const result = await fetchRentApartments();
+      console.log('🏢 Fetching studios from /apartments/parts endpoint...');
       
-      if (result && result.success && result.data) {
-        // Transform the data to studio format
-        const transformedStudios = result.data
-          .filter(apt => apt.status === 'available' || !apt.status) // Only show available
-          .map(transformApartmentToStudio);
+      // Use apartmentPartsApi to fetch all apartment parts (studios)
+      const parts = await apartmentPartsApi.getAll();
+      
+      console.log('✅ Fetched apartment parts:', parts);
+      
+      if (parts && Array.isArray(parts)) {
+        // Filter for available studios and transform the data
+        const availableStudios = parts.filter(part => 
+          part.status === 'available' || !part.status
+        );
         
+        // If we have apartment parts but no location info, we might need to fetch apartment details
+        // For now, transform with available data
+        const transformedStudios = availableStudios.map(transformApartmentPartToStudio);
+        
+        console.log('🏠 Transformed to studios:', transformedStudios);
         setAllStudios(transformedStudios);
         
         // Load first batch for display
@@ -63,14 +108,15 @@ const StudiosListPage = () => {
         setCurrentPage(2);
         setHasMore(transformedStudios.length > STUDIOS_PER_PAGE);
       } else {
-        setError('Failed to load studios');
+        console.warn('⚠️ No parts data received or invalid format');
         setAllStudios([]);
         setDisplayedStudios([]);
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Failed to fetch studios:', error);
-      setError('Failed to load studios. Please try again later.');
+      console.error('❌ Failed to fetch studios:', error);
+      const errorMessage = handleApiError(error, 'Failed to load studios');
+      setError(errorMessage);
       setAllStudios([]);
       setDisplayedStudios([]);
       setHasMore(false);
