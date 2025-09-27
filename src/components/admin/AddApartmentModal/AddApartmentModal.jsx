@@ -17,7 +17,13 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     mapUrl: '',
     facilities: [],
     floor: '',
-    photos: []
+    photos: [],
+    area: '',
+    number: '',
+    price: '',
+    bedrooms: '1',
+    bathrooms: 'private',
+    totalParts: '1'
   });
 
   const [facilityInput, setFacilityInput] = useState('');
@@ -169,34 +175,45 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     }
 
     setIsSubmitting(true);
+    console.log('🚀 Creating rental apartment with proper API format...');
 
     try {
-      const newApartment = {
-        title: formData.name, // API expects 'title'
-        location: formData.location,
-        address: formData.address,
-        description: formData.description,
-        area: 0, // Default area
-        bedrooms: 0, // Default bedrooms
-        bathrooms: 1, // Default bathrooms  
-        price: 0, // Default price
-        furnished: true, // Default furnished
-        amenities: formData.facilities,
-        images: formData.photos.map(photo => photo.preview),
-        contact_number: currentAdmin?.phone || currentAdmin?.mobileNumber || '',
-        coordinates: { lat: 0, lng: 0 }, // Default coordinates
-        floor: parseInt(formData.floor) || 1
+      // Transform form data to match API requirements according to documentation
+      const apiData = {
+        name: formData.name.trim(), // API expects 'name', not 'title'
+        location: formData.location.toLowerCase(), // Must be lowercase: 'maadi' or 'mokkattam'
+        address: formData.address.trim(),
+        area: formData.area.toString() || '0', // API expects string
+        number: formData.number.trim() || 'APT-001', // Required field
+        price: formData.price.toString() || '0', // API expects string
+        bedrooms: parseInt(formData.bedrooms) || 1, // API expects integer
+        bathrooms: formData.bathrooms || 'private', // API expects string enum
+        description: formData.description.trim(),
+        photos_url: formData.photos.length > 0 
+          ? formData.photos.map(photo => photo.preview) 
+          : [], // API expects 'photos_url', not 'images'
+        location_on_map: formData.mapUrl.trim() || '', // API field name
+        facilities_amenities: formData.facilities.join(', '), // API expects string, not array
+        floor: parseInt(formData.floor) || 1, // Required for rent apartments
+        total_parts: parseInt(formData.totalParts) || 1 // Required for rent apartments
       };
+      
+      console.log('📤 API Data prepared:', {
+        ...apiData,
+        photos_url: apiData.photos_url.length > 0 ? `[${apiData.photos_url.length} photos]` : '[]'
+      });
 
       // Use real API call to create apartment
-      const result = await createRentApartment(newApartment);
+      const result = await createRentApartment(apiData);
       
       if (result.success) {
+        console.log('✅ Apartment created successfully:', result.apartment);
+        
         // Notify parent component and close modal
         onApartmentAdded?.(result.apartment);
         onClose();
         
-        // Reset form
+        // Reset form with all fields
         setFormData({
           name: '',
           location: '',
@@ -205,17 +222,23 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           mapUrl: '',
           facilities: [],
           floor: '',
-          photos: []
+          photos: [],
+          area: '',
+          number: '',
+          price: '',
+          bedrooms: '1',
+          bathrooms: 'private',
+          totalParts: '1'
         });
         
         setErrors({});
       } else {
-        // Show error message
-        setErrors({ general: result.message });
+        console.error('❌ API call failed:', result.message);
+        setErrors({ general: result.message || 'Failed to create apartment' });
       }
-      setErrors({});
+      
     } catch (error) {
-      console.error('Error adding apartment:', error);
+      console.error('💥 Error adding apartment:', error);
       setErrors({ general: 'An error occurred while adding the apartment. Please try again.' });
     } finally {
       setIsSubmitting(false);
@@ -262,8 +285,8 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
                 className={errors.location ? 'error' : ''}
               >
                 <option value="">Select Location</option>
-                <option value="Maadi">Maadi</option>
-                <option value="Mokkattam">Mokkattam</option>
+                <option value="maadi">Maadi</option>
+                <option value="mokkattam">Mokkattam</option>
               </select>
               {errors.location && <span className="error-text">{errors.location}</span>}
             </div>
@@ -312,6 +335,104 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
             <small className="form-help">
               Optional: Paste the Google Maps link for the apartment location
             </small>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="area">Area (sqm) *</label>
+              <input
+                type="number"
+                id="area"
+                name="area"
+                value={formData.area}
+                onChange={handleInputChange}
+                className={errors.area ? 'error' : ''}
+                placeholder="e.g., 120"
+                min="1"
+                step="0.1"
+              />
+              {errors.area && <span className="error-text">{errors.area}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="number">Apartment Number *</label>
+              <input
+                type="text"
+                id="number"
+                name="number"
+                value={formData.number}
+                onChange={handleInputChange}
+                className={errors.number ? 'error' : ''}
+                placeholder="e.g., A-101"
+              />
+              {errors.number && <span className="error-text">{errors.number}</span>}
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="price">Base Price (EGP) *</label>
+              <input
+                type="number"
+                id="price"
+                name="price"
+                value={formData.price}
+                onChange={handleInputChange}
+                className={errors.price ? 'error' : ''}
+                placeholder="e.g., 0 (for rental base)"
+                min="0"
+              />
+              {errors.price && <span className="error-text">{errors.price}</span>}
+              <small className="form-help">Base price for the apartment complex (individual studio prices set separately)</small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="bedrooms">Bedrooms *</label>
+              <input
+                type="number"
+                id="bedrooms"
+                name="bedrooms"
+                value={formData.bedrooms}
+                onChange={handleInputChange}
+                className={errors.bedrooms ? 'error' : ''}
+                placeholder="e.g., 1"
+                min="0"
+              />
+              {errors.bedrooms && <span className="error-text">{errors.bedrooms}</span>}
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="bathrooms">Bathroom Type *</label>
+              <select
+                id="bathrooms"
+                name="bathrooms"
+                value={formData.bathrooms}
+                onChange={handleInputChange}
+                className={errors.bathrooms ? 'error' : ''}
+              >
+                <option value="private">Private</option>
+                <option value="shared">Shared</option>
+              </select>
+              {errors.bathrooms && <span className="error-text">{errors.bathrooms}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="totalParts">Total Studio Parts *</label>
+              <input
+                type="number"
+                id="totalParts"
+                name="totalParts"
+                value={formData.totalParts}
+                onChange={handleInputChange}
+                className={errors.totalParts ? 'error' : ''}
+                placeholder="e.g., 5"
+                min="1"
+              />
+              {errors.totalParts && <span className="error-text">{errors.totalParts}</span>}
+              <small className="form-help">Number of studio units that can be created in this apartment</small>
+            </div>
           </div>
 
           <div className="form-group">

@@ -107,15 +107,27 @@ export const useAdminAuth = () => {
   // Legacy compatibility methods
   const createAdminAccount = async (adminData) => {
     try {
-      // This would typically be handled by the admin management hook
-      // but keeping for compatibility
-      const response = await adminApi.create({
-        full_name: adminData.name || adminData.username,
+      console.log('🔨 Creating admin account via API with data:', {
+        ...adminData,
+        password: '[HIDDEN]'
+      });
+      
+      // Transform to API format
+      const apiData = {
+        full_name: adminData.full_name || adminData.name || adminData.username,
         email: adminData.email || adminData.account,
-        phone: adminData.phone || adminData.mobileNumber || adminData.mobile,
+        phone: adminData.phone || adminData.mobile || adminData.mobileNumber,
         role: adminData.role || 'studio_rental',
         password: adminData.password
+      };
+      
+      console.log('📤 Sending to API:', {
+        ...apiData,
+        password: '[HIDDEN]'
       });
+      
+      const response = await adminApi.create(apiData);
+      console.log('📨 API Response:', response);
       
       return { 
         success: true, 
@@ -123,19 +135,29 @@ export const useAdminAuth = () => {
         admin: transformAdminFromApi(response)
       };
     } catch (error) {
+      console.error('❌ Failed to create admin account:', error);
       const errorMessage = handleApiError(error, 'Failed to create admin account');
-      return { success: false, message: errorMessage };
+      return { success: false, error: errorMessage, message: errorMessage };
     }
   };
 
   const getAllAdminAccounts = async () => {
     // Make API call to fetch all admin accounts
     try {
+      console.log('🔍 Fetching all admin accounts from API...');
       const response = await adminApi.getAll();
-      const transformedAdmins = response.map(transformAdminFromApi);
-      return transformedAdmins;
+      console.log('📨 Admin accounts API response:', response);
+      
+      if (Array.isArray(response)) {
+        const transformedAdmins = response.map(transformAdminFromApi);
+        console.log('✅ Transformed admins:', transformedAdmins.length, 'accounts');
+        return transformedAdmins;
+      } else {
+        console.warn('⚠️ API response is not an array:', response);
+        return [];
+      }
     } catch (error) {
-      console.error('Failed to fetch admin accounts:', error);
+      console.error('❌ Failed to fetch admin accounts:', error);
       return [];
     }
   };

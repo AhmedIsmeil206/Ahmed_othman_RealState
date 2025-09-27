@@ -11,8 +11,8 @@ const ApartmentCard = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { deleteApartment } = useProperty();
 
-  const availableStudios = apartment.studios.filter(studio => studio.isAvailable).length;
-  const occupiedStudios = apartment.studios.length - availableStudios;
+  const availableStudios = apartment.studios ? apartment.studios.filter(studio => studio.isAvailable).length : 0;
+  const occupiedStudios = apartment.studios ? apartment.studios.length - availableStudios : 0;
 
   const handleDeleteApartment = () => {
     deleteApartment(apartment.id);
@@ -61,11 +61,17 @@ const ApartmentCard = ({
           <p className="apartment-description">{apartment.description}</p>
           
           <div className="apartment-facilities">
-            {apartment.facilities.slice(0, 3).map((facility, index) => (
-              <span key={index} className="facility-tag">{facility}</span>
-            ))}
-            {apartment.facilities.length > 3 && (
-              <span className="facility-tag more">+{apartment.facilities.length - 3} more</span>
+            {apartment.facilities && apartment.facilities.length > 0 ? (
+              <>
+                {apartment.facilities.slice(0, 3).map((facility, index) => (
+                  <span key={index} className="facility-tag">{facility}</span>
+                ))}
+                {apartment.facilities.length > 3 && (
+                  <span className="facility-tag more">+{apartment.facilities.length - 3} more</span>
+                )}
+              </>
+            ) : (
+              <span className="facility-tag">No facilities listed</span>
             )}
           </div>
         </div>
@@ -76,7 +82,7 @@ const ApartmentCard = ({
           className="expand-btn"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          {isExpanded ? 'Hide Studios' : `View ${apartment.totalStudios} Studios`}
+          {isExpanded ? 'Hide Studios' : `View ${apartment.totalStudios || (apartment.studios ? apartment.studios.length : 0)} Studios`}
           <span className={`expand-icon ${isExpanded ? 'expanded' : ''}`}>▼</span>
         </button>
         
@@ -89,7 +95,7 @@ const ApartmentCard = ({
       </div>
 
       <div className={`studios-section ${isExpanded ? 'expanded' : 'collapsed'}`}>
-        {isExpanded && (
+        {isExpanded && apartment.studios && (
           <>
             <div className="studios-grid">
               {apartment.studios.map(studio => (
@@ -114,6 +120,18 @@ const ApartmentCard = ({
             )}
           </>
         )}
+        
+        {isExpanded && !apartment.studios && (
+          <div className="no-studios">
+            <p>No studios in this apartment yet</p>
+            <button 
+              className="add-first-studio-btn"
+              onClick={() => onAddStudio(apartment.id)}
+            >
+              Add First Studio
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -126,7 +144,7 @@ const ApartmentCard = ({
               <p className="warning-text">⚠️ This action will permanently delete:</p>
               <ul className="deletion-list">
                 <li>• The apartment "{apartment.name}"</li>
-                <li>• All {apartment.studios.length} studio{apartment.studios.length !== 1 ? 's' : ''} in this apartment</li>
+                <li>• All {apartment.studios ? apartment.studios.length : 0} studio{apartment.studios && apartment.studios.length !== 1 ? 's' : ''} in this apartment</li>
                 <li>• All related data and bookings</li>
               </ul>
               <p className="warning-text">This will remove the apartment and its studios from:</p>

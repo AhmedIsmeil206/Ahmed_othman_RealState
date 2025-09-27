@@ -207,74 +207,85 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-
+    console.log('🚀 Starting sale apartment form submission...');
     
     if (!validateForm()) {
-
+      console.log('❌ Form validation failed');
       return;
     }
 
-
     setIsSubmitting(true);
+    console.log('📤 Preparing API data according to backend requirements...');
 
     try {
-      const newSaleApartment = {
-        id: generateApartmentId(),
-        name: formData.name,
-        location: formData.location,
-        address: formData.address,
-        description: formData.description,
-        price: Number(formData.price),
-        bedrooms: Number(formData.bedrooms),
-        bathrooms: Number(formData.bathrooms),
-        area: Number(formData.area),
-        apartmentNumber: formData.apartmentNumber, // Include apartment number
-        floor: formData.floor,
-        mapUrl: formData.mapUrl,
-        facilities: formData.facilities,
-        images: formData.photos.map(photo => photo.preview),
-        image: formData.photos.length > 0 ? formData.photos[0].preview : heroImg,
-        contactNumber: formData.contactNumber,
-        listedAt: new Date().toISOString(),
-        createdBy: currentUser?.email || 'Master Admin',
-        isAvailable: true
+      // Transform frontend data to match API requirements according to documentation
+      const apiData = {
+        name: formData.name.trim(), // API expects 'name', not 'title'
+        location: formData.location.toLowerCase(), // Must be lowercase: 'maadi' or 'mokkattam'
+        address: formData.address.trim(),
+        area: formData.area.toString(), // API expects string, not number
+        number: formData.apartmentNumber.trim(), // API field is 'number'
+        price: formData.price.toString(), // API expects string, not number
+        bedrooms: parseInt(formData.bedrooms), // API expects integer
+        bathrooms: 'private', // API expects string enum, not number
+        description: formData.description.trim(),
+        photos_url: formData.photos.length > 0 
+          ? formData.photos.map(photo => photo.preview) 
+          : [], // API expects 'photos_url', not 'images'
+        location_on_map: formData.mapUrl.trim() || '', // API field name
+        facilities_amenities: formData.facilities.join(', '), // API expects string, not array
+        // Note: contact_number is auto-filled by backend from admin's phone
       };
-
-
       
-      // Use real API call to create sale apartment
-      await createSaleApartment(newSaleApartment);
-      
-      // Notify parent component and close modal
-      onApartmentAdded?.(newSaleApartment);
-      onClose();
-      
-      // Reset form
-      setFormData({
-        name: '',
-        location: '',
-        address: '',
-        description: '',
-        price: '',
-        bedrooms: '',
-        bathrooms: '',
-        area: '',
-        apartmentNumber: '',
-        mapUrl: '',
-        facilities: [],
-        contactNumber: '',
-        photos: []
+      console.log('📊 API Data prepared:', {
+        ...apiData,
+        photos_url: apiData.photos_url.length > 0 ? `[${apiData.photos_url.length} photos]` : '[]'
       });
       
-      setErrors({});
-      console.log('Form reset completed');
+      // Call the API using the property management hook
+      console.log('🔗 Calling createSaleApartment API...');
+      const result = await createSaleApartment(apiData);
+      
+      if (result.success) {
+        console.log('✅ Sale apartment created successfully:', result.apartment);
+        
+        // Notify parent component with the created apartment
+        onApartmentAdded?.(result.apartment);
+        onClose();
+        
+        // Reset form
+        setFormData({
+          name: '',
+          location: '',
+          address: '',
+          description: '',
+          price: '',
+          bedrooms: '',
+          bathrooms: '',
+          area: '',
+          apartmentNumber: '',
+          floor: '',
+          mapUrl: '',
+          facilities: [],
+          contactNumber: '',
+          photos: []
+        });
+        
+        setErrors({});
+        console.log('✅ Form reset completed');
+        
+      } else {
+        console.error('❌ API call failed:', result.message);
+        setErrors({ general: result.message || 'Failed to create apartment. Please try again.' });
+      }
       
     } catch (error) {
-      console.error('Error adding sale apartment:', error);
-      setErrors({ general: 'An error occurred while adding the apartment. Please try again.' });
+      console.error('💥 Error adding sale apartment:', error);
+      const errorMessage = error.message || 'An error occurred while adding the apartment. Please try again.';
+      setErrors({ general: errorMessage });
     } finally {
       setIsSubmitting(false);
-      console.log('Form submission completed');
+      console.log('🏁 Form submission completed');
     }
   };
 
@@ -318,8 +329,8 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
                 className={errors.location ? 'error' : ''}
               >
                 <option value="">Select Location</option>
-                <option value="Maadi">Maadi</option>
-                <option value="Mokkattam">Mokkattam</option>
+                <option value="maadi">Maadi</option>
+                <option value="mokkattam">Mokkattam</option>
               </select>
               {errors.location && <span className="error-text">{errors.location}</span>}
             </div>
@@ -591,21 +602,6 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
               type="submit" 
               className="submit-btn" 
               disabled={isSubmitting}
-              onClick={(e) => {
-                console.log('Submit button clicked!');
-                console.log('Event details:', e);
-                
-                // If form submission doesn't work, try calling handler directly
-                const form = e.target.closest('form');
-                if (form) {
-                  console.log('Form found, submitting...');
-                  form.requestSubmit();
-                } else {
-                  console.log('No form found, calling handleSubmit directly');
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
-              }}
             >
               {isSubmitting ? 'Adding Apartment...' : 'Add Apartment for Sale'}
             </button>

@@ -74,23 +74,56 @@ const MasterAdminDashboard = () => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        // Fetch rental and sale apartments using Redux hooks
-        await fetchRentApartments();
-        await fetchSaleApartments();
+        console.log('🔄 Fetching master admin dashboard data...');
+        
+        // Fetch rental and sale apartments using correct API endpoints
+        console.log('🏠 Fetching rental apartments...');
+        const rentResult = await fetchRentApartments();
+        console.log('Rental apartments result:', rentResult);
+        
+        console.log('🏢 Fetching sale apartments...');
+        const saleResult = await fetchSaleApartments();
+        console.log('Sale apartments result:', saleResult);
 
-        // Fetch all admins
-        const admins = await getAllAdminAccounts(); // Now async API call
-        setAllAdmins(admins);
-        setExistingAdmins(admins);
+        // Fetch all admins using API
+        console.log('👥 Fetching all admins...');
+        try {
+          const adminsResult = await getAllAdminAccounts();
+          console.log('Admins API result:', adminsResult);
+          
+          if (adminsResult && Array.isArray(adminsResult)) {
+            setAllAdmins(adminsResult);
+            setExistingAdmins(adminsResult);
+            console.log('✅ Admins loaded successfully:', adminsResult.length, 'admins');
+          } else if (adminsResult && adminsResult.success && Array.isArray(adminsResult.data)) {
+            // Handle case where result is wrapped in success object
+            setAllAdmins(adminsResult.data);
+            setExistingAdmins(adminsResult.data);
+            console.log('✅ Admins loaded successfully:', adminsResult.data.length, 'admins');
+          } else {
+            console.warn('⚠️ Admins API returned unexpected format:', adminsResult);
+            setAllAdmins([]);
+            setExistingAdmins([]);
+          }
+        } catch (adminError) {
+          console.error('❌ Failed to fetch admins:', adminError);
+          setAllAdmins([]);
+          setExistingAdmins([]);
+        }
+        
+        console.log('✅ Master admin dashboard data fetching completed');
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('💥 Error fetching dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
     
-    fetchAllData();
-  }, [fetchRentApartments, fetchSaleApartments, getAllAdminAccounts]);  // Get filtered properties based on selected admin and property type
+    // Only fetch if user is authenticated
+    if (currentUser) {
+      fetchAllData();
+    }
+  }, [fetchRentApartments, fetchSaleApartments, getAllAdminAccounts, currentUser]);  // Get filtered properties based on selected admin and property type
   const getFilteredProperties = () => {
     let properties = propertyTypeFilter === 'rental' ? apartments : saleApartments;
     
@@ -398,14 +431,25 @@ const MasterAdminDashboard = () => {
     setAdminMessage({ type: '', text: '' });
 
     try {
-      // Create admin account via API
-      const response = await createAdminAccount({
-        name: adminForm.name,
-        email: adminForm.email,
+      console.log('🚀 Creating admin account with API data...');
+      
+      // Transform form data to match API requirements
+      const apiData = {
+        full_name: adminForm.name.trim(),
+        email: adminForm.email.toLowerCase().trim(),
+        phone: adminForm.mobile.trim(),
         password: adminForm.password,
-        mobile: adminForm.mobile,
         role: adminForm.role
+      };
+      
+      console.log('📤 API Data for admin creation:', {
+        ...apiData,
+        password: '[HIDDEN]'
       });
+      
+      // Create admin account via API
+      const response = await createAdminAccount(apiData);
+      console.log('📨 API Response:', response);
 
       if (response.success) {
         // Show success toast
@@ -670,7 +714,7 @@ const MasterAdminDashboard = () => {
                   <option value="all">All Admins</option>
                   {existingAdmins.map(admin => (
                     <option key={admin.id} value={admin.email}>
-                      {admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : 'Apartment Sales'}
+                      {admin.full_full_name || admin.name || admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : admin.role === admin.role === 'apartment_sale' ? 'apartment_sale' ? 'Apartment Sales' : admin.role : admin.role}
                     </option>
                   ))}
                 </select>
@@ -1021,7 +1065,7 @@ const MasterAdminDashboard = () => {
                       className={adminErrors.role ? 'error' : ''}
                     >
                       <option value="studio_rental">Studio Rental Manager</option>
-                      <option value="apartment_sales">Apartment Sales Manager</option>
+                      <option value="apartment_sale">Apartment Sales Manager</option>
                     </select>
                     {adminErrors.role && <span className="error-text">{adminErrors.role}</span>}
                     <small className="field-description">
@@ -1056,7 +1100,7 @@ const MasterAdminDashboard = () => {
                     <option value="">-- Select Admin --</option>
                     {existingAdmins.map(admin => (
                       <option key={admin.id} value={admin.email}>
-                        {admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : 'Apartment Sales'}
+                        {admin.full_name || admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : admin.role === 'apartment_sale' ? 'Apartment Sales' : admin.role}
                       </option>
                     ))}
                   </select>
