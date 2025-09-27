@@ -66,35 +66,84 @@ const MasterAdminLoginForm = () => {
     }
 
     setIsLoading(true);
-    console.log('🔐 Starting Master Admin Login...', { emailOrPhone: formData.emailOrPhone });
+    console.log('🔐 Starting Master Admin Authentication...', { 
+      emailOrPhone: formData.emailOrPhone,
+      timestamp: new Date().toISOString()
+    });
 
     try {
-      // Determine if input is email or phone
+      // Clear any previous errors
+      setErrors({});
+      
+      // Determine if input is email or phone for backend validation
       const isEmail = formData.emailOrPhone.includes('@');
       const loginData = {
         [isEmail ? 'email' : 'username']: formData.emailOrPhone, // Backend expects 'username' for phone
         password: formData.password
       };
       
-      console.log('📤 Sending login data to API:', { 
-        [isEmail ? 'email' : 'username']: loginData[isEmail ? 'email' : 'username'], 
-        password: '[HIDDEN]' 
+      console.log('📤 Sending authentication request:', { 
+        identifier: loginData[isEmail ? 'email' : 'username'],
+        type: isEmail ? 'email' : 'phone',
+        password: '[HIDDEN]',
+        timestamp: new Date().toISOString()
       });
       
+      // Call the enhanced authentication thunk
       const resultAction = await login(loginData);
       
       if (loginMasterAdmin.fulfilled.match(resultAction)) {
-        console.log('✅ Master Admin Login Successful!', resultAction.payload);
-        // Success - redirect to dashboard only after successful login
-        navigate('/master-admin/dashboard', { replace: true });
+        console.log('✅ Master Admin Authentication Successful!', {
+          userId: resultAction.payload.user.id,
+          role: resultAction.payload.user.role,
+          email: resultAction.payload.user.email,
+          loginTime: new Date().toISOString()
+        });
+        
+        // Success - redirect to dashboard with confirmation
+        navigate('/master-admin/dashboard', { 
+          replace: true,
+          state: { loginSuccess: true }
+        });
+        
       } else if (loginMasterAdmin.rejected.match(resultAction)) {
-        console.error('❌ Master Admin Login Failed:', resultAction.payload);
-        // Failed - show error
-        setErrors({ general: resultAction.payload || 'Invalid credentials' });
+        console.error('❌ Master Admin Authentication Failed:', resultAction.payload);
+        
+        // Parse specific error types for better user feedback
+        const errorMessage = resultAction.payload;
+        
+        if (errorMessage.includes('Invalid credentials')) {
+          setErrors({ 
+            general: 'Incorrect email/phone or password. Please check your credentials and try again.',
+            emailOrPhone: 'Please verify your email or phone number',
+            password: 'Please verify your password'
+          });
+        } else if (errorMessage.includes('Access denied')) {
+          setErrors({ 
+            general: 'Access denied. You need master admin privileges to access this portal.',
+            emailOrPhone: 'This account does not have master admin access'
+          });
+        } else if (errorMessage.includes('Account not found')) {
+          setErrors({ 
+            general: 'Account not found. Please verify your credentials.',
+            emailOrPhone: 'No account found with this email or phone number'
+          });
+        } else if (errorMessage.includes('mismatch')) {
+          setErrors({ 
+            general: 'Authentication error. Please contact system administrator.',
+            emailOrPhone: 'Credential validation failed'
+          });
+        } else {
+          setErrors({ 
+            general: errorMessage || 'Authentication failed. Please try again.'
+          });
+        }
       }
     } catch (error) {
-      console.error('💥 Login error:', error);
-      setErrors({ general: 'An error occurred. Please try again.' });
+      console.error('💥 Authentication error:', error);
+      setErrors({ 
+        general: 'Network error occurred. Please check your connection and try again.' 
+      });
     } finally {
       setIsLoading(false);
     }

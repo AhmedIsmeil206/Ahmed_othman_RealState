@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi, adminApi, handleApiError } from '../../services/api';
+import masterAuthService from '../../services/masterAuthService';
 
 // Initial state
 const initialState = {
@@ -49,9 +50,16 @@ const masterAuthSlice = createSlice({
           full_name: action.payload.user.full_name,
           phone: action.payload.user.phone,
           role: action.payload.user.role,
-          loginTime: new Date().toISOString()
+          loginTime: action.payload.loginTime,
+          authMethod: action.payload.authMethod,
+          sessionId: action.payload.sessionId,
+          lastActivity: new Date().toISOString()
         };
         state.initialized = true;
+        console.log('✅ Redux: Master admin state updated successfully', {
+          userId: state.currentUser.id,
+          sessionId: state.currentUser.sessionId
+        });
       })
       .addCase(loginMasterAdmin.rejected, (state, action) => {
         state.isLoading = false;
@@ -133,7 +141,7 @@ export const initializeMasterAuth = createAsyncThunk(
   }
 );
 
-// Only export login thunk, remove signup
+// Enhanced master admin authentication using comprehensive validation service
 export const loginMasterAdmin = createAsyncThunk(
   'masterAuth/login',
   async (loginData, { rejectWithValue }) => {
@@ -141,28 +149,33 @@ export const loginMasterAdmin = createAsyncThunk(
       const { email, username, password } = loginData;
       const identifier = email || username; // Use either email or username (phone)
       
-      console.log('📊 Redux: Master admin login attempt with:', { identifier: identifier, type: email ? 'email' : 'phone' });
+      console.log('📊 Redux: Initiating master admin authentication via service...');
       
-      // Login to get access token using static database credentials
-      console.log('🔗 API Call: POST /auth/login');
-      await authApi.login(identifier, password);
-      console.log('✅ Login API call successful');
+      // Use the comprehensive authentication service
+      const authResult = await masterAuthService.authenticateMasterAdmin({
+        identifier,
+        password
+      });
       
-      // Get current user info from static database
-      console.log('🔗 API Call: GET /admins/me');
-      const user = await adminApi.getMe();
-      console.log('✅ Master admin profile retrieved from database:', user);
-      
-      // Verify user is master admin role
-      if (user.role !== 'super_admin' && user.role !== 'master_admin') {
-        throw new Error('Access denied: Master admin role required');
+      if (authResult.success) {
+        console.log('✅ Redux: Master admin authentication service completed successfully');
+        return {
+          user: authResult.user,
+          authMethod: authResult.authMethod,
+          sessionId: authResult.sessionId,
+          loginTime: authResult.loginTime
+        };
+      } else {
+        throw new Error('Authentication service failed');
       }
       
-      return { user };
     } catch (error) {
-      console.error('❌ Master admin login failed:', error);
-      const errorMessage = error.message || 'Invalid credentials';
-      return rejectWithValue(errorMessage);
+      console.error('❌ Redux: Master admin authentication failed:', error.message);
+      
+      // Ensure clean state on failure
+      masterAuthService.logout();
+      
+      return rejectWithValue(error.message || 'Authentication failed. Please try again.');
     }
   }
 );

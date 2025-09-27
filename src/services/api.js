@@ -327,6 +327,38 @@ export const authApi = {
     });
   },
 
+  // Validate master admin credentials against static database
+  async validateMasterCredentials(identifier, password) {
+    try {
+      // First attempt login to validate credentials
+      const loginResult = await this.login(identifier, password);
+      
+      if (loginResult.access_token) {
+        // Get user profile to verify role
+        const userProfile = await adminApi.getMe();
+        
+        // Check if user has master admin privileges
+        const isMasterAdmin = ['super_admin', 'master_admin'].includes(userProfile.role);
+        
+        if (!isMasterAdmin) {
+          this.logout(); // Clear token for non-master admin
+          throw new Error('Access denied: Master admin privileges required');
+        }
+        
+        return {
+          isValid: true,
+          user: userProfile,
+          token: loginResult.access_token
+        };
+      }
+      
+      return { isValid: false, error: 'Invalid credentials' };
+    } catch (error) {
+      this.logout(); // Ensure clean state on failure
+      throw error;
+    }
+  },
+
   // Logout
   logout() {
     TokenManager.removeToken();
