@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterAuth } from '../../../hooks/useRedux';
+import { signupMasterAdmin } from '../../../store/slices/masterAuthSlice';
 import BackButton from '../../common/BackButton';
 import './MasterAdminSignupForm.css';
 
@@ -76,16 +77,27 @@ const MasterAdminSignupForm = ({ onSignupComplete }) => {
     setIsLoading(true);
 
     try {
-      const result = await signup(formData.email, formData.mobilePhone, formData.password);
-      if (result.success) {
-        // Call the callback to notify parent that signup is complete
+      const resultAction = await signup({
+        full_name: formData.email.split('@')[0], // Use email prefix as name
+        email: formData.email, 
+        phone: formData.mobilePhone, 
+        password: formData.password
+      });
+      
+      if (signupMasterAdmin.fulfilled.match(resultAction)) {
+        // Success - redirect to admin portal
+        navigate('/admin', { replace: true });
+        
+        // Also call the callback if provided for any cleanup
         if (onSignupComplete) {
           onSignupComplete();
         }
-      } else {
-        setErrors({ general: result.message || 'Signup failed. Please try again.' });
+      } else if (signupMasterAdmin.rejected.match(resultAction)) {
+        // Failed - show error
+        setErrors({ general: resultAction.payload || 'Signup failed. Please try again.' });
       }
     } catch (error) {
+      console.error('Signup error:', error);
       setErrors({ general: 'An error occurred. Please try again.' });
     } finally {
       setIsLoading(false);

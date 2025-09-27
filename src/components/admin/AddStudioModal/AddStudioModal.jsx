@@ -5,7 +5,7 @@ import LoadingSpinner from '../../common/LoadingSpinner/LoadingSpinner';
 import './AddStudioModal.css';
 
 const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
-  const { getApartmentById, getApartmentsByCreator, createStudio } = useProperty();
+  const { getApartmentById, getApartmentsByCreator, addStudio } = useProperty();
   const { currentAdmin } = useAdminAuth();
   const { generateStudioId } = useUniqueId();
   
@@ -233,7 +233,7 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
       };
 
       // Use real API call to create studio
-      await createStudio(formData.selectedApartmentId, newStudio);
+      addStudio(formData.selectedApartmentId, newStudio);
       
       // Notify parent and close modal
       onStudioAdded?.(newStudio);

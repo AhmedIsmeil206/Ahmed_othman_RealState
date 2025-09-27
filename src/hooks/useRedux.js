@@ -57,7 +57,7 @@ import {
   updateMasterProfile,
   logout as masterLogout,
   clearError as clearMasterError,
-  initializeApp,
+  initializeMasterAuth,
   // Master auth selectors
   selectCurrentUser,
   selectMasterLoading,
@@ -268,13 +268,12 @@ export const useMasterAuth = () => {
   const currentUserProfile = useSelector(selectCurrentUserProfile);
 
   const helpers = useMemo(() => ({
-    signup: (email, mobilePhone, password) => dispatch(signupMasterAdmin(email, mobilePhone, password)),
-    login: (email, password) => dispatch(loginMasterAdmin(email, password)),
+    signup: (signupData) => dispatch(signupMasterAdmin(signupData)),
+    login: (loginData) => dispatch(loginMasterAdmin(loginData)),
     logout: () => dispatch(masterLogout()),
-    updateProfile: (email, currentPassword, newPassword) => 
-      dispatch(updateMasterProfile(email, currentPassword, newPassword)),
+    updateProfile: (updateData) => dispatch(updateMasterProfile(updateData)),
     clearError: () => dispatch(clearMasterError()),
-    initializeMasterAdmin: () => dispatch(initializeApp()),
+    initialize: () => dispatch(initializeMasterAuth()),
     isAuthenticated: () => isAuthenticated,
     getCurrentUserProfile: () => currentUserProfile
   }), [dispatch, isAuthenticated, currentUserProfile]);

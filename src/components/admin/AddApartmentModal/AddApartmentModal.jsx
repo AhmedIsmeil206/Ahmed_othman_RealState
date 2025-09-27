@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import './AddApartmentModal.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import useUniqueId from '../../../hooks/useUniqueId';
-import { useProperty } from '../../../hooks/useRedux';
+import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
+import { useAdminAuth } from '../../../hooks/useRedux';
 
 const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const { generateApartmentId } = useUniqueId();
-  const { createRentApartment } = useProperty(); // Use real API call
+  const { createRentApartment } = usePropertyManagement(); // Use real API call
+  const { currentAdmin } = useAdminAuth();
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -170,37 +172,47 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
 
     try {
       const newApartment = {
-        id: generateApartmentId(),
-        name: formData.name,
+        title: formData.name, // API expects 'title'
         location: formData.location,
-        description: formData.description,
-        totalStudios: 0,
         address: formData.address,
-        floor: formData.floor,
-        mapUrl: formData.mapUrl,
-        facilities: formData.facilities,
-        image: formData.photos.length > 0 ? formData.photos[0].preview : heroImg,
-        studios: []
+        description: formData.description,
+        area: 0, // Default area
+        bedrooms: 0, // Default bedrooms
+        bathrooms: 1, // Default bathrooms  
+        price: 0, // Default price
+        furnished: true, // Default furnished
+        amenities: formData.facilities,
+        images: formData.photos.map(photo => photo.preview),
+        contact_number: currentAdmin?.phone || currentAdmin?.mobileNumber || '',
+        coordinates: { lat: 0, lng: 0 }, // Default coordinates
+        floor: parseInt(formData.floor) || 1
       };
 
       // Use real API call to create apartment
-      await createRentApartment(newApartment);
+      const result = await createRentApartment(newApartment);
       
-      // Notify parent component and close modal
-      onApartmentAdded?.(newApartment);
-      onClose();
-      
-      // Reset form
-      setFormData({
-        name: '',
-        location: '',
-        address: '',
-        description: '',
-        mapUrl: '',
-        facilities: [],
-        floor: '',
-        photos: []
-      });
+      if (result.success) {
+        // Notify parent component and close modal
+        onApartmentAdded?.(result.apartment);
+        onClose();
+        
+        // Reset form
+        setFormData({
+          name: '',
+          location: '',
+          address: '',
+          description: '',
+          mapUrl: '',
+          facilities: [],
+          floor: '',
+          photos: []
+        });
+        
+        setErrors({});
+      } else {
+        // Show error message
+        setErrors({ general: result.message });
+      }
       setErrors({});
     } catch (error) {
       console.error('Error adding apartment:', error);

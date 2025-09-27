@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMasterAuth } from '../../../hooks/useRedux';
+import { loginMasterAdmin } from '../../../store/slices/masterAuthSlice';
 import BackButton from '../../common/BackButton';
 import MasterAdminSignupForm from '../MasterAdminSignupForm/MasterAdminSignupForm';
 import './MasterAdminLoginForm.css';
@@ -83,10 +84,18 @@ const MasterAdminLoginForm = () => {
     return () => clearTimeout(backButtonTimer);
   }, [location.pathname, location.search]);
 
-  const handleSignupComplete = () => {
-    // After successful signup, hide signup form
+  const handleSignupComplete = async () => {
+    // After successful signup, refresh initialization to get updated state
     setShowSignupForm(false);
-    // The authentication useEffect will handle the redirect to dashboard
+    
+    // Re-initialize to check the updated first-time setup status
+    if (initialize && typeof initialize === 'function') {
+      try {
+        await initialize();
+      } catch (error) {
+        console.error('Re-initialization error:', error);
+      }
+    }
   };
 
   // Show loading spinner while initializing
@@ -157,13 +166,17 @@ const MasterAdminLoginForm = () => {
     setIsLoading(true);
 
     try {
-      const result = await login(formData.email, formData.password);
-      if (result.success) {
+      const resultAction = await login({ email: formData.email, password: formData.password });
+      
+      if (loginMasterAdmin.fulfilled.match(resultAction)) {
+        // Success - navigate to dashboard
         navigate('/master-admin/dashboard');
-      } else {
-        setErrors({ general: result.message || 'Invalid email or password' });
+      } else if (loginMasterAdmin.rejected.match(resultAction)) {
+        // Failed - show error
+        setErrors({ general: resultAction.payload || 'Invalid email or password' });
       }
     } catch (error) {
+      console.error('Login error:', error);
       setErrors({ general: 'An error occurred. Please try again.' });
     } finally {
       setIsLoading(false);

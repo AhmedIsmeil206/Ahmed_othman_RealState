@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import StudioCard from '../../../components/customer/StudioCard/StudioCard';
-import { apartmentPartsApi, rentApartmentsApi, handleApiError } from '../../../services/api';
+import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import './StudiosListPage.css';
 
 const StudiosListPage = () => {
+  const { fetchRentApartments, getAllAvailableStudios } = usePropertyManagement();
+  
+  // State management
   const [allStudios, setAllStudios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,86 +23,57 @@ const StudiosListPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const STUDIOS_PER_PAGE = 10;
 
-  // Transform API studio data to frontend format
-  const transformStudioData = (apiStudio, apartmentData) => ({
-    id: apiStudio.id,
-    title: `Studio ${apiStudio.studio_number}`,
-    price: `${apiStudio.rent_value} EGP`,
-    pricePerMonth: parseFloat(apiStudio.rent_value) || 0,
-    location: apartmentData?.location || 'Unknown',
-    area: `${apiStudio.area || apartmentData?.area || 'N/A'} sqm`,
-    bedrooms: 1, // Studios typically have 1 bedroom
-    bathrooms: apartmentData?.bathrooms === 'private' ? 1 : 0.5,
-    furnished: 'Yes', // Default for studios
-    type: 'Studio',
-    ownership: 'Rent',
-    completionStatus: 'Ready',
-    description: apartmentData?.description || `Studio ${apiStudio.studio_number} available for rent`,
-    highlights: {
-      type: 'Studio',
-      ownership: 'Rent',
-      area: apiStudio.area || apartmentData?.area || 'N/A',
-      bedrooms: '1',
-      bathrooms: apartmentData?.bathrooms === 'private' ? '1' : 'Shared',
-      furnished: 'Yes'
-    },
-    details: {
-      paymentOption: 'Monthly',
-      completionStatus: 'Ready',
-      furnished: 'Yes',
-      parking: 'Available',
-      floor: apiStudio.floor || apartmentData?.floor || 'N/A'
-    },
-    images: apartmentData?.photos_url || [],
-    coordinates: { lat: 30.0444, lng: 31.2357 }, // Default Cairo coordinates
-    postedDate: new Date(apiStudio.created_at).toLocaleDateString() || 'Recently',
-    contactNumber: apartmentData?.contact_number || '+201029336060',
-    studioNumber: apiStudio.studio_number,
-    apartmentId: apiStudio.apartment_id,
-    isAvailable: apiStudio.status === 'available',
-    floor: apiStudio.floor,
-    createdAt: apiStudio.created_at,
-    apartmentAddress: apartmentData?.address,
-    apartmentName: apartmentData?.name
+  // Transform apartment data to studio format
+  const transformApartmentToStudio = (apartment) => ({
+    id: apartment._id || apartment.id,
+    title: apartment.name || apartment.title,
+    location: apartment.location || 'Location not specified',
+    pricePerMonth: apartment.price || 0,
+    area: apartment.area || 'N/A',
+    bedrooms: apartment.bedrooms || 0,
+    bathrooms: apartment.bathrooms || 0,
+    amenities: apartment.amenities || [],
+    images: apartment.images || [],
+    description: apartment.description || 'No description available',
+    createdBy: apartment.createdBy || null,
+    createdAt: apartment.createdAt || new Date(),
+    status: apartment.status || 'available'
   });
 
-  // Fetch all studios from API
+  // Fetch studios data using the hook
   const fetchAllStudios = async () => {
     try {
       setIsLoading(true);
       setError(null);
-
-      // Fetch all apartment parts (studios) 
-      const studiosResponse = await apartmentPartsApi.getAll();
-      console.log('Studios API Response:', studiosResponse);
-
-      // Fetch all rent apartments to get apartment details
-      const apartmentsResponse = await rentApartmentsApi.getAll();
-      console.log('Apartments API Response:', apartmentsResponse);
-
-      // Create a map of apartments by ID for quick lookup
-      const apartmentsMap = {};
-      apartmentsResponse.forEach(apt => {
-        apartmentsMap[apt.id] = apt;
-      });
-
-      // Transform studios and combine with apartment data
-      const transformedStudios = studiosResponse
-        .filter(studio => studio.status === 'available') // Only show available studios for customers
-        .map(studio => {
-          const apartmentData = apartmentsMap[studio.apartment_id];
-          return transformStudioData(studio, apartmentData);
-        });
-
-      console.log('Transformed Studios:', transformedStudios);
-      setAllStudios(transformedStudios);
       
-      return { success: true, studios: transformedStudios };
+      // Use the hook to fetch all available studios
+      const result = await fetchRentApartments();
+      
+      if (result && result.success && result.data) {
+        // Transform the data to studio format
+        const transformedStudios = result.data
+          .filter(apt => apt.status === 'available' || !apt.status) // Only show available
+          .map(transformApartmentToStudio);
+        
+        setAllStudios(transformedStudios);
+        
+        // Load first batch for display
+        const firstBatch = transformedStudios.slice(0, STUDIOS_PER_PAGE);
+        setDisplayedStudios(firstBatch);
+        setCurrentPage(2);
+        setHasMore(transformedStudios.length > STUDIOS_PER_PAGE);
+      } else {
+        setError('Failed to load studios');
+        setAllStudios([]);
+        setDisplayedStudios([]);
+        setHasMore(false);
+      }
     } catch (error) {
       console.error('Failed to fetch studios:', error);
-      const errorMessage = handleApiError(error, 'Failed to load studios');
-      setError(errorMessage);
-      return { success: false, message: errorMessage };
+      setError('Failed to load studios. Please try again later.');
+      setAllStudios([]);
+      setDisplayedStudios([]);
+      setHasMore(false);
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +82,7 @@ const StudiosListPage = () => {
   // Fetch data on component mount
   useEffect(() => {
     fetchAllStudios();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Filter and sort studios - memoized to prevent infinite loops
   const filteredStudios = React.useMemo(() => {
@@ -146,7 +120,7 @@ const StudiosListPage = () => {
   }, [filteredStudios, sortBy]);
 
   // Load more studios function
-  const loadMoreStudios = useCallback(() => {
+  const loadMoreStudios = () => {
     if (isLoadingMore || !hasMore) return;
     
     setIsLoadingMore(true);
@@ -171,13 +145,7 @@ const StudiosListPage = () => {
       
       setIsLoadingMore(false);
     }, 500);
-  }, [currentPage, sortedStudios, isLoadingMore, hasMore]);
-
-  // Use ref to store the latest loadMoreStudios function
-  const loadMoreStudiosRef = useRef(loadMoreStudios);
-  useEffect(() => {
-    loadMoreStudiosRef.current = loadMoreStudios;
-  }, [loadMoreStudios]);
+  };
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -193,14 +161,14 @@ const StudiosListPage = () => {
     setDisplayedStudios(firstBatch);
     setCurrentPage(2);
     setHasMore(sortedStudios.length > STUDIOS_PER_PAGE);
-  }, [sortBy, priceRange, locationFilter, STUDIOS_PER_PAGE]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sortBy, priceRange, locationFilter, sortedStudios]);
 
   // Infinite scroll listener
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + document.documentElement.scrollTop 
           >= document.documentElement.offsetHeight - 1000) {
-        loadMoreStudiosRef.current();
+        loadMoreStudios();
       }
     };
 

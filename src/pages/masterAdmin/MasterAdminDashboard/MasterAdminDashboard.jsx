@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth } from '../../../hooks/useAdminAuth';
-import { rentApartmentsApi, saleApartmentsApi, adminApi, apartmentPartsApi } from '../../../services/api';
+import { useMasterAuth, useAdminAuth, useProperty } from '../../../hooks/useRedux';
 import ApartmentCard from '../../../components/admin/ApartmentCard';
 import SaleApartmentCard from '../../../components/admin/SaleApartmentCard';
 import AddStudioModal from '../../../components/admin/AddStudioModal';
@@ -12,19 +11,18 @@ import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 
 const MasterAdminDashboard = () => {
   const navigate = useNavigate();
-  const { currentAdmin, logout, updateProfile, createAdminAccount, deleteAdminAccount, getAllAdminAccounts } = useAdminAuth();
+  const { currentUser, logout, updateProfile } = useMasterAuth();
+  const { createAdminAccount, getAllAdminAccounts, deleteAdminAccount } = useAdminAuth();
+  const { apartments, addApartment, addStudio, 
+          saleApartments, addSaleApartment, getSaleApartmentsByCreator, fetchRentApartments, fetchSaleApartments } = useProperty();
   const [isAddStudioModalOpen, setIsAddStudioModalOpen] = useState(false);
   const [isAddApartmentModalOpen, setIsAddApartmentModalOpen] = useState(false);
   const [isAddSaleApartmentModalOpen, setIsAddSaleApartmentModalOpen] = useState(false);
   const [selectedApartmentId, setSelectedApartmentId] = useState(null);
   
-  // Data states
-  const [apartments, setApartments] = useState([]);
-  const [saleApartments, setSaleApartments] = useState([]);
+  // Admin management states
   const [allAdmins, setAllAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Admin management states
   const [selectedAdminFilter, setSelectedAdminFilter] = useState('all');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState('rental'); // 'rental' or 'sale'
   const [existingAdmins, setExistingAdmins] = useState([]);
@@ -76,36 +74,23 @@ const MasterAdminDashboard = () => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        // Fetch rental apartments
-        const rentApartmentsResponse = await rentApartmentsApi.getAll();
-        if (rentApartmentsResponse) {
-          setApartments(Array.isArray(rentApartmentsResponse) ? rentApartmentsResponse : []);
-        }
-
-        // Fetch sale apartments
-        const saleApartmentsResponse = await saleApartmentsApi.getAll();
-        if (saleApartmentsResponse) {
-          setSaleApartments(Array.isArray(saleApartmentsResponse) ? saleApartmentsResponse : []);
-        }
+        // Fetch rental and sale apartments using Redux hooks
+        await fetchRentApartments();
+        await fetchSaleApartments();
 
         // Fetch all admins
-        const adminsResponse = await adminApi.getAll();
-        if (adminsResponse) {
-          const adminsList = Array.isArray(adminsResponse) ? adminsResponse : [];
-          setAllAdmins(adminsList);
-          setExistingAdmins(adminsList);
-        }
+        const admins = await getAllAdminAccounts(); // Now async API call
+        setAllAdmins(admins);
+        setExistingAdmins(admins);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchAllData();
-  }, []);
-
-  // Get filtered properties based on selected admin and property type
+  }, [fetchRentApartments, fetchSaleApartments, getAllAdminAccounts]);  // Get filtered properties based on selected admin and property type
   const getFilteredProperties = () => {
     let properties = propertyTypeFilter === 'rental' ? apartments : saleApartments;
     
@@ -126,7 +111,7 @@ const MasterAdminDashboard = () => {
       setEditType(parsed.editType || 'email');
       setProfileForm(prev => ({
         ...prev,
-        email: parsed.email || currentAdmin?.email || '',
+        email: parsed.email || currentUser?.email || '',
         // Don't restore passwords for security
       }));
     }
@@ -141,7 +126,7 @@ const MasterAdminDashboard = () => {
         // Don't restore password for security
       }));
     }
-  }, [currentAdmin]);
+  }, [currentUser]);
 
   // Save form data to localStorage whenever forms change
   useEffect(() => {
@@ -181,7 +166,7 @@ const MasterAdminDashboard = () => {
     console.log('Opening Edit Profile Modal');
     setEditType('email'); // Default to email editing
     setProfileForm({
-      email: currentAdmin?.email || '',
+      email: currentUser?.email || '',
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
@@ -259,21 +244,21 @@ const MasterAdminDashboard = () => {
 
     try {
       // Check if user is authenticated
-      if (!currentAdmin) {
+      if (!currentUser) {
         setProfileMessage({ type: 'error', text: 'You are not authenticated. Please login again.' });
         setIsProfileSubmitting(false);
         return;
       }
 
       // Prepare update parameters based on edit type
-      let emailToUpdate = currentAdmin.email; // Keep current email by default
+      let emailToUpdate = currentUser.email; // Keep current email by default
       let passwordToUpdate = null; // Don't change password by default
       
       if (editType === 'email') {
         emailToUpdate = profileForm.email;
         passwordToUpdate = null; // Don't change password when updating email
       } else if (editType === 'password') {
-        emailToUpdate = currentAdmin.email; // Keep current email
+        emailToUpdate = currentUser.email; // Keep current email
         passwordToUpdate = profileForm.newPassword;
       }
 
@@ -531,16 +516,10 @@ const MasterAdminDashboard = () => {
 
   const handleStudioAdded = async (newStudio) => {
     try {
-      const response = await apartmentPartsApi.create(newStudio);
-      if (response) {
-        // Refresh apartments data
-        const rentApartmentsResponse = await rentApartmentsApi.getAll();
-        if (rentApartmentsResponse) {
-          setApartments(Array.isArray(rentApartmentsResponse) ? rentApartmentsResponse : []);
-        }
-        setIsAddStudioModalOpen(false);
-        setSelectedApartmentId(null);
-      }
+      await addStudio(newStudio);
+      // Data will be automatically updated through Redux
+      setIsAddStudioModalOpen(false);
+      setSelectedApartmentId(null);
     } catch (error) {
       console.error('Error adding studio:', error);
     }
@@ -549,17 +528,11 @@ const MasterAdminDashboard = () => {
   const handleApartmentAdded = async (newApartment) => {
     try {
       if (propertyTypeFilter === 'rental') {
-        const response = await rentApartmentsApi.create(newApartment);
-        if (response) {
-          setApartments(prev => [...prev, response]);
-          setIsAddApartmentModalOpen(false);
-        }
+        await addApartment(newApartment);
+        setIsAddApartmentModalOpen(false);
       } else {
-        const response = await saleApartmentsApi.create(newApartment);
-        if (response) {
-          setSaleApartments(prev => [...prev, response]);
-          setIsAddSaleApartmentModalOpen(false);
-        }
+        await addSaleApartment(newApartment);
+        setIsAddSaleApartmentModalOpen(false);
       }
     } catch (error) {
       console.error('Error adding apartment:', error);
@@ -568,11 +541,8 @@ const MasterAdminDashboard = () => {
 
   const handleSaleApartmentAdded = async (newSaleApartment) => {
     try {
-      const response = await saleApartmentsApi.create(newSaleApartment);
-      if (response) {
-        setSaleApartments(prev => [...prev, response]);
-        setIsAddSaleApartmentModalOpen(false);
-      }
+      await addSaleApartment(newSaleApartment);
+      setIsAddSaleApartmentModalOpen(false);
     } catch (error) {
       console.error('Error adding sale apartment:', error);
     }
@@ -600,7 +570,7 @@ const MasterAdminDashboard = () => {
   console.log('Render - Modal States:', {
     isEditProfileModalOpen,
     isManageAdminsModalOpen,
-    currentAdmin
+    currentUser
   });
 
   return (
