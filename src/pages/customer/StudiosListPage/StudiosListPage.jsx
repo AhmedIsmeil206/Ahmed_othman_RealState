@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import StudioCard from '../../../components/customer/StudioCard/StudioCard';
 import { apartmentPartsApi, handleApiError } from '../../../services/api';
+import { convertFromApiEnum, getValidOptions } from '../../../utils/apiEnums';
 import './StudiosListPage.css';
 
 const StudiosListPage = () => {
@@ -45,32 +46,53 @@ const StudiosListPage = () => {
       ? imageUrls 
       : ['https://via.placeholder.com/300x200?text=No+Image'];
     
-    // Handle location - might come from parent apartment data
+    // Handle location using enum conversion - might come from parent apartment data
     let location = 'Location not specified';
+    let locationEnum = null;
+    
     if (part.location) {
-      location = part.location.charAt(0).toUpperCase() + part.location.slice(1);
+      locationEnum = part.location;
+      location = convertFromApiEnum.location(part.location);
     } else if (part.apartment && part.apartment.location) {
-      location = part.apartment.location.charAt(0).toUpperCase() + part.apartment.location.slice(1);
+      locationEnum = part.apartment.location;
+      location = convertFromApiEnum.location(part.apartment.location);
     }
+    
+    // Handle bathrooms enum conversion
+    const bathroomsDisplay = part.bathrooms ? convertFromApiEnum.bathrooms(part.bathrooms) : 'Private';
+    
+    // Handle furnished enum conversion
+    const furnishedDisplay = part.furnished ? convertFromApiEnum.furnished(part.furnished) : false;
+    
+    // Handle balcony enum conversion
+    const balconyDisplay = part.balcony ? convertFromApiEnum.balcony(part.balcony) : 'No';
+    
+    // Handle status enum conversion
+    const statusDisplay = part.status ? convertFromApiEnum.status(part.status) : 'Available';
     
     return {
       id: part.id || part._id,
       title: part.title || part.name || 'Studio',
       location: location,
+      locationEnum: locationEnum, // Keep for filtering
       price: formattedPrice,
       pricePerMonth: parseFloat(monthlyPrice),
       area: formattedArea,
       bedrooms: part.bedrooms || 1,
-      bathrooms: part.bathrooms || 'Private',
+      bathrooms: bathroomsDisplay,
+      bathroomsEnum: part.bathrooms, // Keep for API calls
+      furnished: furnishedDisplay,
+      furnishedEnum: part.furnished, // Keep for API calls
+      balcony: balconyDisplay,
+      balconyEnum: part.balcony, // Keep for API calls
       amenities: part.facilities_amenities?.split(', ') || [],
       images: images,
       description: part.description || 'No description available',
       createdBy: part.created_by_admin_id || part.createdBy || null,
       createdAt: createdDate,
       postedDate: postedDate,
-      status: part.status || 'available',
-      furnished: part.furnished === 'yes',
-      balcony: part.balcony || 'no',
+      status: statusDisplay,
+      statusEnum: part.status, // Keep for API calls
       floor: part.floor || 1,
       apartment_id: part.apartment_id
     };
@@ -90,9 +112,10 @@ const StudiosListPage = () => {
       console.log('✅ Fetched apartment parts:', parts);
       
       if (parts && Array.isArray(parts)) {
-        // Filter for available studios and transform the data
+        // If we have apartment parts but no location info, we might need to fetch apartment details
+        // Filter for available studios first, then transform the data
         const availableStudios = parts.filter(part => 
-          part.status === 'available' || !part.status
+          !part.status || part.status === 'available'
         );
         
         // If we have apartment parts but no location info, we might need to fetch apartment details
@@ -143,9 +166,10 @@ const StudiosListPage = () => {
         if (priceRange === 'high' && price <= 20000) return false;
       }
       
-      // Location filter
+      // Location filter - use enum values for comparison
       if (locationFilter !== 'all') {
-        if (!studio.location || !studio.location.toLowerCase().includes(locationFilter.toLowerCase())) return false;
+        const studioLocationEnum = studio.locationEnum || studio.location?.toLowerCase();
+        if (!studioLocationEnum || studioLocationEnum !== locationFilter) return false;
       }
       
       return true;
@@ -274,8 +298,11 @@ const StudiosListPage = () => {
                 className="filter-select"
               >
                 <option value="all">All Locations</option>
-                <option value="maadi">Maadi</option>
-                <option value="mokkattam">Mokkattam</option>
+                {getValidOptions.locations().map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
             

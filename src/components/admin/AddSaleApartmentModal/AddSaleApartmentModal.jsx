@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useMasterAuth, useProperty } from '../../../hooks/useRedux';
 import './AddSaleApartmentModal.css';
-import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import useUniqueId from '../../../hooks/useUniqueId';
 
 const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {

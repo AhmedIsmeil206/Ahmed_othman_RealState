@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getValidOptions } from '../../../utils/apiEnums';
 import './BookingModal.css';
 
 const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
@@ -18,15 +19,8 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const platformOptions = [
-    'Website',
-    'Facebook',
-    'Instagram', 
-    'WhatsApp',
-    'Referral',
-    'Walk-in',
-    'Other'
-  ];
+  // Use proper enum values for platform sources from API documentation
+  const platformOptions = getValidOptions.customerSources();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

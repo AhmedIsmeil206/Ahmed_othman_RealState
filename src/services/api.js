@@ -4,6 +4,9 @@
  * Configuration loaded from environment variables
  */
 
+// Import enum constants for proper API value mapping
+import { convertToApiEnum, convertFromApiEnum, validateEnum, LOCATIONS, BATHROOM_TYPES, FURNISHED_STATUS, BALCONY_TYPES, CUSTOMER_SOURCES, ADMIN_ROLES, PART_STATUS } from '../utils/apiEnums.js';
+
 // API Configuration from environment variables only
 const API_CONFIG = {
   BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1',
@@ -572,22 +575,38 @@ export const rentalContractsApi = {
 export const dataTransformers = {
   // Transform frontend apartment data to backend format
   transformApartmentToApi(frontendData, type = 'rent') {
+    // Ensure proper enum conversion for location
+    const locationValue = convertToApiEnum.location(frontendData.location);
+    
+    // Ensure proper enum conversion for bathrooms
+    const bathroomsValue = convertToApiEnum.bathrooms(frontendData.bathrooms);
+    
+    // Validate critical enum values
+    try {
+      validateEnum(locationValue, LOCATIONS, 'location');
+      validateEnum(bathroomsValue, BATHROOM_TYPES, 'bathrooms');
+    } catch (error) {
+      console.error('Enum validation failed during apartment transformation:', error.message);
+      throw new Error(`Data validation failed: ${error.message}`);
+    }
+
     return {
       name: frontendData.name || frontendData.title,
-      location: frontendData.location?.toLowerCase(),
+      location: locationValue,
       address: frontendData.address,
-      area: String(frontendData.area).replace(' sqm', ''),
+      area: String(frontendData.area).replace(' sqm', '').replace(/[^0-9.]/g, ''),
       number: frontendData.number || frontendData.unitNumber,
       price: String(frontendData.price).replace(/[^0-9.]/g, ''),
-      bedrooms: Number(frontendData.bedrooms),
-      bathrooms: frontendData.bathrooms?.toLowerCase() || 'private',
-      description: frontendData.description,
-      photos_url: frontendData.photos_url || frontendData.images || [],
-      location_on_map: frontendData.location_on_map || frontendData.mapLocation,
+      bedrooms: Number(frontendData.bedrooms) || 1,
+      bathrooms: bathroomsValue,
+      description: frontendData.description || '',
+      photos_url: Array.isArray(frontendData.photos_url) ? frontendData.photos_url : 
+                  Array.isArray(frontendData.images) ? frontendData.images : [],
+      location_on_map: frontendData.location_on_map || frontendData.mapLocation || '',
       facilities_amenities: Array.isArray(frontendData.amenities) 
         ? frontendData.amenities.join(', ') 
-        : frontendData.facilities_amenities || frontendData.amenities,
-      floor: Number(frontendData.floor),
+        : String(frontendData.facilities_amenities || frontendData.amenities || ''),
+      floor: Number(frontendData.floor) || 1,
       total_parts: Number(frontendData.total_parts || frontendData.totalStudios || 1),
       contact_number: frontendData.contact_number || frontendData.contactNumber
     };
@@ -599,20 +618,22 @@ export const dataTransformers = {
       id: backendData.id,
       name: backendData.name,
       title: backendData.name,
-      location: backendData.location,
+      location: convertFromApiEnum.location(backendData.location),
+      locationEnum: backendData.location, // Keep original enum value for API calls
       address: backendData.address,
       area: backendData.area,
       unitNumber: backendData.number,
       number: backendData.number,
       price: backendData.price,
       bedrooms: backendData.bedrooms,
-      bathrooms: backendData.bathrooms,
-      description: backendData.description,
-      images: backendData.photos_url,
-      photos_url: backendData.photos_url,
+      bathrooms: convertFromApiEnum.bathrooms(backendData.bathrooms),
+      bathroomsEnum: backendData.bathrooms, // Keep original enum value for API calls
+      description: backendData.description || '',
+      images: backendData.photos_url || [],
+      photos_url: backendData.photos_url || [],
       mapLocation: backendData.location_on_map,
       location_on_map: backendData.location_on_map,
-      amenities: backendData.facilities_amenities?.split(', ') || [],
+      amenities: backendData.facilities_amenities ? backendData.facilities_amenities.split(', ') : [],
       facilities_amenities: backendData.facilities_amenities,
       floor: backendData.floor,
       totalStudios: backendData.total_parts,
@@ -627,16 +648,46 @@ export const dataTransformers = {
       type: 'Apartment',
       ownership: 'Rent',
       completionStatus: 'Ready',
-      studios: backendData.apartment_parts || []
+      studios: backendData.apartment_parts ? backendData.apartment_parts.map(part => 
+        this.transformStudioFromApi(part)
+      ) : []
     };
   },
 
-  // Transform studio part data
+  // Transform studio part data for API
   transformStudioToApi(frontendData) {
+    // Convert enum values
+    const bathroomsValue = convertToApiEnum.bathrooms(frontendData.bathrooms);
+    const furnishedValue = convertToApiEnum.furnished(frontendData.furnished);
+    const balconyValue = convertToApiEnum.balcony(frontendData.balcony);
+    const statusValue = convertToApiEnum.status(frontendData.status);
+
+    // Validate enum values
+    try {
+      validateEnum(bathroomsValue, BATHROOM_TYPES, 'bathrooms');
+      validateEnum(furnishedValue, FURNISHED_STATUS, 'furnished');
+      validateEnum(balconyValue, BALCONY_TYPES, 'balcony');
+      if (statusValue) {
+        validateEnum(statusValue, PART_STATUS, 'status');
+      }
+    } catch (error) {
+      console.error('Enum validation failed during studio transformation:', error.message);
+      throw new Error(`Studio data validation failed: ${error.message}`);
+    }
+
     return {
-      studio_number: frontendData.studio_number || frontendData.unitNumber,
-      rent_value: String(frontendData.rent_value || frontendData.price).replace(/[^0-9.]/g, ''),
-      floor: Number(frontendData.floor)
+      title: frontendData.title || frontendData.studio_number || frontendData.unitNumber,
+      area: String(frontendData.area || '0').replace(' sqm', '').replace(/[^0-9.]/g, ''),
+      monthly_price: String(frontendData.monthly_price || frontendData.rent_value || frontendData.price || '0').replace(/[^0-9.]/g, ''),
+      bedrooms: Number(frontendData.bedrooms) || 1,
+      bathrooms: bathroomsValue,
+      furnished: furnishedValue,
+      balcony: balconyValue,
+      description: frontendData.description || '',
+      photos_url: Array.isArray(frontendData.photos_url) ? frontendData.photos_url : 
+                  Array.isArray(frontendData.images) ? frontendData.images : [],
+      status: statusValue || PART_STATUS.AVAILABLE,
+      floor: Number(frontendData.floor) || 1
     };
   },
 
@@ -644,12 +695,26 @@ export const dataTransformers = {
     return {
       id: backendData.id,
       apartment_id: backendData.apartment_id,
-      studio_number: backendData.studio_number,
-      unitNumber: backendData.studio_number,
-      rent_value: backendData.rent_value,
-      price: backendData.rent_value,
-      status: backendData.status,
-      isAvailable: backendData.status === 'available',
+      title: backendData.title,
+      studio_number: backendData.title || backendData.studio_number,
+      unitNumber: backendData.title || backendData.studio_number,
+      area: backendData.area,
+      monthly_price: backendData.monthly_price,
+      rent_value: backendData.monthly_price,
+      price: backendData.monthly_price,
+      bedrooms: backendData.bedrooms,
+      bathrooms: convertFromApiEnum.bathrooms(backendData.bathrooms),
+      bathroomsEnum: backendData.bathrooms, // Keep original for API calls
+      furnished: convertFromApiEnum.furnished(backendData.furnished),
+      furnishedEnum: backendData.furnished, // Keep original for API calls
+      balcony: convertFromApiEnum.balcony(backendData.balcony),
+      balconyEnum: backendData.balcony, // Keep original for API calls
+      description: backendData.description || '',
+      photos_url: backendData.photos_url || [],
+      images: backendData.photos_url || [],
+      status: convertFromApiEnum.status(backendData.status),
+      statusEnum: backendData.status, // Keep original for API calls
+      isAvailable: backendData.status === PART_STATUS.AVAILABLE,
       floor: backendData.floor,
       created_by_admin_id: backendData.created_by_admin_id,
       createdBy: backendData.created_by_admin_id,
@@ -658,24 +723,113 @@ export const dataTransformers = {
     };
   },
 
-  // Transform rental contract data
+  // Transform rental contract data for API
   transformContractToApi(frontendData) {
+    // Convert customer source enum
+    const customerSourceValue = convertToApiEnum.customerSource(frontendData.how_did_customer_find_us || frontendData.customerSource);
+    
+    // Validate customer source enum
+    try {
+      validateEnum(customerSourceValue, CUSTOMER_SOURCES, 'customer_source');
+    } catch (error) {
+      console.error('Enum validation failed during contract transformation:', error.message);
+      throw new Error(`Contract data validation failed: ${error.message}`);
+    }
+
     return {
       apartment_part_id: frontendData.apartment_part_id || frontendData.studioId,
       customer_name: frontendData.customer_name || frontendData.customerName,
       customer_phone: frontendData.customer_phone || frontendData.customerPhone,
       customer_id_number: frontendData.customer_id_number || frontendData.customerIdNumber,
-      how_did_customer_find_us: frontendData.how_did_customer_find_us || frontendData.customerSource,
-      paid_deposit: String(frontendData.paid_deposit || frontendData.deposit),
-      warrant_amount: String(frontendData.warrant_amount || frontendData.warrantyAmount),
+      how_did_customer_find_us: customerSourceValue,
+      paid_deposit: String(frontendData.paid_deposit || frontendData.deposit || '0').replace(/[^0-9.]/g, ''),
+      warrant_amount: String(frontendData.warrant_amount || frontendData.warrantyAmount || '0').replace(/[^0-9.]/g, ''),
       rent_start_date: frontendData.rent_start_date || frontendData.startDate,
       rent_end_date: frontendData.rent_end_date || frontendData.endDate,
-      rent_period: Number(frontendData.rent_period || frontendData.contractPeriod),
-      contract_url: frontendData.contract_url || frontendData.contractDocument,
-      studio_number: frontendData.studio_number || frontendData.studioNumber,
-      customer_id_url: frontendData.customer_id_url || frontendData.customerIdDocument,
-      commission: String(frontendData.commission),
-      rent_price: String(frontendData.rent_price || frontendData.monthlyRent)
+      rent_period: Number(frontendData.rent_period || frontendData.contractPeriod || 12),
+      contract_url: frontendData.contract_url || frontendData.contractDocument || '',
+      customer_id_url: frontendData.customer_id_url || frontendData.customerIdDocument || '',
+      commission: String(frontendData.commission || '0').replace(/[^0-9.]/g, ''),
+      rent_price: String(frontendData.rent_price || frontendData.monthlyRent || '0').replace(/[^0-9.]/g, '')
+    };
+  },
+
+  // Transform rental contract data from API
+  transformContractFromApi(backendData) {
+    return {
+      id: backendData.id,
+      apartment_part_id: backendData.apartment_part_id,
+      studioId: backendData.apartment_part_id,
+      customer_name: backendData.customer_name,
+      customerName: backendData.customer_name,
+      customer_phone: backendData.customer_phone,
+      customerPhone: backendData.customer_phone,
+      customer_id_number: backendData.customer_id_number,
+      customerIdNumber: backendData.customer_id_number,
+      how_did_customer_find_us: convertFromApiEnum.customerSource(backendData.how_did_customer_find_us),
+      customerSource: convertFromApiEnum.customerSource(backendData.how_did_customer_find_us),
+      customerSourceEnum: backendData.how_did_customer_find_us, // Keep original for API calls
+      paid_deposit: backendData.paid_deposit,
+      deposit: backendData.paid_deposit,
+      warrant_amount: backendData.warrant_amount,
+      warrantyAmount: backendData.warrant_amount,
+      rent_start_date: backendData.rent_start_date,
+      startDate: backendData.rent_start_date,
+      rent_end_date: backendData.rent_end_date,
+      endDate: backendData.rent_end_date,
+      rent_period: backendData.rent_period,
+      contractPeriod: backendData.rent_period,
+      contract_url: backendData.contract_url,
+      contractDocument: backendData.contract_url,
+      customer_id_url: backendData.customer_id_url,
+      customerIdDocument: backendData.customer_id_url,
+      commission: backendData.commission,
+      rent_price: backendData.rent_price,
+      monthlyRent: backendData.rent_price,
+      is_active: backendData.is_active,
+      isActive: backendData.is_active,
+      created_by_admin_id: backendData.created_by_admin_id,
+      createdBy: backendData.created_by_admin_id,
+      created_at: backendData.created_at,
+      updated_at: backendData.updated_at
+    };
+  },
+
+  // Transform admin data for API
+  transformAdminToApi(frontendData) {
+    // Convert admin role enum
+    const roleValue = convertToApiEnum.adminRole(frontendData.role);
+    
+    // Validate admin role enum
+    try {
+      validateEnum(roleValue, ADMIN_ROLES, 'admin_role');
+    } catch (error) {
+      console.error('Enum validation failed during admin transformation:', error.message);
+      throw new Error(`Admin data validation failed: ${error.message}`);
+    }
+
+    return {
+      full_name: frontendData.full_name || frontendData.fullName || frontendData.name,
+      email: frontendData.email,
+      phone: frontendData.phone,
+      password: frontendData.password,
+      role: roleValue
+    };
+  },
+
+  // Transform admin data from API
+  transformAdminFromApi(backendData) {
+    return {
+      id: backendData.id,
+      full_name: backendData.full_name,
+      fullName: backendData.full_name,
+      name: backendData.full_name,
+      email: backendData.email,
+      phone: backendData.phone,
+      role: convertFromApiEnum.adminRole(backendData.role),
+      roleEnum: backendData.role, // Keep original for API calls
+      created_at: backendData.created_at,
+      updated_at: backendData.updated_at
     };
   }
 };
