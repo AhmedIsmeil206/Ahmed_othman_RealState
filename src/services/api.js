@@ -385,6 +385,11 @@ export const adminApi = {
     return apiClient.get('/admins/me');
   },
 
+  // Update current admin's own information
+  async updateMe(data) {
+    return apiClient.put('/admins/me', data);
+  },
+
   // Create new admin (super admin only)
   async create(data) {
     return apiClient.post('/admins/', data);
@@ -426,6 +431,11 @@ export const rentApartmentsApi = {
   // Delete rent apartment
   async delete(apartmentId) {
     return apiClient.delete(`/apartments/rent/${apartmentId}`);
+  },
+
+  // Get WhatsApp contact info for apartment inquiry
+  async getWhatsAppContact(apartmentId) {
+    return apiClient.get(`/apartments/rent/${apartmentId}/whatsapp`);
   }
 };
 
@@ -454,6 +464,11 @@ export const saleApartmentsApi = {
   // Delete sale apartment
   async delete(apartmentId) {
     return apiClient.delete(`/apartments/sale/${apartmentId}`);
+  },
+
+  // Get WhatsApp contact info for sale apartment inquiry
+  async getWhatsAppContact(apartmentId) {
+    return apiClient.get(`/apartments/sale/${apartmentId}/whatsapp`);
   }
 };
 

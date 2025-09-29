@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import StudioCard from '../../../components/customer/StudioCard/StudioCard';
-import { apartmentPartsApi, handleApiError } from '../../../services/api';
+import { apartmentPartsApi, rentApartmentsApi, handleApiError } from '../../../services/api';
 import { convertFromApiEnum, getValidOptions } from '../../../utils/apiEnums';
 import './StudiosListPage.css';
 
@@ -94,7 +94,11 @@ const StudiosListPage = () => {
       status: statusDisplay,
       statusEnum: part.status, // Keep for API calls
       floor: part.floor || 1,
-      apartment_id: part.apartment_id
+      apartment_id: part.apartment_id,
+      // Admin contact info will be populated by fetchAllStudios
+      adminPhone: null,
+      whatsappUrl: null,
+      contact_number: null // Will be set to admin phone or fallback
     };
   };
 
@@ -118,11 +122,36 @@ const StudiosListPage = () => {
           !part.status || part.status === 'available'
         );
         
-        // If we have apartment parts but no location info, we might need to fetch apartment details
-        // For now, transform with available data
-        const transformedStudios = availableStudios.map(transformApartmentPartToStudio);
+        // Transform studios and fetch admin contact info for each
+        const transformedStudios = await Promise.all(
+          availableStudios.map(async (part) => {
+            const transformedStudio = transformApartmentPartToStudio(part);
+            
+            // If we have apartment_id, fetch the admin's WhatsApp contact info
+            if (part.apartment_id) {
+              try {
+                const whatsappInfo = await rentApartmentsApi.getWhatsAppContact(part.apartment_id);
+                transformedStudio.adminPhone = whatsappInfo.admin_phone;
+                transformedStudio.whatsappUrl = whatsappInfo.whatsapp_url;
+                transformedStudio.contact_number = whatsappInfo.admin_phone; // Use admin's actual phone
+                console.log(`📱 Fetched admin phone for studio ${part.id}:`, whatsappInfo.admin_phone);
+              } catch (error) {
+                console.warn(`⚠️ Could not fetch WhatsApp info for apartment ${part.apartment_id}:`, error);
+                // Use fallback - try to get from original part data or use default
+                transformedStudio.contact_number = part.contact_number || '+201000000000';
+                transformedStudio.adminPhone = part.contact_number || '+201000000000';
+              }
+            } else {
+              // No apartment_id, use fallback
+              transformedStudio.contact_number = part.contact_number || '+201000000000';
+              transformedStudio.adminPhone = part.contact_number || '+201000000000';
+            }
+            
+            return transformedStudio;
+          })
+        );
         
-        console.log('🏠 Transformed to studios:', transformedStudios);
+        console.log('🏠 Transformed studios with admin contacts:', transformedStudios);
         setAllStudios(transformedStudios);
         
         // Load first batch for display

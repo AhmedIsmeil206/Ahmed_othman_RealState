@@ -580,7 +580,7 @@ const StudioDetailsPage = () => {
               
               <div className="contact-actions">
                 <WhatsAppButton 
-                  phoneNumber={studio.contact_number || '+201000000000'}
+                  phoneNumber={studio.adminPhone || studio.contact_number || '+201000000000'}
                   message={`Hello, I'm interested in ${studio.title || studio.name} for ${studio.price || `EGP ${studio.monthly_rent?.toLocaleString()}/month`}`}
                 />
               </div>

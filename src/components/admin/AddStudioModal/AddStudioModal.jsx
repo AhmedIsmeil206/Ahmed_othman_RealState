@@ -1,45 +1,28 @@
 import React, { useState } from 'react';
-import { useProperty, useAdminAuth } from '../../../hooks/useRedux';
-import useUniqueId from '../../../hooks/useUniqueId';
+import { apartmentPartsApi, handleApiError, dataTransformers } from '../../../services/api';
+import { convertToApiEnum, getValidOptions } from '../../../utils/apiEnums';
 import LoadingSpinner from '../../common/LoadingSpinner/LoadingSpinner';
 import './AddStudioModal.css';
 
 const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
-  const { getApartmentById, getApartmentsByCreator, addStudio } = useProperty();
-  const { currentAdmin } = useAdminAuth();
-  const { generateStudioId } = useUniqueId();
-  
-  // Get apartments created by current admin only
-  const adminApartments = currentAdmin ? 
-    getApartmentsByCreator(currentAdmin.email || currentAdmin.accountOrMobile) : 
-    [];
-  
   const [formData, setFormData] = useState({
-    selectedApartmentId: apartmentId || '',
     title: '',
     area: '',
-    unitNumber: '',
-    price: '',
-    pricePerMonth: '',
-    bedrooms: '',
-    bathrooms: '1',
-    furnished: 'Yes',
+    monthly_price: '',
+    bedrooms: 1,
+    bathrooms: 'private',
+    furnished: 'yes',
+    balcony: 'no',
     description: '',
-    balcony: 'Yes',
-    parking: 'Available', 
-    isAvailable: true,
-    photos: []
+    photos_url: []
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
 
-  // Don't render if modal is not open
-  if (!isOpen) return null;
-
-  // Get the selected apartment
-  const selectedApartment = getApartmentById(formData.selectedApartmentId);
+  // Don't render if modal is not open or no apartment ID provided
+  if (!isOpen || !apartmentId) return null;
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -49,16 +32,6 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
       ...prev,
       [name]: newValue
     }));
-
-    // Update pricePerMonth when price changes
-    if (name === 'price') {
-      const numericPrice = value.replace(/[^0-9]/g, '');
-      setFormData(prev => ({
-        ...prev,
-        price: value,
-        pricePerMonth: parseInt(numericPrice) || 0
-      }));
-    }
 
     // Clear error when user starts typing
     if (errors[name]) {
@@ -76,43 +49,27 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
     setIsUploadingPhotos(true);
     
     try {
-      // Simulate network delay for photo processing
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Convert files to base64 URLs for preview
-      const fileReaders = files.map(file => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            resolve({
-              file: file,
-              preview: e.target.result,
-              name: file.name
-            });
-          };
-          reader.readAsDataURL(file);
-        });
-      });
-
-      const results = await Promise.all(fileReaders);
+      // In a real implementation, you would upload to your file storage service
+      // For now, we'll create object URLs for preview
+      const photoUrls = files.map(file => URL.createObjectURL(file));
       
       setFormData(prev => ({
         ...prev,
-        photos: [...prev.photos, ...results]
+        photos_url: [...prev.photos_url, ...photoUrls]
       }));
 
       // Clear error when user uploads photos
-      if (errors.photos) {
+      if (errors.photos_url) {
         setErrors(prev => ({
           ...prev,
-          photos: ''
+          photos_url: ''
         }));
       }
     } catch (error) {
       console.error('Error uploading photos:', error);
       setErrors(prev => ({
         ...prev,
-        photos: 'Error uploading photos. Please try again.'
+        photos_url: 'Error uploading photos. Please try again.'
       }));
     } finally {
       setIsUploadingPhotos(false);
@@ -122,17 +79,12 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
   const removePhoto = (index) => {
     setFormData(prev => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
+      photos_url: prev.photos_url.filter((_, i) => i !== index)
     }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-
-    // Only validate apartment selection if no apartmentId was provided
-    if (!apartmentId && !formData.selectedApartmentId) {
-      newErrors.selectedApartmentId = 'Please select an apartment';
-    }
 
     if (!formData.title.trim()) {
       newErrors.title = 'Studio title is required';
@@ -142,22 +94,12 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
       newErrors.area = 'Area is required';
     }
 
-    if (!formData.unitNumber.trim()) {
-      newErrors.unitNumber = 'Unit number is required';
-    }
-
-    if (!formData.price.trim()) {
-      newErrors.price = 'Price is required';
-    } else if (formData.pricePerMonth < 1000) {
-      newErrors.price = 'Price must be at least 1000 EGP';
+    if (!formData.monthly_price.trim()) {
+      newErrors.monthly_price = 'Monthly price is required';
     }
 
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
-    }
-
-    if (formData.photos.length === 0) {
-      newErrors.photos = 'At least one photo is required';
     }
 
     setErrors(newErrors);
@@ -174,92 +116,41 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      // Create new studio object
-      const newStudio = {
-        id: generateStudioId(), // Use unique ID generation
-        apartmentId: formData.selectedApartmentId,
-        title: formData.title,
-        price: formData.price.startsWith('EGP') ? formData.price : `EGP ${formData.price.replace(/[^0-9,]/g, '')}`,
-        pricePerMonth: formData.pricePerMonth,
-        location: selectedApartment.location,
-        area: formData.area + (formData.area.includes('sqm') ? '' : ' sqm'),
-        bedrooms: formData.bedrooms,
-        bathrooms: parseInt(formData.bathrooms),
-        furnished: formData.furnished,
-        type: "Studio",
-        ownership: "Rent",
-        completionStatus: "Ready",
-        unitNumber: formData.unitNumber,
-        description: formData.description,
-        createdBy: currentAdmin?.id || currentAdmin?.email || 'admin_123',
-        createdAt: new Date().toISOString(),
-        highlights: {
-          type: "Studio",
-          ownership: "Rent",
-          area: formData.area,
-          bedrooms: formData.bedrooms,
-          bathrooms: formData.bathrooms,
-          furnished: formData.furnished
-        },
-        details: {
-          paymentOption: "Monthly",
-          completionStatus: "Ready",
-          furnished: formData.furnished,
-          parking: formData.parking,
-          balcony: formData.balcony
-        },
-        images: formData.photos.length > 0 ? formData.photos.map(photo => photo.preview) : [
-          "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-          "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-          "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-        ],
-        coordinates: selectedApartment?.coordinates || { lat: 30.0444, lng: 31.2357 },
-        postedDate: "Just now",
-        contactNumber: selectedApartment?.contactNumber || "+20 100 123 4567",
-        isAvailable: formData.isAvailable,
-        amenities: [
-          "Air Conditioning",
-          "Built-in Wardrobe", 
-          "Kitchen Appliances",
-          "Private Bathroom",
-          formData.parking !== "Not Available" ? "Parking Space" : null,
-          formData.balcony === "Yes" ? "Balcony" : null,
-          "High-Speed Internet",
-          "24/7 Security",
-          "Elevator Access"
-        ].filter(Boolean),
-        // Inherit location from parent apartment  
-        locationUrl: selectedApartment?.mapUrl
-      };
-
-      // Use real API call to create studio
-      addStudio(formData.selectedApartmentId, newStudio);
+      console.log('🏗️ Creating studio for apartment ID:', apartmentId);
+      console.log('📝 Form data:', formData);
       
-      // Notify parent and close modal
-      onStudioAdded?.(newStudio);
+      // Transform the data according to API requirements
+      const apiData = dataTransformers.transformStudioToApi(formData);
+      console.log('🔄 Transformed API data:', apiData);
+      
+      // Use the correct API endpoint: POST /apartments/rent/{apartment_id}/parts
+      const createdStudio = await apartmentPartsApi.create(apartmentId, apiData);
+      console.log('✅ Studio created successfully:', createdStudio);
+      
+      // Notify parent component
+      if (onStudioAdded) {
+        onStudioAdded(createdStudio);
+      }
+      
+      // Close modal and reset form
       onClose();
-      
-      // Reset form
       setFormData({
-        selectedApartmentId: apartmentId || '',
         title: '',
         area: '',
-        unitNumber: '',
-        price: '',
-        pricePerMonth: '',
-        bedrooms: '',
-        bathrooms: '1',
-        furnished: 'Yes',
+        monthly_price: '',
+        bedrooms: 1,
+        bathrooms: 'private',
+        furnished: 'yes',
+        balcony: 'no',
         description: '',
-        balcony: 'Yes',
-        parking: 'Available', 
-        isAvailable: true,
-        photos: []
+        photos_url: []
       });
       setErrors({});
+      
     } catch (error) {
-      console.error('Error adding studio:', error);
-      setErrors({ general: 'An error occurred while adding the studio. Please try again.' });
+      console.error('❌ Error creating studio:', error);
+      const errorMessage = handleApiError(error, 'Failed to create studio');
+      setErrors({ general: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
@@ -280,72 +171,23 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
             </div>
           )}
 
-          {/* Only show apartment selection if no apartmentId was provided */}
-          {!apartmentId && (
-            <div className="form-group">
-              <label htmlFor="selectedApartmentId">Select Apartment *</label>
-              <select
-                id="selectedApartmentId"
-                name="selectedApartmentId"
-                value={formData.selectedApartmentId}
-                onChange={handleInputChange}
-                className={errors.selectedApartmentId ? 'error' : ''}
-              >
-                <option value="">Choose an apartment...</option>
-                {adminApartments.map(apartment => (
-                  <option key={apartment.id} value={apartment.id}>
-                    {apartment.name} - {apartment.location}
-                  </option>
-                ))}
-              </select>
-              {errors.selectedApartmentId && <span className="error-text">{errors.selectedApartmentId}</span>}
-            </div>
-          )}
-
-          {/* Show selected apartment info when apartmentId is provided */}
-          {apartmentId && selectedApartment && (
-            <div className="form-group">
-              <label>Adding Studio to:</label>
-              <div className="apartment-info">
-                <strong>{selectedApartment.name}</strong>
-                <p>{selectedApartment.location}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="title">Studio Title *</label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                className={errors.title ? 'error' : ''}
-                placeholder="Modern Studio in Downtown - Unit 201"
-              />
-              {errors.title && <span className="error-text">{errors.title}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="unitNumber">Unit Number *</label>
-              <input
-                type="text"
-                id="unitNumber"
-                name="unitNumber"
-                value={formData.unitNumber}
-                onChange={handleInputChange}
-                className={errors.unitNumber ? 'error' : ''}
-                placeholder="A-201"
-              />
-              {errors.unitNumber && <span className="error-text">{errors.unitNumber}</span>}
-            </div>
+          <div className="form-group">
+            <label htmlFor="title">Studio Title *</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              className={errors.title ? 'error' : ''}
+              placeholder="Modern Studio - Unit A-201"
+            />
+            {errors.title && <span className="error-text">{errors.title}</span>}
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="area">Area *</label>
+              <label htmlFor="area">Area (sqm) *</label>
               <input
                 type="text"
                 id="area"
@@ -353,43 +195,40 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
                 value={formData.area}
                 onChange={handleInputChange}
                 className={errors.area ? 'error' : ''}
-                placeholder="45 sqm"
+                placeholder="45.5"
               />
               {errors.area && <span className="error-text">{errors.area}</span>}
             </div>
 
-
+            <div className="form-group">
+              <label htmlFor="monthly_price">Monthly Price (EGP) *</label>
+              <input
+                type="text"
+                id="monthly_price"
+                name="monthly_price"
+                value={formData.monthly_price}
+                onChange={handleInputChange}
+                className={errors.monthly_price ? 'error' : ''}
+                placeholder="3500.00"
+              />
+              {errors.monthly_price && <span className="error-text">{errors.monthly_price}</span>}
+            </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="price">Monthly Price (EGP) *</label>
-              <input
-                type="text"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className={errors.price ? 'error' : ''}
-                placeholder="12,000"
-              />
-              {errors.price && <span className="error-text">{errors.price}</span>}
-            </div>
-
-            <div className="form-group">
               <label htmlFor="bedrooms">Bedrooms</label>
               <input
-                type="text"
+                type="number"
                 id="bedrooms"
                 name="bedrooms"
                 value={formData.bedrooms}
                 onChange={handleInputChange}
-                placeholder="Studio"
+                min="1"
+                placeholder="1"
               />
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="bathrooms">Bathrooms</label>
               <select
@@ -398,11 +237,16 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
                 value={formData.bathrooms}
                 onChange={handleInputChange}
               >
-                <option value="1">1</option>
-                <option value="2">2</option>
+                {getValidOptions.bathroomTypes().map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
+          </div>
 
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="furnished">Furnished</label>
               <select
@@ -411,14 +255,14 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
                 value={formData.furnished}
                 onChange={handleInputChange}
               >
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-                <option value="Semi-furnished">Semi-furnished</option>
+                {getValidOptions.furnishedStatus().map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="balcony">Balcony</label>
               <select
@@ -427,22 +271,11 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
                 value={formData.balcony}
                 onChange={handleInputChange}
               >
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="parking">Parking</label>
-              <select
-                id="parking"
-                name="parking"
-                value={formData.parking}
-                onChange={handleInputChange}
-              >
-                <option value="Available">Available</option>
-                <option value="Valet">Valet</option>
-                <option value="Not Available">Not Available</option>
+                {getValidOptions.balconyTypes().map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -455,14 +288,14 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
               value={formData.description}
               onChange={handleInputChange}
               className={errors.description ? 'error' : ''}
-              placeholder="Cozy studio apartment with modern amenities. Features include air conditioning, built-in wardrobe, kitchen with appliances, and private bathroom. Located in a quiet neighborhood with easy access to public transportation and shopping centers."
+              placeholder="Cozy studio apartment with modern amenities..."
               rows="4"
             />
             {errors.description && <span className="error-text">{errors.description}</span>}
           </div>
 
           <div className="form-group full-width">
-            <label htmlFor="photos">Studio Photos *</label>
+            <label htmlFor="photos">Studio Photos</label>
             <div className="photo-upload-container">
               <input
                 type="file"
@@ -491,14 +324,14 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
                 )}
               </label>
             </div>
-            {errors.photos && <span className="error-text">{errors.photos}</span>}
+            {errors.photos_url && <span className="error-text">{errors.photos_url}</span>}
             
-            {formData.photos.length > 0 && (
+            {formData.photos_url.length > 0 && (
               <div className="photo-preview-grid">
-                {formData.photos.map((photo, index) => (
+                {formData.photos_url.map((photoUrl, index) => (
                   <div key={index} className="photo-preview-item">
                     <img 
-                      src={photo.preview} 
+                      src={photoUrl} 
                       alt={`Studio ${index + 1}`}
                       className="photo-preview-image"
                     />
@@ -510,23 +343,10 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
                     >
                       ×
                     </button>
-                    <div className="photo-name">{photo.name}</div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="form-group checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                name="isAvailable"
-                checked={formData.isAvailable}
-                onChange={handleInputChange}
-              />
-              <span className="checkbox-text">Studio is available for rent</span>
-            </label>
           </div>
 
           <div className="modal-actions">

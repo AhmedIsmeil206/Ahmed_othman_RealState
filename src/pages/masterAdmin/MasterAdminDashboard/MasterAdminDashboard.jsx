@@ -6,6 +6,7 @@ import SaleApartmentCard from '../../../components/admin/SaleApartmentCard';
 import AddStudioModal from '../../../components/admin/AddStudioModal';
 import AddApartmentModal from '../../../components/admin/AddApartmentModal';
 import AddSaleApartmentModal from '../../../components/admin/AddSaleApartmentModal/AddSaleApartmentModal';
+import { formatPhoneForAPI, validateEgyptianPhone, normalizePhoneInput } from '../../../utils/phoneUtils';
 import './MasterAdminDashboard.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 
@@ -371,7 +372,15 @@ const MasterAdminDashboard = () => {
 
   const handleAdminInputChange = (e) => {
     const { name, value } = e.target;
-    setAdminForm(prev => ({ ...prev, [name]: value }));
+    
+    let processedValue = value;
+    
+    // Handle phone number input without requiring +2 prefix
+    if (name === 'mobile') {
+      processedValue = normalizePhoneInput(value);
+    }
+    
+    setAdminForm(prev => ({ ...prev, [name]: processedValue }));
     if (adminErrors[name]) {
       setAdminErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -396,8 +405,11 @@ const MasterAdminDashboard = () => {
     }
     if (!adminForm.mobile?.trim()) {
       errors.mobile = 'Mobile number is required';
-    } else if (!/^[+]?[\d\s-()]+$/.test(adminForm.mobile)) {
-      errors.mobile = 'Invalid mobile number format';
+    } else {
+      const phoneValidation = validateEgyptianPhone(adminForm.mobile);
+      if (!phoneValidation.isValid) {
+        errors.mobile = phoneValidation.error;
+      }
     }
     
     // Simplified role validation for debugging
@@ -437,7 +449,7 @@ const MasterAdminDashboard = () => {
       const apiData = {
         full_name: adminForm.name.trim(),
         email: adminForm.email.toLowerCase().trim(),
-        phone: adminForm.mobile.trim(),
+        phone: formatPhoneForAPI(adminForm.mobile.trim()),
         password: adminForm.password,
         role: adminForm.role
       };
@@ -1042,7 +1054,7 @@ const MasterAdminDashboard = () => {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="mobile">Mobile Phone</label>
+                    <label htmlFor="mobile">Mobile Phone (without +2)</label>
                     <input
                       type="tel"
                       id="mobile"
@@ -1050,7 +1062,7 @@ const MasterAdminDashboard = () => {
                       value={adminForm.mobile}
                       onChange={handleAdminInputChange}
                       className={adminErrors.mobile ? 'error' : ''}
-                      placeholder="Enter admin's mobile number"
+                      placeholder="10xxxxxxxx or 01xxxxxxxxx"
                     />
                     {adminErrors.mobile && <span className="error-text">{adminErrors.mobile}</span>}
                   </div>

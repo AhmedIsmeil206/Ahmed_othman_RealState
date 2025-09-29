@@ -191,17 +191,26 @@ export const updateMasterProfile = createAsyncThunk(
       }
       
       const updateData = {
-        email: email.toLowerCase().trim()
+        full_name: masterAuth.currentUser.full_name || masterAuth.currentUser.name,
+        email: email.toLowerCase().trim(),
+        phone: masterAuth.currentUser.phone
       };
       
       if (newPassword && newPassword.trim().length > 0) {
         updateData.password = newPassword;
       }
       
-      const updatedUser = await adminApi.update(masterAuth.currentUser.id, updateData);
+      console.log('🔄 Updating master admin profile via PUT /admins/me');
+      console.log('📝 Update data:', { ...updateData, password: updateData.password ? '[REDACTED]' : undefined });
+      
+      // Use the correct API endpoint: PUT /admins/me (not PUT /admins/{id})
+      const updatedUser = await adminApi.updateMe(updateData);
+      
+      console.log('✅ Profile updated successfully:', updatedUser);
       
       return { user: updatedUser };
     } catch (error) {
+      console.error('❌ Profile update failed:', error);
       return rejectWithValue(handleApiError(error, 'Update failed. Please try again.'));
     }
   }

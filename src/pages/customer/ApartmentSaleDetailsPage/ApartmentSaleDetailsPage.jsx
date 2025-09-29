@@ -13,8 +13,8 @@ const ApartmentSaleDetailsPage = () => {
   const [apartment, setApartment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [inquirySubmitted, setInquirySubmitted] = useState(false);
-  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
+  const [adminPhone, setAdminPhone] = useState(null);
+  const [whatsappUrl, setWhatsappUrl] = useState(null);
 
   // Fetch apartment details from API
   useEffect(() => {
@@ -27,6 +27,18 @@ const ApartmentSaleDetailsPage = () => {
         
         if (response) {
           setApartment(response);
+          
+          // Also fetch the admin's WhatsApp contact info
+          try {
+            const whatsappInfo = await saleApartmentsApi.getWhatsAppContact(id);
+            setAdminPhone(whatsappInfo.admin_phone);
+            setWhatsappUrl(whatsappInfo.whatsapp_url);
+            console.log('📱 Fetched admin contact for sale apartment:', whatsappInfo.admin_phone);
+          } catch (contactError) {
+            console.warn('⚠️ Could not fetch WhatsApp contact info:', contactError);
+            // Use fallback from apartment data
+            setAdminPhone(response.contact_number || '+201000000000');
+          }
         } else {
           setError('Apartment not found');
         }
@@ -42,49 +54,6 @@ const ApartmentSaleDetailsPage = () => {
       fetchApartmentDetails();
     }
   }, [id]);
-
-  useEffect(() => {
-    // Check if inquiry was already submitted for this apartment
-    const checkExistingInquiry = async () => {
-      try {
-        if (id) {
-          // Check via API if inquiries endpoint exists
-          // For now, check localStorage as fallback
-          const existingInquiry = localStorage.getItem(`apartment_inquiry_${id}`);
-          if (existingInquiry) {
-            setInquirySubmitted(true);
-          }
-        }
-      } catch (error) {
-        // Not critical - just use localStorage
-        const existingInquiry = localStorage.getItem(`apartment_inquiry_${id}`);
-        if (existingInquiry) {
-          setInquirySubmitted(true);
-        }
-      }
-    };
-    
-    checkExistingInquiry();
-  }, [id]);
-
-  const handleInquirySubmit = async () => {
-    setIsSubmittingInquiry(true);
-    try {
-      // Save inquiry to localStorage as fallback
-      const localInquiryData = {
-        apartmentId: id,
-        apartmentTitle: apartment.name || apartment.title,
-        submittedAt: new Date().toISOString(),
-        inquiryType: 'purchase'
-      };
-      localStorage.setItem(`apartment_inquiry_${id}`, JSON.stringify(localInquiryData));
-      setInquirySubmitted(true);
-    } catch (error) {
-      console.error('Error submitting inquiry:', error);
-    } finally {
-      setIsSubmittingInquiry(false);
-    }
-  };
 
   // Loading state
   if (loading) {
@@ -301,32 +270,9 @@ const ApartmentSaleDetailsPage = () => {
             )}
 
             <div className="apartment-actions">
-              {!inquirySubmitted ? (
-                <button 
-                  className="inquire-btn"
-                  onClick={handleInquirySubmit}
-                  disabled={isSubmittingInquiry}
-                >
-                  {isSubmittingInquiry ? (
-                    <>
-                      <LoadingSpinner size="small" color="white" inline />
-                      Submitting Inquiry...
-                    </>
-                  ) : (
-                    '📧 Send Purchase Inquiry'
-                  )}
-                </button>
-              ) : (
-                <button className="inquire-btn submitted" disabled>
-                  ✅ Inquiry Submitted
-                </button>
-              )}
-              
               <WhatsAppButton 
-                phone={apartment.contact_number || "+201234567890"}
+                phoneNumber={adminPhone || apartment.contact_number || "+201000000000"}
                 message={`Hi! I'm interested in the apartment "${apartment.name || apartment.title}" listed for ${formatPrice(apartment.price || apartment.sale_price)}. Could you provide more details?`}
-                buttonText="💬 Contact via WhatsApp"
-                className="whatsapp-btn"
               />
             </div>
           </div>

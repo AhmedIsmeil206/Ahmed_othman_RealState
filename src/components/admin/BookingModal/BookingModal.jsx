@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getValidOptions } from '../../../utils/apiEnums';
+import { formatPhoneForAPI, validateEgyptianPhone, normalizePhoneInput } from '../../../utils/phoneUtils';
 import './BookingModal.css';
 
 const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
@@ -24,9 +25,17 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    let processedValue = value;
+    
+    // Handle phone number input without requiring +2 prefix
+    if (name === 'customerPhone') {
+      processedValue = normalizePhoneInput(value);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
     
     // Clear error when user starts typing
@@ -57,8 +66,11 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
 
     if (!formData.customerPhone.trim()) {
       newErrors.customerPhone = 'Phone number is required';
-    } else if (!/^[+]?[0-9\s\-()]{10,}$/.test(formData.customerPhone.trim())) {
-      newErrors.customerPhone = 'Please enter a valid phone number';
+    } else {
+      const phoneValidation = validateEgyptianPhone(formData.customerPhone);
+      if (!phoneValidation.isValid) {
+        newErrors.customerPhone = phoneValidation.error;
+      }
     }
 
     if (!formData.customerId.trim()) {
@@ -115,7 +127,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
         studioTitle: studio.title,
         studioPrice: studio.price,
         customerName: formData.customerName.trim(),
-        customerPhone: formData.customerPhone.trim(),
+        customerPhone: formatPhoneForAPI(formData.customerPhone.trim()),
         customerId: formData.customerId.trim(),
         contract: formData.contract,
         paidDeposit: parseFloat(formData.paidDeposit),
@@ -188,7 +200,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="customerPhone">Phone Number *</label>
+              <label htmlFor="customerPhone">Phone Number (without +2) *</label>
               <input
                 type="tel"
                 id="customerPhone"
@@ -196,7 +208,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
                 value={formData.customerPhone}
                 onChange={handleInputChange}
                 className={errors.customerPhone ? 'error' : ''}
-                placeholder="+20 100 123 4567"
+                placeholder="10xxxxxxxx or 01xxxxxxxxx"
               />
               {errors.customerPhone && <span className="error-text">{errors.customerPhone}</span>}
             </div>
