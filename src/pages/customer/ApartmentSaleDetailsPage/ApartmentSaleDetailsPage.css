@@ -281,7 +281,6 @@
     flex-direction: column;
   }
 
-  .inquire-btn,
   .whatsapp-btn {
     min-width: auto;
   }
@@ -313,10 +312,7 @@
     padding: 12px;
   }
 
-  .inquire-btn {
-    padding: 12px 16px;
-    font-size: 14px;
-  }
+
 }
 
 /* Google Maps Link Styles */
