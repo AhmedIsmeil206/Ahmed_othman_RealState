@@ -111,16 +111,20 @@ const StudiosListPage = () => {
       console.log('🏢 Fetching studios from /apartments/parts endpoint...');
       
       // Use apartmentPartsApi to fetch all apartment parts (studios)
-      const parts = await apartmentPartsApi.getAll();
+      const response = await apartmentPartsApi.getAll();
       
-      console.log('✅ Fetched apartment parts:', parts);
+      // Handle different response formats
+      const parts = Array.isArray(response) ? response : (response?.data || response?.parts || []);
       
-      if (parts && Array.isArray(parts)) {
-        // If we have apartment parts but no location info, we might need to fetch apartment details
+      console.log('✅ Fetched apartment parts:', parts, 'Response type:', typeof response);
+      
+      if (parts && Array.isArray(parts) && parts.length > 0) {
         // Filter for available studios first, then transform the data
         const availableStudios = parts.filter(part => 
           !part.status || part.status === 'available'
         );
+        
+        console.log(`🔍 Found ${availableStudios.length} available studios from ${parts.length} total parts`);
         
         // Transform studios and fetch admin contact info for each
         const transformedStudios = await Promise.all(
@@ -132,7 +136,6 @@ const StudiosListPage = () => {
               try {
                 const whatsappInfo = await rentApartmentsApi.getWhatsAppContact(part.apartment_id);
                 transformedStudio.adminPhone = whatsappInfo.admin_phone;
-                transformedStudio.whatsappUrl = whatsappInfo.whatsapp_url;
                 transformedStudio.contact_number = whatsappInfo.admin_phone; // Use admin's actual phone
                 console.log(`📱 Fetched admin phone for studio ${part.id}:`, whatsappInfo.admin_phone);
               } catch (error) {
@@ -160,7 +163,7 @@ const StudiosListPage = () => {
         setCurrentPage(2);
         setHasMore(transformedStudios.length > STUDIOS_PER_PAGE);
       } else {
-        console.warn('⚠️ No parts data received or invalid format');
+        console.warn('⚠️ No parts data received or invalid format. Response:', typeof response, response);
         setAllStudios([]);
         setDisplayedStudios([]);
         setHasMore(false);

@@ -197,8 +197,15 @@ export const updateMasterProfile = createAsyncThunk(
       };
       
       if (newPassword && newPassword.trim().length > 0) {
-        updateData.password = newPassword;
+        updateData.password = newPassword.trim();
       }
+      
+      // Remove undefined/null values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined || updateData[key] === null) {
+          delete updateData[key];
+        }
+      });
       
       console.log('🔄 Updating master admin profile via PUT /admins/me');
       console.log('📝 Update data:', { ...updateData, password: updateData.password ? '[REDACTED]' : undefined });

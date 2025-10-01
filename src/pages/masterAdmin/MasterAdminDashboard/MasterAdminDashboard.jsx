@@ -296,12 +296,20 @@ const MasterAdminDashboard = () => {
         passwordToUpdate = profileForm.newPassword;
       }
 
-      // Call the updateProfile method from context
-      const result = await updateProfile(
-        emailToUpdate,
-        profileForm.currentPassword,
-        passwordToUpdate
-      );
+      // Call the updateProfile method from context with proper data format
+      const updateData = {
+        email: emailToUpdate,
+        currentPassword: profileForm.currentPassword,
+        newPassword: passwordToUpdate
+      };
+      
+      console.log('🔄 Updating master admin profile with data:', { 
+        ...updateData, 
+        currentPassword: '[HIDDEN]', 
+        newPassword: updateData.newPassword ? '[HIDDEN]' : undefined 
+      });
+      
+      const result = await updateProfile(updateData);
 
       if (result.success) {
         const successMessage = editType === 'email' 
@@ -445,14 +453,16 @@ const MasterAdminDashboard = () => {
     try {
       console.log('🚀 Creating admin account with API data...');
       
-      // Transform form data to match API requirements
+      // Transform form data to match API requirements  
       const apiData = {
         full_name: adminForm.name.trim(),
         email: adminForm.email.toLowerCase().trim(),
         phone: formatPhoneForAPI(adminForm.mobile.trim()),
-        password: adminForm.password,
+        password: adminForm.password.trim(),
         role: adminForm.role
       };
+      
+      console.log('📋 Admin phone will be used for WhatsApp:', apiData.phone);
       
       console.log('📤 API Data for admin creation:', {
         ...apiData,
