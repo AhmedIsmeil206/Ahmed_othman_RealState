@@ -45,22 +45,24 @@ export const usePropertyManagement = () => {
   // Transform backend apartment data to frontend format
   const transformRentApartmentFromApi = (apiApartment) => ({
     id: apiApartment.id,
-    title: apiApartment.title,
+    title: apiApartment.name || apiApartment.title, // API uses 'name' field
+    name: apiApartment.name, // Keep API field as well
     location: apiApartment.location,
     address: apiApartment.address,
     price: apiApartment.price,
     area: apiApartment.area,
     bedrooms: apiApartment.bedrooms,
     bathrooms: apiApartment.bathrooms,
-    furnished: apiApartment.furnished,
-    amenities: apiApartment.amenities || [],
-    images: apiApartment.images || [],
+    floor: apiApartment.floor,
     description: apiApartment.description,
+    amenities: apiApartment.facilities_amenities ? [apiApartment.facilities_amenities] : [],
+    images: apiApartment.photos_url || [],
     contactNumber: apiApartment.contact_number,
-    coordinates: apiApartment.coordinates || { lat: 0, lng: 0 },
-    totalStudios: apiApartment.total_studios || 0,
-    availableStudios: apiApartment.available_studios || 0,
-    createdBy: apiApartment.created_by,
+    coordinates: apiApartment.location_on_map ? { url: apiApartment.location_on_map } : { lat: 0, lng: 0 },
+    totalStudios: apiApartment.total_parts || 0,
+    availableStudios: 0, // Will be calculated from parts
+    createdBy: apiApartment.listed_by_admin_id,
+    listed_by_admin_id: apiApartment.listed_by_admin_id,
     createdAt: apiApartment.created_at,
     updatedAt: apiApartment.updated_at,
     studios: [], // Will be populated separately if needed
@@ -125,25 +127,27 @@ export const usePropertyManagement = () => {
   // Transform sale apartment data
   const transformSaleApartmentFromApi = (apiApartment) => ({
     id: apiApartment.id,
-    title: apiApartment.title,
+    title: apiApartment.name || apiApartment.title, // API uses 'name' field
+    name: apiApartment.name, // Keep API field as well
     location: apiApartment.location,
     address: apiApartment.address,
     price: apiApartment.price,
     area: apiApartment.area,
+    number: apiApartment.number,
     bedrooms: apiApartment.bedrooms,
     bathrooms: apiApartment.bathrooms,
-    furnished: apiApartment.furnished,
-    amenities: apiApartment.amenities || [],
-    images: apiApartment.images || [],
     description: apiApartment.description,
+    amenities: apiApartment.facilities_amenities ? [apiApartment.facilities_amenities] : [],
+    images: apiApartment.photos_url || [],
     contactNumber: apiApartment.contact_number,
-    coordinates: apiApartment.coordinates || { lat: 0, lng: 0 },
+    coordinates: apiApartment.location_on_map ? { url: apiApartment.location_on_map } : { lat: 0, lng: 0 },
     completionStatus: apiApartment.completion_status,
     floor: apiApartment.floor,
     unitNumber: apiApartment.unit_number,
     highlights: apiApartment.highlights || {},
     details: apiApartment.details || {},
-    createdBy: apiApartment.created_by,
+    createdBy: apiApartment.listed_by_admin_id,
+    listed_by_admin_id: apiApartment.listed_by_admin_id,
     createdAt: apiApartment.created_at,
     updatedAt: apiApartment.updated_at,
     // Legacy compatibility

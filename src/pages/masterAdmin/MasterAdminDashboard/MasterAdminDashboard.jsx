@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterAuth, useAdminAuth, useProperty } from '../../../hooks/useRedux';
+import { apartmentPartsApi } from '../../../services/api';
 import ApartmentCard from '../../../components/admin/ApartmentCard';
 import SaleApartmentCard from '../../../components/admin/SaleApartmentCard';
 import AddStudioModal from '../../../components/admin/AddStudioModal';
@@ -23,6 +24,7 @@ const MasterAdminDashboard = () => {
   
   // Admin management states
   const [allAdmins, setAllAdmins] = useState([]);
+  const [allStudios, setAllStudios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAdminFilter, setSelectedAdminFilter] = useState('all');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState('rental'); // 'rental' or 'sale'
@@ -85,6 +87,18 @@ const MasterAdminDashboard = () => {
         console.log('🏢 Fetching sale apartments...');
         const saleResult = await fetchSaleApartments();
         console.log('Sale apartments result:', saleResult);
+        
+        // Fetch studios data from apartmentPartsApi
+        console.log('🏠 Fetching all apartment parts (studios)...');
+        try {
+          const studiosResponse = await apartmentPartsApi.getAll();
+          console.log('Studios/Parts API response:', studiosResponse);
+          // Store studios count for statistics  
+          setAllStudios(studiosResponse || []);
+        } catch (studioError) {
+          console.error('❌ Failed to fetch studios:', studioError);
+          setAllStudios([]);
+        }
 
         // Fetch all admins using API
         console.log('👥 Fetching all admins...');
@@ -113,8 +127,20 @@ const MasterAdminDashboard = () => {
         }
         
         console.log('✅ Master admin dashboard data fetching completed');
+        
+        // Log final state for debugging
+        console.log('📊 Final Dashboard State:', {
+          apartments: apartments?.length || 0,
+          saleApartments: saleApartments?.length || 0,
+          studios: allStudios?.length || 0,
+          admins: allAdmins?.length || 0
+        });
       } catch (error) {
         console.error('💥 Error fetching dashboard data:', error);
+        // Set empty states on error to prevent undefined access
+        setAllAdmins([]);
+        setExistingAdmins([]);
+        setAllStudios([]);
       } finally {
         setLoading(false);
       }
@@ -124,12 +150,17 @@ const MasterAdminDashboard = () => {
     if (currentUser) {
       fetchAllData();
     }
-  }, [fetchRentApartments, fetchSaleApartments, getAllAdminAccounts, currentUser]);  // Get filtered properties based on selected admin and property type
+  }, [fetchRentApartments, fetchSaleApartments, getAllAdminAccounts, currentUser]);
+  
+  // Get filtered properties based on selected admin and property type
   const getFilteredProperties = () => {
     let properties = propertyTypeFilter === 'rental' ? apartments : saleApartments;
     
     if (selectedAdminFilter !== 'all') {
-      properties = properties.filter(property => property.created_by === selectedAdminFilter);
+      properties = properties.filter(property => 
+        property.listed_by_admin_id === parseInt(selectedAdminFilter) || 
+        property.createdBy === parseInt(selectedAdminFilter)
+      );
     }
     
     return properties;
@@ -614,14 +645,19 @@ const MasterAdminDashboard = () => {
     }
   };
 
-  // Calculate statistics
-  const totalStudios = apartments.reduce((total, apartment) => {
-    return total + (apartment.studios?.length || 0);
-  }, 0);
+  // Calculate statistics using fetched studios data
+  const totalStudios = allStudios?.length || 0;
+  const availableStudios = allStudios?.filter(studio => 
+    studio.status === 'available' || studio.isAvailable
+  )?.length || 0;
   
-  const availableStudios = apartments.reduce((total, apartment) => {
-    return total + (apartment.studios?.filter(studio => studio.is_available)?.length || 0);
-  }, 0);
+  console.log('📊 Dashboard Statistics:', {
+    totalApartments: apartments.length,
+    totalSaleApartments: saleApartments.length, 
+    totalStudios,
+    availableStudios,
+    totalAdmins: allAdmins.length
+  });
 
   if (loading) {
     return (
@@ -735,8 +771,8 @@ const MasterAdminDashboard = () => {
                 >
                   <option value="all">All Admins</option>
                   {existingAdmins.map(admin => (
-                    <option key={admin.id} value={admin.email}>
-                      {admin.full_full_name || admin.name || admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : admin.role === admin.role === 'apartment_sale' ? 'apartment_sale' ? 'Apartment Sales' : admin.role : admin.role}
+                    <option key={admin.id} value={admin.id}>
+                      {admin.full_name || admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : admin.role === 'apartment_sale' ? 'Apartment Sales' : admin.role}
                     </option>
                   ))}
                 </select>
