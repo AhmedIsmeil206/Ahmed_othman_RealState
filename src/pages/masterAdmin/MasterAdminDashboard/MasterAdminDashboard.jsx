@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMasterAuth, useAdminAuth, useProperty } from '../../../hooks/useRedux';
+import { useMasterAuth, useAdminAuth } from '../../../hooks/useRedux';
+import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import { apartmentPartsApi } from '../../../services/api';
 import ApartmentCard from '../../../components/admin/ApartmentCard';
 import SaleApartmentCard from '../../../components/admin/SaleApartmentCard';
@@ -16,7 +17,7 @@ const MasterAdminDashboard = () => {
   const { currentUser, logout, updateProfile } = useMasterAuth();
   const { createAdminAccount, getAllAdminAccounts, deleteAdminAccount } = useAdminAuth();
   const { apartments, addApartment, addStudio, 
-          saleApartments, addSaleApartment, getSaleApartmentsByCreator, fetchRentApartments, fetchSaleApartments } = useProperty();
+          saleApartments, addSaleApartment, getSaleApartmentsByCreator, fetchRentApartments, fetchSaleApartments } = usePropertyManagement();
   const [isAddStudioModalOpen, setIsAddStudioModalOpen] = useState(false);
   const [isAddApartmentModalOpen, setIsAddApartmentModalOpen] = useState(false);
   const [isAddSaleApartmentModalOpen, setIsAddSaleApartmentModalOpen] = useState(false);
