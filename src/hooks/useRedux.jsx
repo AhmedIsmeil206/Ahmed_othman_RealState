@@ -66,13 +66,10 @@ export const useMasterAuth = () => {
     }
   };
 
-  const updateProfile = async (email, currentPassword, newPassword) => {
+  const updateProfile = async (updateData) => {
     try {
-      const result = await dispatch(updateMasterProfile({
-        email,
-        currentPassword,
-        newPassword
-      }));
+      // updateData should contain: { email, currentPassword, newPassword }
+      const result = await dispatch(updateMasterProfile(updateData));
       
       if (updateMasterProfile.fulfilled.match(result)) {
         return { success: true, message: 'Profile updated successfully' };

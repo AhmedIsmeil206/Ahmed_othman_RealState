@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterAuth, useAdminAuth } from '../../../hooks/useRedux';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
@@ -27,6 +27,8 @@ const MasterAdminDashboard = () => {
   const [allAdmins, setAllAdmins] = useState([]);
   const [allStudios, setAllStudios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const hasInitialFetch = useRef(false);
+  const isFetching = useRef(false);
   const [selectedAdminFilter, setSelectedAdminFilter] = useState('all');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState('rental'); // 'rental' or 'sale'
   const [existingAdmins, setExistingAdmins] = useState([]);
@@ -73,88 +75,134 @@ const MasterAdminDashboard = () => {
   // Password visibility states for Manage Admins
   const [showAdminPassword, setShowAdminPassword] = useState(false);
 
-  // Fetch all data from API
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
+  // Memoized fetch function to prevent infinite re-renders
+  const fetchAllData = useCallback(async () => {
+    if (!currentUser) return;
+    
+    setLoading(true);
+    console.log('🔄 Fetching master admin dashboard data...');
+    
+    try {
+      // Set up timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn('⚠️ API calls taking too long, setting loading to false');
+        setLoading(false);
+      }, 10000); // 10 second timeout
+      
+      // Fetch rental and sale apartments using correct API endpoints
+      console.log('🏠 Fetching rental apartments...');
+      let rentResult;
       try {
-        console.log('🔄 Fetching master admin dashboard data...');
-        
-        // Fetch rental and sale apartments using correct API endpoints
-        console.log('🏠 Fetching rental apartments...');
-        const rentResult = await fetchRentApartments();
+        rentResult = await Promise.race([
+          fetchRentApartments(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Rent apartments timeout')), 5000))
+        ]);
         console.log('Rental apartments result:', rentResult);
-        
-        console.log('🏢 Fetching sale apartments...');
-        const saleResult = await fetchSaleApartments();
+      } catch (rentError) {
+        console.error('❌ Failed to fetch rental apartments:', rentError);
+      }
+      
+      console.log('🏢 Fetching sale apartments...');
+      let saleResult;
+      try {
+        saleResult = await Promise.race([
+          fetchSaleApartments(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Sale apartments timeout')), 5000))
+        ]);
         console.log('Sale apartments result:', saleResult);
-        
-        // Fetch studios data from apartmentPartsApi
-        console.log('🏠 Fetching all apartment parts (studios)...');
-        try {
-          const studiosResponse = await apartmentPartsApi.getAll();
-          console.log('Studios/Parts API response:', studiosResponse);
-          // Store studios count for statistics  
-          setAllStudios(studiosResponse || []);
-        } catch (studioError) {
-          console.error('❌ Failed to fetch studios:', studioError);
-          setAllStudios([]);
-        }
+      } catch (saleError) {
+        console.error('❌ Failed to fetch sale apartments:', saleError);
+      }
+      
+      // Clear the timeout if we reach here
+      clearTimeout(timeoutId);
+      
+      // Fetch studios data from apartmentPartsApi
+      console.log('🏠 Fetching all apartment parts (studios)...');
+      try {
+        const studiosResponse = await Promise.race([
+          apartmentPartsApi.getAll(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Studios timeout')), 5000))
+        ]);
+        console.log('Studios/Parts API response:', studiosResponse);
+        setAllStudios(studiosResponse || []);
+      } catch (studioError) {
+        console.error('❌ Failed to fetch studios:', studioError);
+        setAllStudios([]);
+      }
 
-        // Fetch all admins using API
-        console.log('👥 Fetching all admins...');
-        try {
-          const adminsResult = await getAllAdminAccounts();
-          console.log('Admins API result:', adminsResult);
-          
-          if (adminsResult && Array.isArray(adminsResult)) {
-            setAllAdmins(adminsResult);
-            setExistingAdmins(adminsResult);
-            console.log('✅ Admins loaded successfully:', adminsResult.length, 'admins');
-          } else if (adminsResult && adminsResult.success && Array.isArray(adminsResult.data)) {
-            // Handle case where result is wrapped in success object
-            setAllAdmins(adminsResult.data);
-            setExistingAdmins(adminsResult.data);
-            console.log('✅ Admins loaded successfully:', adminsResult.data.length, 'admins');
-          } else {
-            console.warn('⚠️ Admins API returned unexpected format:', adminsResult);
-            setAllAdmins([]);
-            setExistingAdmins([]);
-          }
-        } catch (adminError) {
-          console.error('❌ Failed to fetch admins:', adminError);
+      // Fetch all admins using API
+      console.log('👥 Fetching all admins...');
+      try {
+        const adminsResult = await Promise.race([
+          getAllAdminAccounts(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Admins timeout')), 5000))
+        ]);
+        console.log('Admins API result:', adminsResult);
+        
+        if (Array.isArray(adminsResult)) {
+          setAllAdmins(adminsResult);
+          setExistingAdmins(adminsResult);
+          console.log('✅ Admins loaded successfully:', adminsResult.length, 'admins');
+        } else if (adminsResult?.success && Array.isArray(adminsResult.data)) {
+          setAllAdmins(adminsResult.data);
+          setExistingAdmins(adminsResult.data);
+          console.log('✅ Admins loaded successfully:', adminsResult.data.length, 'admins');
+        } else {
+          console.warn('⚠️ Admins API returned unexpected format:', adminsResult);
           setAllAdmins([]);
           setExistingAdmins([]);
         }
-        
-        console.log('✅ Master admin dashboard data fetching completed');
-        
-        // Log final state for debugging
-        console.log('📊 Final Dashboard State:', {
-          apartments: apartments?.length || 0,
-          saleApartments: saleApartments?.length || 0,
-          studios: allStudios?.length || 0,
-          admins: allAdmins?.length || 0
-        });
-      } catch (error) {
-        console.error('💥 Error fetching dashboard data:', error);
-        // Set empty states on error to prevent undefined access
+      } catch (adminError) {
+        console.error('❌ Failed to fetch admins:', adminError);
         setAllAdmins([]);
         setExistingAdmins([]);
-        setAllStudios([]);
-      } finally {
+      }
+      
+      console.log('✅ Master admin dashboard data fetching completed');
+    } catch (error) {
+      console.error('💥 Error fetching dashboard data:', error);
+      setAllAdmins([]);
+      setExistingAdmins([]);
+      setAllStudios([]);
+    } finally {
+      setLoading(false);
+      isFetching.current = false;
+    }
+  }, [currentUser, fetchRentApartments, fetchSaleApartments, getAllAdminAccounts]);
+
+  // Fetch all data from API - only run once when component mounts
+  useEffect(() => {
+    // Prevent multiple simultaneous fetches and re-fetching
+    if (!currentUser || hasInitialFetch.current || isFetching.current) {
+      if (!currentUser) {
         setLoading(false);
       }
-    };
-    
-    // Only fetch if user is authenticated
-    if (currentUser) {
-      fetchAllData();
+      return;
     }
-  }, [fetchRentApartments, fetchSaleApartments, getAllAdminAccounts, currentUser]);
+    
+    // Mark as fetching
+    isFetching.current = true;
+    hasInitialFetch.current = true;
+    
+    fetchAllData();
+    
+    // Emergency timeout - force loading to false after 15 seconds
+    const emergencyTimeout = setTimeout(() => {
+      console.warn('🚨 Emergency timeout - forcing loading to false');
+      setLoading(false);
+      isFetching.current = false;
+    }, 15000);
+    
+    return () => {
+      clearTimeout(emergencyTimeout);
+      isFetching.current = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount - do not add dependencies
   
-  // Get filtered properties based on selected admin and property type
-  const getFilteredProperties = () => {
+  // Memoize filtered properties to prevent recalculation on every render
+  const filteredProperties = useMemo(() => {
     let properties = propertyTypeFilter === 'rental' ? apartments : saleApartments;
     
     if (selectedAdminFilter !== 'all') {
@@ -165,7 +213,7 @@ const MasterAdminDashboard = () => {
     }
     
     return properties;
-  };
+  }, [apartments, saleApartments, propertyTypeFilter, selectedAdminFilter]);
 
   // Load form data from localStorage on component mount
   useEffect(() => {
@@ -586,7 +634,8 @@ const MasterAdminDashboard = () => {
         setSelectedAdminToDelete('');
         
         // If the deleted admin was selected in filter, reset to 'all'
-        if (selectedAdminFilter === selectedAdminToDelete) {
+        // Compare with string conversion since filter uses admin ID
+        if (selectedAdminFilter === String(adminToDelete.id)) {
           setSelectedAdminFilter('all');
         }
         
@@ -646,21 +695,30 @@ const MasterAdminDashboard = () => {
     }
   };
 
-  // Calculate statistics using fetched studios data
-  const totalStudios = allStudios?.length || 0;
-  const availableStudios = allStudios?.filter(studio => 
-    studio.status === 'available' || studio.isAvailable
-  )?.length || 0;
-  
-  console.log('📊 Dashboard Statistics:', {
-    totalApartments: apartments.length,
-    totalSaleApartments: saleApartments.length, 
-    totalStudios,
-    availableStudios,
-    totalAdmins: allAdmins.length
-  });
+  // Memoize statistics calculations to prevent recalculation on every render
+  const statistics = useMemo(() => {
+    const totalStudios = allStudios?.length || 0;
+    const availableStudios = allStudios?.filter(studio => 
+      studio.status === 'available' || studio.isAvailable
+    )?.length || 0;
+    
+    return {
+      totalApartments: apartments.length,
+      totalSaleApartments: saleApartments.length,
+      totalStudios,
+      availableStudios,
+      totalAdmins: allAdmins.length
+    };
+  }, [allStudios, apartments, saleApartments, allAdmins]);
+
+  // Safety check for user authentication
+  if (!currentUser) {
+    console.log('❌ No current user, redirecting...');
+    return null; // Let the auth system handle the redirect
+  }
 
   if (loading) {
+    console.log('⏳ Dashboard loading...');
     return (
       <div className="master-admin-dashboard loading">
         <div className="loading-container">
@@ -729,15 +787,15 @@ const MasterAdminDashboard = () => {
           
           <div className="dashboard-stats">
             <div className="stat-card">
-              <div className="stat-number">{apartments.length}</div>
+              <div className="stat-number">{statistics.totalApartments}</div>
               <div className="stat-label">Total Apartments</div>
             </div>
             <div className="stat-card">
-              <div className="stat-number">{totalStudios}</div>
+              <div className="stat-number">{statistics.totalStudios}</div>
               <div className="stat-label">Total Studios</div>
             </div>
             <div className="stat-card">
-              <div className="stat-number">{availableStudios}</div>
+              <div className="stat-number">{statistics.availableStudios}</div>
               <div className="stat-label">Available Studios</div>
             </div>
           </div>
@@ -795,7 +853,7 @@ const MasterAdminDashboard = () => {
 
           <div className="apartments-grid">
             {propertyTypeFilter === 'rental' ? (
-              getFilteredProperties().map(apartment => (
+              filteredProperties.map(apartment => (
                 <ApartmentCard
                   key={apartment.id}
                   apartment={apartment}
@@ -803,7 +861,7 @@ const MasterAdminDashboard = () => {
                 />
               ))
             ) : (
-              getFilteredProperties().map(apartment => (
+              filteredProperties.map(apartment => (
                 <SaleApartmentCard
                   key={apartment.id}
                   apartment={apartment}
@@ -814,7 +872,7 @@ const MasterAdminDashboard = () => {
             )}
           </div>
 
-          {getFilteredProperties().length === 0 && (
+          {filteredProperties.length === 0 && (
             <div className="empty-state">
               {selectedAdminFilter === 'all' ? (
                 <>

@@ -14,7 +14,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     description: '',
     price: '',
     bedrooms: '',
-    bathrooms: '',
+    bathrooms: 'private', // REQUIRED enum: must be 'private' or 'shared', not empty string
     area: '',
     apartmentNumber: '',
     floor: '',
@@ -163,10 +163,9 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       newErrors.bedrooms = 'Please enter a valid number of bedrooms';
     }
 
-    if (!formData.bathrooms.trim()) {
-      newErrors.bathrooms = 'Number of bathrooms is required';
-    } else if (isNaN(Number(formData.bathrooms)) || Number(formData.bathrooms) <= 0) {
-      newErrors.bathrooms = 'Please enter a valid number of bathrooms';
+    // CRITICAL: bathrooms must be enum string 'private' or 'shared', not a number
+    if (!formData.bathrooms || (formData.bathrooms !== 'private' && formData.bathrooms !== 'shared')) {
+      newErrors.bathrooms = 'Bathroom type must be either private or shared';
     }
 
     if (!formData.area.trim()) {
@@ -179,8 +178,10 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       newErrors.apartmentNumber = 'Apartment number is required';
     }
 
-    if (!formData.floor.trim()) {
-      newErrors.floor = 'Floor is required';
+    // Floor is optional for sale apartments (not in backend schema requirements)
+    // But still validate if provided
+    if (formData.floor && formData.floor.trim() && isNaN(parseInt(formData.floor))) {
+      newErrors.floor = 'Floor must be a valid number if provided';
     }
 
     if (formData.photos.length === 0) {
@@ -218,22 +219,24 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
 
     try {
       // Transform frontend data to match API requirements according to documentation
+      // REQUIRED FIELDS for sale: name, location, address, area, number, price, bedrooms, bathrooms
       const apiData = {
-        name: formData.name.trim(), // API expects 'name', not 'title'
-        location: formData.location.toLowerCase(), // Must be lowercase: 'maadi' or 'mokkattam'
-        address: formData.address.trim(),
-        area: formData.area.toString(), // API expects string, not number
-        number: formData.apartmentNumber.trim(), // API field is 'number'
-        price: formData.price.toString(), // API expects string, not number
-        bedrooms: parseInt(formData.bedrooms), // API expects integer
-        bathrooms: 'private', // API expects string enum, not number
-        description: formData.description.trim(),
-        photos_url: formData.photos.length > 0 
+        name: formData.name.trim() || 'Unnamed Property', // REQUIRED: API expects 'name', not 'title'
+        location: formData.location ? formData.location.toLowerCase() : 'maadi', // REQUIRED: Must be lowercase: 'maadi' or 'mokkattam'
+        address: formData.address.trim() || 'Address not provided', // REQUIRED
+        area: formData.area && formData.area.toString().trim() ? formData.area.toString() : '50', // REQUIRED: API expects string, default 50 sqm
+        number: formData.apartmentNumber && formData.apartmentNumber.trim() ? formData.apartmentNumber.trim() : 'SALE-001', // REQUIRED: API field is 'number'
+        price: formData.price && formData.price.toString().trim() ? formData.price.toString() : '0', // REQUIRED: API expects string, not number
+        bedrooms: parseInt(formData.bedrooms) || 1, // REQUIRED: API expects integer
+        bathrooms: formData.bathrooms === 'shared' ? 'shared' : 'private', // REQUIRED: API expects string enum: 'private' or 'shared' ONLY
+        description: formData.description.trim() || 'No description provided', // Optional
+        photos_url: formData.photos && formData.photos.length > 0 
           ? formData.photos.map(photo => photo.preview) 
-          : [], // API expects 'photos_url', not 'images'
-        location_on_map: formData.mapUrl.trim() || '', // API field name
-        facilities_amenities: formData.facilities.join(', '), // API expects string, not array
+          : [], // Optional: API expects 'photos_url', not 'images'
+        location_on_map: formData.mapUrl ? formData.mapUrl.trim() : '', // Optional: API field name
+        facilities_amenities: formData.facilities && formData.facilities.length > 0 ? formData.facilities.join(', ') : '' // Optional: API expects string, not array
         // Note: contact_number is auto-filled by backend from admin's phone
+        // Note: floor and total_parts are NOT in sale apartment schema
       };
       
       console.log('📊 API Data prepared:', {
@@ -260,7 +263,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           description: '',
           price: '',
           bedrooms: '',
-          bathrooms: '',
+          bathrooms: 'private', // Reset to default enum value
           area: '',
           apartmentNumber: '',
           floor: '',
@@ -428,19 +431,19 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="bathrooms">Bathrooms *</label>
-              <input
-                type="number"
+              <label htmlFor="bathrooms">Bathroom Type *</label>
+              <select
                 id="bathrooms"
                 name="bathrooms"
                 value={formData.bathrooms}
                 onChange={handleInputChange}
                 className={errors.bathrooms ? 'error' : ''}
-                placeholder="e.g., 2"
-                min="1"
-                step="0.5"
-              />
+              >
+                <option value="private">Private</option>
+                <option value="shared">Shared</option>
+              </select>
               {errors.bathrooms && <span className="error-text">{errors.bathrooms}</span>}
+              <small className="form-help">Select bathroom type for this apartment</small>
             </div>
           </div>
 

@@ -190,27 +190,53 @@ export const updateMasterProfile = createAsyncThunk(
         return rejectWithValue('Not authenticated');
       }
       
-      const updateData = {
-        full_name: masterAuth.currentUser.full_name || masterAuth.currentUser.name,
-        email: email.toLowerCase().trim(),
-        phone: masterAuth.currentUser.phone
-      };
+      // Build targeted update data - only send fields that are being changed
+      const updateData = {};
       
+      // For email updates: only send email
+      if (email !== masterAuth.currentUser.email) {
+        const emailToUpdate = email.toLowerCase().trim();
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailToUpdate)) {
+          return rejectWithValue('Please enter a valid email address');
+        }
+        
+        updateData.email = emailToUpdate;
+      }
+      
+      // For password updates: only send password  
       if (newPassword && newPassword.trim().length > 0) {
         updateData.password = newPassword.trim();
       }
       
-      // Remove undefined/null values
+      // Validate that we have something to update
+      if (Object.keys(updateData).length === 0) {
+        return rejectWithValue('No changes detected');
+      }
+      
+      // Remove undefined/null/empty values
       Object.keys(updateData).forEach(key => {
-        if (updateData[key] === undefined || updateData[key] === null) {
+        if (updateData[key] === undefined || updateData[key] === null || updateData[key] === '') {
           delete updateData[key];
         }
       });
       
       console.log('🔄 Updating master admin profile via PUT /admins/me');
-      console.log('📝 Update data:', { ...updateData, password: updateData.password ? '[REDACTED]' : undefined });
+      console.log('📝 Current user:', { 
+        id: masterAuth.currentUser.id,
+        full_name: masterAuth.currentUser.full_name,
+        email: masterAuth.currentUser.email,
+        phone: masterAuth.currentUser.phone 
+      });
+      console.log('📝 Target email:', email);
+      console.log('📝 Has password update:', !!newPassword);
+      console.log('📝 Update data to send:', { ...updateData, password: updateData.password ? '[REDACTED]' : undefined });
+      console.log('📝 Update data keys:', Object.keys(updateData));
       
-      // Use the correct API endpoint: PUT /admins/me (not PUT /admins/{id})
+      // Use the correct API endpoint: PUT /admins/me
+      // Note: Backend doesn't validate currentPassword for this endpoint
       const updatedUser = await adminApi.updateMe(updateData);
       
       console.log('✅ Profile updated successfully:', updatedUser);
@@ -218,7 +244,32 @@ export const updateMasterProfile = createAsyncThunk(
       return { user: updatedUser };
     } catch (error) {
       console.error('❌ Profile update failed:', error);
-      return rejectWithValue(handleApiError(error, 'Update failed. Please try again.'));
+      console.error('❌ Error status:', error.status);
+      console.error('❌ Error data:', error.data);
+      
+      // Enhanced error logging for validation errors
+      if (error.status === 422) {
+        console.error('❌ Validation errors:', error.getValidationErrors?.());
+        console.error('❌ Raw validation data:', error.data?.detail);
+        
+        // Log each validation error in detail
+        if (Array.isArray(error.data?.detail)) {
+          error.data.detail.forEach((validationError, index) => {
+            console.error(`❌ Validation Error ${index + 1}:`, {
+              field: validationError.loc?.[validationError.loc.length - 1],
+              location: validationError.loc,
+              message: validationError.msg,
+              type: validationError.type,
+              input: validationError.input
+            });
+          });
+        }
+      }
+      
+      const errorMessage = handleApiError(error, 'Update failed. Please try again.');
+      console.error('❌ Processed error message:', errorMessage);
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );

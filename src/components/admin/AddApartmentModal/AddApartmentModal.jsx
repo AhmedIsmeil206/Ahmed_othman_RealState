@@ -11,16 +11,16 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const { currentAdmin } = useAdminAuth();
   const [formData, setFormData] = useState({
     name: '',
-    location: '',
+    location: 'maadi', // Set default location
     address: '',
     description: '',
     mapUrl: '',
     facilities: [],
-    floor: '',
+    floor: '1', // Set default floor as string
     photos: [],
-    area: '',
+    area: '50', // Set default area
     number: '',
-    price: '',
+    price: '0', // Set default price
     bedrooms: '1',
     bathrooms: 'private',
     totalParts: '1'
@@ -137,8 +137,8 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       newErrors.name = 'Apartment name is required';
     }
 
-    if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
+    if (!formData.location || !formData.location.trim() || (formData.location !== 'maadi' && formData.location !== 'mokkattam')) {
+      newErrors.location = 'Location is required and must be either Maadi or Mokkattam';
     }
 
     if (!formData.address.trim()) {
@@ -149,13 +149,38 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       newErrors.description = 'Description is required';
     }
 
-    if (formData.photos.length === 0) {
-      newErrors.photos = 'At least one photo is required for the apartment';
+    // Photos are optional - studios will have their own photos
+    // if (formData.photos.length === 0) {
+    //   newErrors.photos = 'At least one photo is required for the apartment';
+    // }
+
+    // Floor validation - REQUIRED field for rental apartments
+    if (!formData.floor || !formData.floor.toString().trim()) {
+      newErrors.floor = 'Floor is required';
+    } else if (isNaN(parseInt(formData.floor)) || parseInt(formData.floor) < 0) {
+      newErrors.floor = 'Floor must be a valid number';
     }
 
-    // Floor validation
-    if (!formData.floor.trim()) {
-      newErrors.floor = 'Floor is required';
+    // Number validation - REQUIRED field
+    if (!formData.number.trim()) {
+      newErrors.number = 'Apartment number is required';
+    }
+
+    // Bathrooms validation - REQUIRED enum field
+    if (!formData.bathrooms || (formData.bathrooms !== 'private' && formData.bathrooms !== 'shared')) {
+      newErrors.bathrooms = 'Bathroom type must be either private or shared';
+    }
+
+    // Total parts validation - REQUIRED field for rental apartments
+    if (!formData.totalParts || !formData.totalParts.toString().trim()) {
+      newErrors.totalParts = 'Total parts/studios is required';
+    } else if (isNaN(parseInt(formData.totalParts)) || parseInt(formData.totalParts) < 1) {
+      newErrors.totalParts = 'Total parts must be at least 1';
+    }
+
+    // Area validation - must be valid if provided
+    if (formData.area && (isNaN(parseFloat(formData.area)) || parseFloat(formData.area) <= 0)) {
+      newErrors.area = 'Area must be a valid positive number';
     }
 
     // Validate mapUrl if provided (optional field)
@@ -171,37 +196,88 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     e.preventDefault();
     
     if (!validateForm()) {
+      console.log('❌ Form validation failed - not submitting to API');
       return;
     }
+
+    // FAILSAFE: Double-check essential user fields are filled
+    const essentialFields = {
+      name: formData.name?.trim(),
+      address: formData.address?.trim(),
+      number: formData.number?.trim()
+    };
+    
+    const emptyEssentialFields = Object.keys(essentialFields).filter(key => !essentialFields[key]);
+    
+    if (emptyEssentialFields.length > 0) {
+      console.error('❌ CRITICAL: Essential fields are empty:', emptyEssentialFields);
+      const fieldNames = {
+        name: 'Apartment Name',
+        address: 'Address', 
+        number: 'Apartment Number'
+      };
+      const missingFieldNames = emptyEssentialFields.map(f => fieldNames[f]);
+      setErrors({ general: `Please fill in: ${missingFieldNames.join(', ')}` });
+      return;
+    }
+    
+    // Log what we're about to send
+    console.log('📋 Form data before API call:', {
+      name: formData.name,
+      location: formData.location,
+      address: formData.address,
+      number: formData.number,
+      floor: formData.floor,
+      totalParts: formData.totalParts,
+      bathrooms: formData.bathrooms
+    });
 
     setIsSubmitting(true);
     console.log('🚀 Creating rental apartment with proper API format...');
 
     try {
       // Transform form data to match API requirements according to documentation
+      // ALL REQUIRED FIELDS: name, location, address, area, number, price, bedrooms, bathrooms, floor, total_parts
       const apiData = {
-        name: formData.name.trim(), // API expects 'name', not 'title'
-        location: formData.location.toLowerCase(), // Must be lowercase: 'maadi' or 'mokkattam'
-        address: formData.address.trim(),
-        area: formData.area.toString() || '0', // API expects string
-        number: formData.number.trim() || 'APT-001', // Required field
-        price: formData.price.toString() || '0', // API expects string
-        bedrooms: parseInt(formData.bedrooms) || 1, // API expects integer
-        bathrooms: formData.bathrooms || 'private', // API expects string enum
-        description: formData.description.trim(),
-        photos_url: formData.photos.length > 0 
+        name: (formData.name && formData.name.trim()) || 'Unnamed Apartment', // REQUIRED: Never empty
+        location: (formData.location && formData.location.toLowerCase()) || 'maadi', // REQUIRED: Never empty
+        address: (formData.address && formData.address.trim()) || 'Address not provided', // REQUIRED: Never empty
+        area: (formData.area && formData.area.toString().trim()) || '50', // REQUIRED: Never empty, default 50 sqm
+        number: (formData.number && formData.number.trim()) || 'APT-001', // REQUIRED: Never empty
+        price: (formData.price && formData.price.toString().trim()) || '0', // REQUIRED: Never empty
+        bedrooms: parseInt(formData.bedrooms) || 1, // REQUIRED: Always valid integer
+        bathrooms: (formData.bathrooms === 'shared') ? 'shared' : 'private', // REQUIRED: Always valid enum
+        description: (formData.description && formData.description.trim()) || 'No description provided', // Optional but never empty
+        photos_url: formData.photos && formData.photos.length > 0 
           ? formData.photos.map(photo => photo.preview) 
-          : [], // API expects 'photos_url', not 'images'
-        location_on_map: formData.mapUrl.trim() || '', // API field name
-        facilities_amenities: formData.facilities.join(', '), // API expects string, not array
-        floor: parseInt(formData.floor) || 1, // Required for rent apartments
-        total_parts: parseInt(formData.totalParts) || 1 // Required for rent apartments
+          : [], // Optional: API expects 'photos_url', not 'images'
+        location_on_map: formData.mapUrl ? formData.mapUrl.trim() : '', // Optional: API field name
+        facilities_amenities: formData.facilities && formData.facilities.length > 0 ? formData.facilities.join(', ') : '', // Optional: API expects string, not array
+        floor: parseInt(formData.floor) || 1, // REQUIRED: Always valid integer ≥ 1
+        total_parts: parseInt(formData.totalParts) || 1 // REQUIRED: Always valid integer ≥ 1
       };
       
       console.log('📤 API Data prepared:', {
         ...apiData,
         photos_url: apiData.photos_url.length > 0 ? `[${apiData.photos_url.length} photos]` : '[]'
       });
+      
+      console.log('🔍 EXACT API DATA BEING SENT:');
+      console.log('name:', `"${apiData.name}"`);
+      console.log('location:', `"${apiData.location}"`);
+      console.log('address:', `"${apiData.address}"`);
+      console.log('area:', `"${apiData.area}"`);
+      console.log('number:', `"${apiData.number}"`);
+      console.log('price:', `"${apiData.price}"`);
+      console.log('bedrooms:', apiData.bedrooms);
+      console.log('bathrooms:', `"${apiData.bathrooms}"`);
+      console.log('floor:', apiData.floor);
+      console.log('total_parts:', apiData.total_parts);
+      console.log('📨 Full JSON being sent to API:', JSON.stringify(apiData, null, 2));
+      console.log('bathrooms:', `"${apiData.bathrooms}"`);
+      console.log('floor:', apiData.floor);
+      console.log('total_parts:', apiData.total_parts);
+      console.log('JSON.stringify(apiData):', JSON.stringify(apiData, null, 2));
 
       // Use real API call to create apartment
       const result = await createRentApartment(apiData);
@@ -213,19 +289,19 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         onApartmentAdded?.(result.apartment);
         onClose();
         
-        // Reset form with all fields
+        // Reset form with proper defaults
         setFormData({
           name: '',
-          location: '',
+          location: 'maadi', // Keep default location
           address: '',
           description: '',
           mapUrl: '',
           facilities: [],
-          floor: '',
+          floor: '1', // Keep default floor
           photos: [],
-          area: '',
+          area: '50', // Keep default area
           number: '',
-          price: '',
+          price: '0', // Keep default price
           bedrooms: '1',
           bathrooms: 'private',
           totalParts: '1'
@@ -269,7 +345,8 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
               value={formData.name}
               onChange={handleInputChange}
               className={errors.name ? 'error' : ''}
-              placeholder="e.g., Golden Plaza Residences"
+              placeholder="e.g., Golden Plaza Residences (REQUIRED)"
+              required
             />
             {errors.name && <span className="error-text">{errors.name}</span>}
           </div>
@@ -371,22 +448,6 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="price">Base Price (EGP) *</label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className={errors.price ? 'error' : ''}
-                placeholder="e.g., 0 (for rental base)"
-                min="0"
-              />
-              {errors.price && <span className="error-text">{errors.price}</span>}
-              <small className="form-help">Base price for the apartment complex (individual studio prices set separately)</small>
-            </div>
-
-            <div className="form-group">
               <label htmlFor="bedrooms">Bedrooms *</label>
               <input
                 type="number"
@@ -399,6 +460,23 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
                 min="0"
               />
               {errors.bedrooms && <span className="error-text">{errors.bedrooms}</span>}
+              <small className="form-help">Number of bedrooms in the apartment complex</small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="totalParts">Total Studios/Parts *</label>
+              <input
+                type="number"
+                id="totalParts"
+                name="totalParts"
+                value={formData.totalParts}
+                onChange={handleInputChange}
+                className={errors.totalParts ? 'error' : ''}
+                placeholder="e.g., 4"
+                min="1"
+              />
+              {errors.totalParts && <span className="error-text">{errors.totalParts}</span>}
+              <small className="form-help">How many studio units in this apartment</small>
             </div>
           </div>
 
@@ -416,22 +494,6 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
                 <option value="shared">Shared</option>
               </select>
               {errors.bathrooms && <span className="error-text">{errors.bathrooms}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="totalParts">Total Studio Parts *</label>
-              <input
-                type="number"
-                id="totalParts"
-                name="totalParts"
-                value={formData.totalParts}
-                onChange={handleInputChange}
-                className={errors.totalParts ? 'error' : ''}
-                placeholder="e.g., 5"
-                min="1"
-              />
-              {errors.totalParts && <span className="error-text">{errors.totalParts}</span>}
-              <small className="form-help">Number of studio units that can be created in this apartment</small>
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import store from './store';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { detectSystemTheme } from './store/slices/themeSlice';
+import { initializeMasterAuth } from './store/slices/masterAuthSlice';
 import { ToastProvider } from './contexts/ToastContext';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
 import LandingPage from './pages/customer/Landing page/LandingPage';
@@ -30,8 +31,11 @@ function AppContent() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Initialize theme detection only
+    // Initialize theme detection
     dispatch(detectSystemTheme());
+    
+    // Initialize authentication state to persist login across page refreshes
+    dispatch(initializeMasterAuth());
   }, [dispatch]);
 
   return (
