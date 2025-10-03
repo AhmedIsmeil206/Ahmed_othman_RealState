@@ -97,7 +97,6 @@ const StudiosListPage = () => {
       apartment_id: part.apartment_id,
       // Admin contact info will be populated by fetchAllStudios
       adminPhone: null,
-      whatsappUrl: null,
       contact_number: null // Will be set to admin phone or fallback
     };
   };

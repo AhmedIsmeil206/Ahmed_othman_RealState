@@ -14,7 +14,6 @@ const ApartmentSaleDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [adminPhone, setAdminPhone] = useState(null);
-  const [whatsappUrl, setWhatsappUrl] = useState(null);
 
   // Fetch apartment details from API
   useEffect(() => {
@@ -32,7 +31,6 @@ const ApartmentSaleDetailsPage = () => {
           try {
             const whatsappInfo = await saleApartmentsApi.getWhatsAppContact(id);
             setAdminPhone(whatsappInfo.admin_phone);
-            setWhatsappUrl(whatsappInfo.whatsapp_url);
             console.log('📱 Fetched admin contact for sale apartment:', whatsappInfo.admin_phone);
           } catch (contactError) {
             console.warn('⚠️ Could not fetch WhatsApp contact info:', contactError);
