@@ -109,19 +109,19 @@ const StudioDetailsPage = () => {
       // Create rental contract via API
       const contractData = {
         apartment_part_id: parseInt(id),
-        tenant_name: bookingData.customerName,
-        tenant_phone: bookingData.customerPhone,
-        tenant_email: bookingData.customerEmail || '',
-        tenant_national_id: bookingData.customerId,
-        start_date: bookingData.startDate,
-        end_date: bookingData.endDate,
-        monthly_rent: parseFloat(bookingData.monthlyRent) || 0,
-        deposit: parseFloat(bookingData.paidDeposit) || 0,
-        warranty: parseFloat(bookingData.warranty) || 0,
-        platform_source: bookingData.platformSource || 'direct',
-        rent_period: bookingData.rentPeriod || 'monthly',
-        status: 'active',
-        notes: bookingData.notes || ''
+        customer_name: bookingData.customerName,
+        customer_phone: bookingData.customerPhone,
+        customer_id_number: bookingData.customerId,
+        how_did_customer_find_us: bookingData.how_did_customer_find_us || 'direct',
+        paid_deposit: String(parseFloat(bookingData.paidDeposit) || 0),
+        warrant_amount: String(parseFloat(bookingData.warranty) || 0),
+        rent_start_date: bookingData.startDate,
+        rent_end_date: bookingData.endDate,
+        rent_period: parseInt(bookingData.rentPeriod) || 12,
+        contract_url: bookingData.contract || '',
+        customer_id_url: '',
+        commission: '0.00',
+        rent_price: String(parseFloat(studio.monthly_price) || 0)
       };
       
       const response = await rentalContractsApi.create(contractData);

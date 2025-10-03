@@ -133,7 +133,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
         paidDeposit: parseFloat(formData.paidDeposit),
         warranty: parseFloat(formData.warranty),
         rentPeriod: formData.rentPeriod.trim(),
-        platformSource: formData.platformSource,
+        how_did_customer_find_us: formData.platformSource, // API field name
         startDate: formData.startDate,
         endDate: formData.endDate,
         bookingDate: new Date().toISOString(),
