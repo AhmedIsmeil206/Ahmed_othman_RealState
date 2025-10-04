@@ -377,7 +377,7 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
           </div>
 
           <div className="form-group full-width">
-            <label htmlFor="photos">Studio Photos</label>
+            <label htmlFor="photos">Studio Photos (Optional)</label>
             <div className="photo-upload-container">
               <input
                 type="file"
@@ -398,7 +398,7 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
                   <>
                     <div className="upload-icon">📸</div>
                     <div className="upload-text">
-                      <strong>Click to upload photos</strong>
+                      <strong>Click to upload photos (optional)</strong>
                       <span>or drag and drop</span>
                     </div>
                     <div className="upload-hint">PNG, JPG, GIF up to 10MB each</div>

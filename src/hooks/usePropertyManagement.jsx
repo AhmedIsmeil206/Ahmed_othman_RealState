@@ -72,22 +72,40 @@ export const usePropertyManagement = () => {
   });
 
   // Transform frontend apartment data to backend format
-  const transformRentApartmentToApi = (frontendApartment) => ({
-    title: frontendApartment.title,
-    location: frontendApartment.location,
-    address: frontendApartment.address,
-    price: parseFloat(frontendApartment.price) || 0,
-    area: parseFloat(frontendApartment.area) || 0,
-    bedrooms: parseInt(frontendApartment.bedrooms) || 0,
-    bathrooms: parseInt(frontendApartment.bathrooms) || 0,
-    furnished: frontendApartment.furnished || false,
-    amenities: frontendApartment.amenities || [],
-    images: frontendApartment.images || [],
-    description: frontendApartment.description || '',
-    contact_number: frontendApartment.contactNumber || '',
-    coordinates: frontendApartment.coordinates || { lat: 0, lng: 0 },
-    total_studios: parseInt(frontendApartment.totalStudios) || 0
-  });
+  const transformRentApartmentToApi = (frontendApartment) => {
+    console.log('🔄 Transforming rental apartment data:', frontendApartment);
+    
+    // If data is already in API format (has 'name' field), return as is
+    if (frontendApartment.name !== undefined && typeof frontendApartment.name === 'string') {
+      console.log('✅ Data already in API format, using as-is');
+      return frontendApartment;
+    }
+    
+    // Otherwise transform from legacy frontend format
+    const transformed = {
+      name: frontendApartment.title || frontendApartment.name || 'Unnamed Apartment',
+      location: (frontendApartment.location || 'maadi').toLowerCase(),
+      address: frontendApartment.address || 'Address not provided',
+      price: frontendApartment.price?.toString() || '0',
+      area: frontendApartment.area?.toString() || '50',
+      number: frontendApartment.number || frontendApartment.apartmentNumber || 'APT-001',
+      bedrooms: parseInt(frontendApartment.bedrooms) || 1,
+      bathrooms: frontendApartment.bathrooms === 'shared' ? 'shared' : 'private',
+      description: frontendApartment.description || 'No description provided',
+      photos_url: frontendApartment.photos_url || frontendApartment.images || [],
+      location_on_map: frontendApartment.location_on_map || frontendApartment.coordinates?.url || frontendApartment.mapUrl || '',
+      facilities_amenities: Array.isArray(frontendApartment.facilities_amenities) 
+        ? frontendApartment.facilities_amenities.join(', ') 
+        : frontendApartment.facilities_amenities || 
+          (Array.isArray(frontendApartment.facilities) ? frontendApartment.facilities.join(', ') : '') ||
+          (Array.isArray(frontendApartment.amenities) ? frontendApartment.amenities.join(', ') : ''),
+      floor: parseInt(frontendApartment.floor) || 1,
+      total_parts: parseInt(frontendApartment.total_parts || frontendApartment.totalParts || frontendApartment.totalStudios) || 1
+    };
+    
+    console.log('🔄 Transformed rental apartment data:', transformed);
+    return transformed;
+  };
 
   // Transform studio/apartment part data
   const transformStudioFromApi = (apiStudio) => ({
@@ -158,27 +176,70 @@ export const usePropertyManagement = () => {
     listedAt: apiApartment.created_at
   });
 
-  const transformSaleApartmentToApi = (frontendApartment) => ({
-    title: frontendApartment.title,
-    location: frontendApartment.location,
-    address: frontendApartment.address,
-    price: parseFloat(frontendApartment.price) || 0,
-    area: parseFloat(frontendApartment.area) || 0,
-    bedrooms: parseInt(frontendApartment.bedrooms) || 0,
-    bathrooms: parseInt(frontendApartment.bathrooms) || 0,
-    furnished: frontendApartment.furnished || false,
-    amenities: frontendApartment.amenities || [],
-    images: frontendApartment.images || [],
-    description: frontendApartment.description || '',
-    contact_number: frontendApartment.contactNumber || '',
-    coordinates: frontendApartment.coordinates || { lat: 0, lng: 0 },
-    completion_status: frontendApartment.completionStatus || 'Ready',
-    floor: frontendApartment.floor || '',
-    unit_number: frontendApartment.unitNumber || '',
-    highlights: frontendApartment.highlights || {},
-    details: frontendApartment.details || {},
-    is_available: frontendApartment.isAvailable !== false
-  });
+  const transformSaleApartmentToApi = (frontendApartment) => {
+    console.log('🔄 Transforming sale apartment data for API...');
+    console.log('📋 Frontend data received:', JSON.stringify(frontendApartment, null, 2));
+    
+    // CRITICAL: Sale apartments have DIFFERENT schema than rent apartments
+    // Sale schema does NOT include: floor, total_parts, contact_number
+    // Build transformed data matching EXACT backend schema
+    const transformed = {
+      // === REQUIRED FIELDS ===
+      name: (frontendApartment.name || frontendApartment.title || '').trim(),
+      location: (frontendApartment.location || '').toString().toLowerCase().trim(),
+      address: (frontendApartment.address || '').trim(),
+      price: (frontendApartment.price || frontendApartment.salePrice || '').toString().trim(),
+      area: (frontendApartment.area || '').toString().trim(),
+      number: (frontendApartment.number || frontendApartment.apartmentNumber || frontendApartment.unitNumber || '').toString().trim(),
+      bedrooms: parseInt(frontendApartment.bedrooms) || 0,
+      bathrooms: frontendApartment.bathrooms === 'shared' ? 'shared' : 'private',
+      
+      // === OPTIONAL FIELDS ===
+      description: (frontendApartment.description || '').trim(),
+      photos_url: Array.isArray(frontendApartment.photos_url) 
+        ? frontendApartment.photos_url 
+        : (Array.isArray(frontendApartment.images) ? frontendApartment.images : []),
+      location_on_map: (frontendApartment.location_on_map || frontendApartment.coordinates?.url || frontendApartment.mapUrl || '').trim(),
+      facilities_amenities: (() => {
+        if (typeof frontendApartment.facilities_amenities === 'string') {
+          return frontendApartment.facilities_amenities.trim();
+        }
+        if (Array.isArray(frontendApartment.facilities_amenities)) {
+          return frontendApartment.facilities_amenities.join(', ').trim();
+        }
+        if (Array.isArray(frontendApartment.facilities)) {
+          return frontendApartment.facilities.join(', ').trim();
+        }
+        if (Array.isArray(frontendApartment.amenities)) {
+          return frontendApartment.amenities.join(', ').trim();
+        }
+        return '';
+      })()
+    };
+    
+    // Remove empty optional fields to avoid sending empty strings
+    if (!transformed.description) delete transformed.description;
+    if (!transformed.location_on_map) delete transformed.location_on_map;
+    if (!transformed.facilities_amenities) delete transformed.facilities_amenities;
+    if (transformed.photos_url.length === 0) delete transformed.photos_url;
+    
+    // Validation logging
+    console.log('✅ Transformed data ready for POST /api/v1/apartments/sale:');
+    console.log('  - name:', transformed.name || '❌ MISSING');
+    console.log('  - location:', transformed.location || '❌ MISSING');
+    console.log('  - address:', transformed.address || '❌ MISSING');
+    console.log('  - price:', transformed.price || '❌ MISSING');
+    console.log('  - area:', transformed.area || '❌ MISSING');
+    console.log('  - number:', transformed.number || '❌ MISSING');
+    console.log('  - bedrooms:', transformed.bedrooms);
+    console.log('  - bathrooms:', transformed.bathrooms);
+    console.log('  - photos_url count:', transformed.photos_url?.length || 0);
+    console.log('  - facilities_amenities:', transformed.facilities_amenities || '(not included)');
+    console.log('  - description:', transformed.description || '(not included)');
+    
+    console.log('📤 Final API payload:', JSON.stringify(transformed, null, 2));
+    return transformed;
+  };
 
   // ==================== RENT APARTMENTS ====================
 

@@ -136,7 +136,22 @@ export const useAdminAuth = () => {
       };
     } catch (error) {
       console.error('❌ Failed to create admin account:', error);
-      const errorMessage = handleApiError(error, 'Failed to create admin account');
+      console.error('❌ Error details:', {
+        status: error.status,
+        data: error.data,
+        detail: error.data?.detail,
+        message: error.message
+      });
+      
+      // Extract the detail message from the backend
+      let errorMessage = 'Failed to create admin account';
+      
+      if (error.data?.detail) {
+        errorMessage = error.data.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       return { success: false, error: errorMessage, message: errorMessage };
     }
   };

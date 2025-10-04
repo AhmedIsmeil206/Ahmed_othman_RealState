@@ -59,12 +59,18 @@ export const formatPhoneForAPI = (phoneNumber) => {
     return `+${cleaned}`;
   }
   
-  // If starts with 0, replace with +20
+  // If starts with 0 (Egyptian format 010, 011, 012, 015)
+  // Convert 01XXXXXXXXX (11 digits) to +201XXXXXXXXX
+  if (cleaned.startsWith('0') && cleaned.length === 11) {
+    return `+2${cleaned}`;
+  }
+  
+  // If starts with 0 but not 11 digits, still try to format
   if (cleaned.startsWith('0')) {
     return `+2${cleaned}`;
   }
   
-  // If starts with 1 (Egyptian mobile format), add +20
+  // If starts with 1 (Egyptian mobile format without leading 0), add +20
   if (cleaned.startsWith('1') && cleaned.length === 10) {
     return `+20${cleaned}`;
   }
@@ -118,31 +124,34 @@ export const validateEgyptianPhone = (phoneNumber) => {
 
   const cleaned = phoneNumber.replace(/[\s\-()]/g, '');
   
-  // Allow various formats:
-  // 1xxxxxxxxx (10 digits starting with 1)
-  // 01xxxxxxxxx (11 digits starting with 01)
-  // 201xxxxxxxxx (12 digits starting with 201)
-  // +201xxxxxxxxx (13 characters starting with +201)
-  
-  const patterns = [
-    /^1[0-9]{9}$/, // 1xxxxxxxxx (10 digits)
-    /^01[0-9]{9}$/, // 01xxxxxxxxx (11 digits)
-    /^201[0-9]{9}$/, // 201xxxxxxxxx (12 digits)
-    /^\+201[0-9]{9}$/ // +201xxxxxxxxx (13 characters)
-  ];
-  
-  const isValid = patterns.some(pattern => pattern.test(cleaned));
-  
-  if (!isValid) {
+  // Primary format: 010/011/012/015 followed by 8 digits (11 total)
+  // This is the standard Egyptian mobile format
+  if (/^(010|011|012|015)\d{8}$/.test(cleaned)) {
     return {
-      isValid: false,
-      error: 'Please enter a valid Egyptian mobile number (e.g., 1xxxxxxxxx, 01xxxxxxxxx)'
+      isValid: true,
+      error: null
+    };
+  }
+  
+  // Also allow with +20 prefix: +20 10/11/12/15 + 8 digits
+  if (/^\+?20(10|11|12|15)\d{8}$/.test(cleaned)) {
+    return {
+      isValid: true,
+      error: null
+    };
+  }
+  
+  // Also allow 10 digits starting with 1 (without leading 0)
+  if (/^1[0-5]\d{8}$/.test(cleaned)) {
+    return {
+      isValid: true,
+      error: null
     };
   }
   
   return {
-    isValid: true,
-    error: null
+    isValid: false,
+    error: 'Must be 11 digits starting with 010, 011, 012, or 015 (e.g., 01012345678)'
   };
 };
 

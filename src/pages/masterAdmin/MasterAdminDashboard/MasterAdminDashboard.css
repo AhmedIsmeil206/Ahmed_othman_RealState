@@ -1020,7 +1020,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  padding: 32px 24px 24px; /* extra top padding for space under header */
+  padding: 24px 24px 24px; /* padding for content */
+  padding-top: 0; /* No top padding, let tab-section handle spacing */
 }
 
 @media (max-width: 768px) {
@@ -1036,15 +1037,15 @@
 }
 
 .tab-section {
+  margin-top: 32px; 
   background: #f8fafc;
   padding: 24px;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  margin-top: 24px; /* Add spacing from header */
 }
 
 .tab-section h3 {
-  margin: 0 0 24px 0; /* Increase bottom margin for more space */
+  margin: 0 0 20px 0;
   color: #1f2937;
   font-size: 1.2rem;
   font-weight: 600;
@@ -1058,7 +1059,7 @@
 }
 
 .tab-section .form-group:first-of-type {
-  margin-top: 16px; /* Add extra space for first input field */
+  margin-top: 8px; /* Space between section title and first input */
 }
 
 .tab-section .form-group label {

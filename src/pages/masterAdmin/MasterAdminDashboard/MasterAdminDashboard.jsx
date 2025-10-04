@@ -215,52 +215,8 @@ const MasterAdminDashboard = () => {
     return properties;
   }, [apartments, saleApartments, propertyTypeFilter, selectedAdminFilter]);
 
-  // Load form data from localStorage on component mount
-  useEffect(() => {
-    const savedProfileForm = localStorage.getItem('masterAdminProfileForm');
-    const savedAdminForm = localStorage.getItem('masterAdminAdminForm');
-    
-    if (savedProfileForm) {
-      const parsed = JSON.parse(savedProfileForm);
-      setEditType(parsed.editType || 'email');
-      setProfileForm(prev => ({
-        ...prev,
-        email: parsed.email || currentUser?.email || '',
-        // Don't restore passwords for security
-      }));
-    }
-    
-    if (savedAdminForm) {
-      const parsed = JSON.parse(savedAdminForm);
-      setAdminForm(prev => ({
-        ...prev,
-        name: parsed.name || '',
-        email: parsed.email || '',
-        mobile: parsed.mobile || '',
-        // Don't restore password for security
-      }));
-    }
-  }, [currentUser]);
-
-  // Save form data to localStorage whenever forms change
-  useEffect(() => {
-    const formToSave = {
-      email: profileForm.email,
-      editType: editType,
-      // Don't save passwords
-    };
-    localStorage.setItem('masterAdminProfileForm', JSON.stringify(formToSave));
-  }, [profileForm.email, editType]);
-
-  useEffect(() => {
-    const formToSave = {
-      name: adminForm.name,
-      email: adminForm.email,
-      mobile: adminForm.mobile,
-      // Don't save password
-    };
-    localStorage.setItem('masterAdminAdminForm', JSON.stringify(formToSave));
-  }, [adminForm.name, adminForm.email, adminForm.mobile]);
+  // Note: Removed localStorage persistence to prevent unnecessary re-renders
+  // Forms will reset when modals are closed, improving performance
 
   const handleLogout = () => {
     logout();
@@ -306,8 +262,6 @@ const MasterAdminDashboard = () => {
     setShowCurrentPassword(false);
     setShowNewPassword(false);
     setShowConfirmPassword(false);
-    // Clear saved form data
-    localStorage.removeItem('masterAdminProfileForm');
   };
 
   const handleProfileInputChange = (e) => {
@@ -401,9 +355,6 @@ const MasterAdminDashboard = () => {
           text: successMessage
         });
         
-        // Clear saved form data
-        localStorage.removeItem('masterAdminProfileForm');
-        
         // Wait 2 seconds then logout and redirect to login
         setTimeout(() => {
           logout(); // This will clear the session
@@ -426,7 +377,7 @@ const MasterAdminDashboard = () => {
   };
 
   // Manage Admins Modal Functions
-  const openManageAdminsModal = () => {
+  const openManageAdminsModal = async () => {
     console.log('Opening Manage Admins Modal');
     setAdminForm({
       name: '',
@@ -439,6 +390,19 @@ const MasterAdminDashboard = () => {
     setAdminMessage({ type: '', text: '' });
     setIsManageAdminsModalOpen(true);
     console.log('Manage Admins Modal state set to true');
+    
+    // Fetch latest admin list when opening modal
+    try {
+      console.log('🔄 Fetching admin list for modal...');
+      const adminsResponse = await getAllAdminAccounts();
+      if (adminsResponse && Array.isArray(adminsResponse)) {
+        console.log('✅ Fetched', adminsResponse.length, 'admins');
+        setAllAdmins(adminsResponse);
+        setExistingAdmins(adminsResponse);
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch admins:', error);
+    }
   };
 
   const closeManageAdminsModal = () => {
@@ -454,8 +418,6 @@ const MasterAdminDashboard = () => {
     setAdminMessage({ type: '', text: '' });
     // Reset password visibility
     setShowAdminPassword(false);
-    // Clear saved form data
-    localStorage.removeItem('masterAdminAdminForm');
   };
 
   const handleAdminInputChange = (e) => {
@@ -463,9 +425,14 @@ const MasterAdminDashboard = () => {
     
     let processedValue = value;
     
-    // Handle phone number input without requiring +2 prefix
+    // Handle phone number input - allow only digits and preserve leading zero
     if (name === 'mobile') {
-      processedValue = normalizePhoneInput(value);
+      // Remove any non-digit characters
+      processedValue = value.replace(/\D/g, '');
+      // Limit to 11 digits
+      if (processedValue.length > 11) {
+        processedValue = processedValue.slice(0, 11);
+      }
     }
     
     setAdminForm(prev => ({ ...prev, [name]: processedValue }));
@@ -494,9 +461,12 @@ const MasterAdminDashboard = () => {
     if (!adminForm.mobile?.trim()) {
       errors.mobile = 'Mobile number is required';
     } else {
-      const phoneValidation = validateEgyptianPhone(adminForm.mobile);
-      if (!phoneValidation.isValid) {
-        errors.mobile = phoneValidation.error;
+      // Remove spaces and check length
+      const cleanedMobile = adminForm.mobile.replace(/\s/g, '');
+      
+      // Must be 11 digits starting with 010, 011, 012, or 015
+      if (!/^(010|011|012|015)\d{8}$/.test(cleanedMobile)) {
+        errors.mobile = 'Must be 11 digits starting with 010, 011, 012, or 015 (e.g., 01012345678)';
       }
     }
     
@@ -526,12 +496,73 @@ const MasterAdminDashboard = () => {
       return;
     }
 
-    console.log('Validation passed, creating admin...');
+    console.log('Validation passed, checking for duplicates...');
+    
+    // Fetch fresh admin list to ensure we have latest data
+    console.log('🔄 Fetching fresh admin list for duplicate checking...');
+    let freshAdmins = [];
+    try {
+      freshAdmins = await getAllAdminAccounts() || [];
+      console.log('📊 Fresh admin list:', freshAdmins.length, 'admins');
+      console.log('📧 Existing emails:', freshAdmins.map(a => a.email));
+      console.log('📱 Existing phones:', freshAdmins.map(a => a.phone || a.mobile));
+    } catch (error) {
+      console.warn('⚠️ Could not fetch fresh admin list:', error);
+      freshAdmins = existingAdmins; // Fallback to cached list
+    }
+    
+    // Check for duplicate email
+    const emailToCheck = adminForm.email.toLowerCase().trim();
+    const existingAdminWithEmail = freshAdmins.find(admin => 
+      admin.email?.toLowerCase() === emailToCheck
+    );
+    
+    if (existingAdminWithEmail) {
+      const errorMsg = `❌ Email "${adminForm.email}" is already registered to ${existingAdminWithEmail.name || existingAdminWithEmail.full_name}. Please use a different email address.`;
+      console.error('❌ Duplicate email found:', {
+        inputEmail: emailToCheck,
+        existingAdmin: existingAdminWithEmail.name || existingAdminWithEmail.full_name,
+        adminId: existingAdminWithEmail.id
+      });
+      setAdminMessage({ type: 'error', text: errorMsg });
+      showToast(errorMsg, 'error');
+      return;
+    }
+    
+    // Check for duplicate phone
+    const phoneToCheck = formatPhoneForAPI(adminForm.mobile.trim());
+    const existingAdminWithPhone = freshAdmins.find(admin => {
+      const adminPhone = admin.phone || admin.mobile || '';
+      return adminPhone === phoneToCheck;
+    });
+    
+    if (existingAdminWithPhone) {
+      const errorMsg = `❌ Phone number "${adminForm.mobile}" is already registered to ${existingAdminWithPhone.name || existingAdminWithPhone.full_name}. Please use a different phone number.`;
+      console.error('❌ Duplicate phone found:', {
+        inputPhone: phoneToCheck,
+        existingAdmin: existingAdminWithPhone.name || existingAdminWithPhone.full_name,
+        adminId: existingAdminWithPhone.id
+      });
+      setAdminMessage({ type: 'error', text: errorMsg });
+      showToast(errorMsg, 'error');
+      return;
+    }
+    
+    console.log('✅ No duplicates found in frontend check, proceeding to API...');
+    console.log('� Current existing admins:', existingAdmins.length);
+    
+    console.log('✅ No duplicates found in frontend check, proceeding to API...');
     setIsAdminSubmitting(true);
     setAdminMessage({ type: '', text: '' });
 
     try {
       console.log('🚀 Creating admin account with API data...');
+      console.log('📋 Form data before transformation:', {
+        name: adminForm.name,
+        email: adminForm.email,
+        mobile: adminForm.mobile,
+        role: adminForm.role
+      });
       
       // Transform form data to match API requirements  
       const apiData = {
@@ -542,7 +573,11 @@ const MasterAdminDashboard = () => {
         role: adminForm.role
       };
       
-      console.log('📋 Admin phone will be used for WhatsApp:', apiData.phone);
+      console.log('� Phone formatting:', {
+        input: adminForm.mobile.trim(),
+        formatted: apiData.phone,
+        length: apiData.phone.length
+      });
       
       console.log('📤 API Data for admin creation:', {
         ...apiData,
@@ -550,8 +585,15 @@ const MasterAdminDashboard = () => {
       });
       
       // Create admin account via API
+      console.log('🌐 Sending request to backend with:', {
+        full_name: apiData.full_name,
+        email: apiData.email,
+        phone: apiData.phone,
+        role: apiData.role
+      });
+      
       const response = await createAdminAccount(apiData);
-      console.log('📨 API Response:', response);
+      console.log('📨 Full API Response:', JSON.stringify(response, null, 2));
 
       if (response.success) {
         // Show success toast
@@ -568,30 +610,101 @@ const MasterAdminDashboard = () => {
         setAdminErrors({});
         setAdminMessage({ type: '', text: '' });
         
-        // Refresh admins list
+        // Refresh admins list immediately after creation
+        console.log('🔄 Refreshing admin list after creation...');
         const adminsResponse = await getAllAdminAccounts();
-        if (adminsResponse) {
+        if (adminsResponse && Array.isArray(adminsResponse)) {
+          console.log('✅ Refreshed admin list:', adminsResponse.length, 'admins');
           setAllAdmins(adminsResponse);
           setExistingAdmins(adminsResponse);
+        } else {
+          console.warn('⚠️ Failed to refresh admin list');
         }
-        
-        // Clear saved form data
-        localStorage.removeItem('masterAdminAdminForm');
         
         // Close modal after a short delay
         setTimeout(() => {
           closeManageAdminsModal();
         }, 2000);
       } else {
+        console.error('❌ Admin creation failed from backend:', response);
+        console.error('🔍 Debugging info:', {
+          sentEmail: apiData.email,
+          sentPhone: apiData.phone,
+          errorMessage: response.error || response.message,
+          fullResponse: response
+        });
+        
+        let errorMsg = response.error || response.message || 'Failed to create admin account. Please try again.';
+        
+        // Make error message more user-friendly
+        if (errorMsg.toLowerCase().includes('already') || errorMsg.toLowerCase().includes('exists') || errorMsg.toLowerCase().includes('duplicate')) {
+          console.log('🔄 Backend rejected with duplicate error, fetching admin list to identify the issue...');
+          
+          // Fetch fresh admin list to identify exactly what's duplicate
+          try {
+            const freshAdmins = await getAllAdminAccounts();
+            console.log('📊 Fresh admins for duplicate analysis:', freshAdmins?.length || 0);
+            
+            if (freshAdmins && Array.isArray(freshAdmins)) {
+              // Check email match
+              const matchingEmail = freshAdmins.find(a => 
+                a.email?.toLowerCase() === apiData.email.toLowerCase()
+              );
+              
+              // Check phone match
+              const matchingPhone = freshAdmins.find(a => 
+                (a.phone || a.mobile) === apiData.phone
+              );
+              
+              console.log('🔍 Duplicate analysis results:', {
+                emailMatch: matchingEmail ? `${matchingEmail.email} (${matchingEmail.name || matchingEmail.full_name})` : 'No match',
+                phoneMatch: matchingPhone ? `${matchingPhone.phone || matchingPhone.mobile} (${matchingPhone.name || matchingPhone.full_name})` : 'No match',
+                searchedEmail: apiData.email,
+                searchedPhone: apiData.phone
+              });
+              
+              if (matchingEmail && matchingPhone && matchingEmail.id === matchingPhone.id) {
+                // Same admin has both email and phone
+                errorMsg = `❌ Both email and phone are already registered to "${matchingEmail.name || matchingEmail.full_name}"\n\n` +
+                          `• Email: ${apiData.email}\n` +
+                          `• Phone: ${apiData.phone}\n\n` +
+                          `Please use different email AND phone number.`;
+              } else if (matchingEmail) {
+                // Email is duplicate
+                errorMsg = `❌ Email "${apiData.email}" is already registered to "${matchingEmail.name || matchingEmail.full_name}".\n\nPlease use a different email address.`;
+              } else if (matchingPhone) {
+                // Phone is duplicate
+                errorMsg = `❌ Phone number "${apiData.phone}" is already registered to "${matchingPhone.name || matchingPhone.full_name}".\n\nPlease use a different phone number.`;
+              } else {
+                // Backend says duplicate but we can't find it - might be a sync issue
+                errorMsg = `❌ Backend detected a duplicate but it's not showing in our admin list.\n\n` +
+                          `This might be a database sync issue.\n\n` +
+                          `Tried to create:\n` +
+                          `• Email: ${apiData.email}\n` +
+                          `• Phone: ${apiData.phone}\n\n` +
+                          `Try refreshing the page or use completely different values.`;
+              }
+            } else {
+              errorMsg = `❌ Backend says duplicate exists but could not fetch admin list to identify the issue.\n\nPlease try different email and phone number.`;
+            }
+          } catch (fetchError) {
+            console.error('❌ Failed to fetch admin list for duplicate analysis:', fetchError);
+            errorMsg = `❌ Backend detected duplicate values but could not verify details.\n\nPlease try different email and phone number.`;
+          }
+        }
+        
         setAdminMessage({ 
           type: 'error', 
-          text: response.error || 'Failed to create admin account. Please try again.' 
+          text: errorMsg
         });
+        showToast(errorMsg, 'error');
       }
 
     } catch (error) {
-      console.error('Error creating admin account:', error);
-      setAdminMessage({ type: 'error', text: 'Failed to create admin account. Please try again.' });
+      console.error('💥 Exception creating admin account:', error);
+      const errorMsg = error.message || 'Failed to create admin account. Please try again.';
+      setAdminMessage({ type: 'error', text: errorMsg });
+      showToast(errorMsg, 'error');
     } finally {
       setIsAdminSubmitting(false);
     }
@@ -1107,7 +1220,7 @@ const MasterAdminDashboard = () => {
                   )}
 
                   <div className="form-group">
-                    <label htmlFor="name">Full Name</label>
+                    <label htmlFor="name" style={{paddingTop:"250px"}}>Full Name</label>
                     <input
                       type="text"
                       id="name"
@@ -1159,17 +1272,25 @@ const MasterAdminDashboard = () => {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="mobile">Mobile Phone (without +2)</label>
+                    <label htmlFor="mobile">Mobile Phone (11 digits)</label>
                     <input
-                      type="tel"
+                      type="text"
                       id="mobile"
                       name="mobile"
                       value={adminForm.mobile}
                       onChange={handleAdminInputChange}
                       className={adminErrors.mobile ? 'error' : ''}
-                      placeholder="10xxxxxxxx or 01xxxxxxxxx"
+                      placeholder="01012345678"
+                      maxLength="11"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                     />
                     {adminErrors.mobile && <span className="error-text">{adminErrors.mobile}</span>}
+                    {!adminErrors.mobile && (
+                      <small className="field-hint" style={{color: '#6b7280', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
+                        Enter 11 digits starting with 010, 011, 012, or 015
+                      </small>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -1191,6 +1312,24 @@ const MasterAdminDashboard = () => {
                   </div>
 
                   <div className="modal-actions">
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      onClick={async () => {
+                        console.log('🔄 Refreshing admin list manually...');
+                        try {
+                          const freshAdmins = await getAllAdminAccounts();
+                          setAllAdmins(freshAdmins);
+                          setExistingAdmins(freshAdmins);
+                          showToast('Admin list refreshed!', 'success');
+                        } catch (error) {
+                          console.error('Failed to refresh:', error);
+                          showToast('Failed to refresh admin list', 'error');
+                        }
+                      }}
+                    >
+                      🔄 Refresh Admin List
+                    </button>
                     <button type="submit" className="btn-primary" disabled={isAdminSubmitting}>
                       {isAdminSubmitting ? 'Creating...' : 'Create Admin'}
                     </button>

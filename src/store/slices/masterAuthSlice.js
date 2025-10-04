@@ -37,6 +37,34 @@ const masterAuthSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Initialize Master Auth - CRITICAL FOR PAGE REFRESH
+      .addCase(initializeMasterAuth.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(initializeMasterAuth.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.initialized = true;
+        
+        if (action.payload.currentUser) {
+          state.currentUser = action.payload.currentUser;
+          console.log('✅ Redux: Master admin session restored from token', {
+            userId: state.currentUser.id,
+            email: state.currentUser.email
+          });
+        } else {
+          state.currentUser = null;
+          console.log('ℹ️ Redux: No active master admin session found');
+        }
+      })
+      .addCase(initializeMasterAuth.rejected, (state, action) => {
+        state.isLoading = false;
+        state.initialized = true;
+        state.currentUser = null;
+        state.error = action.payload;
+        console.log('⚠️ Redux: Failed to initialize master admin session');
+      })
+      
       // Login
       .addCase(loginMasterAdmin.pending, (state) => {
         state.isLoading = true;

@@ -7,6 +7,9 @@
   overflow: hidden;
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  max-height: 800px;
+  display: flex;
+  flex-direction: column;
 }
 
 .apartment-card:hover {
@@ -15,8 +18,34 @@
   border-color: #f59e0b;
 }
 
+.apartment-card.delete-mode {
+  border-color: #ef4444;
+  max-height: none;
+}
+
 .apartment-card-header {
   position: relative;
+  overflow-y: auto;
+  max-height: 500px;
+  flex-shrink: 0;
+}
+
+.apartment-card-header::-webkit-scrollbar {
+  width: 6px;
+}
+
+.apartment-card-header::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.apartment-card-header::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.apartment-card-header::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .apartment-image {
@@ -98,118 +127,143 @@
   transform: scale(1.05);
 }
 
-/* Delete Confirmation Modal */
-.delete-confirm-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.delete-confirm-dialog {
-  background: white;
+/* Inline Delete Confirmation */
+.delete-confirmation-inline {
   padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
-  width: 90%;
+  background: white;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.delete-confirm-header {
   text-align: center;
-  max-height: 80vh;
-  overflow-y: auto;
+  margin-bottom: 20px;
 }
 
-.delete-confirm-dialog h4 {
-  margin: 0 0 15px 0;
-  color: #333;
-  font-size: 20px;
-}
-
-.delete-confirm-dialog p {
+.delete-confirm-header h4 {
   margin: 0 0 10px 0;
-  color: #666;
-  line-height: 1.5;
+  color: #dc2626;
+  font-size: 24px;
+  font-weight: 700;
 }
 
-.warning-details {
+.delete-confirm-header p {
+  margin: 0;
+  color: #374151;
+  font-size: 16px;
+}
+
+.warning-box {
   background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
+  border: 2px solid #fecaca;
+  border-radius: 12px;
   padding: 20px;
   margin: 20px 0;
   text-align: left;
 }
 
-.warning-text {
-  color: #dc2626 !important;
-  font-weight: 600;
-  margin-bottom: 10px !important;
+.warning-title {
+  color: #dc2626;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  font-size: 15px;
 }
 
-.deletion-list, .portal-list {
-  margin: 10px 0;
+.deletion-items {
+  margin: 12px 0;
   padding-left: 20px;
+  list-style: none;
+}
+
+.deletion-items li {
   color: #374151;
-}
-
-.deletion-list li, .portal-list li {
-  margin: 5px 0;
+  margin: 8px 0;
   font-size: 14px;
+  line-height: 1.5;
 }
 
-.portal-list li {
-  color: #059669;
-  font-weight: 500;
+.warning-footer {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 12px 0 0 0;
+  line-height: 1.5;
 }
 
 .final-warning {
-  color: #dc2626 !important;
-  font-weight: 700 !important;
-  font-size: 16px !important;
-  margin-top: 15px !important;
-  text-align: center !important;
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 16px;
+  margin: 16px 0 0 0;
+  text-align: center;
+  padding: 12px;
+  background: #fee2e2;
+  border-radius: 8px;
 }
 
-.delete-confirm-actions {
+.delete-actions-inline {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
-.confirm-cancel-btn {
+.cancel-delete-btn {
   background: #6b7280;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s;
+  flex: 1;
+  max-width: 150px;
 }
 
-.confirm-cancel-btn:hover {
+.cancel-delete-btn:hover:not(:disabled) {
   background: #4b5563;
+  transform: translateY(-1px);
 }
 
-.confirm-delete-btn {
+.cancel-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm-delete-btn-inline {
   background: #ef4444;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s;
+  flex: 1;
+  max-width: 200px;
 }
 
-.confirm-delete-btn:hover {
+.confirm-delete-btn-inline:hover:not(:disabled) {
   background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.confirm-delete-btn-inline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .apartment-name {
@@ -266,6 +320,25 @@
   gap: 12px;
   border-top: 1px solid #e5e7eb;
   background: #f9fafb;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.apartment-card-actions::-webkit-scrollbar {
+  height: 4px;
+}
+
+.apartment-card-actions::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.apartment-card-actions::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.apartment-card-actions::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .expand-btn {
@@ -325,18 +398,40 @@
   transition: all 0.3s ease;
   max-height: 0;
   opacity: 0;
+  flex: 1;
+  min-height: 0;
 }
 
 .studios-section.expanded {
-  max-height: 2000px;
+  max-height: 500px;
   opacity: 1;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .studios-section.collapsed {
   max-height: 0;
   opacity: 0;
   padding: 0 20px;
+}
+
+.studios-section::-webkit-scrollbar {
+  width: 8px;
+}
+
+.studios-section::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
+.studios-section::-webkit-scrollbar-thumb {
+  background: #f59e0b;
+  border-radius: 10px;
+}
+
+.studios-section::-webkit-scrollbar-thumb:hover {
+  background: #d97706;
 }
 
 .studios-grid {

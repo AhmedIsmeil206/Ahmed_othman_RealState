@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useMasterAuth, useProperty } from '../../../hooks/useRedux';
+import { useMasterAuth } from '../../../hooks/useRedux';
+import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import './AddSaleApartmentModal.css';
 import useUniqueId from '../../../hooks/useUniqueId';
 
 const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const { currentUser } = useMasterAuth();
-  const { createSaleApartment } = useProperty();
+  const { createSaleApartment } = usePropertyManagement();
   const { generateApartmentId } = useUniqueId();
   const [formData, setFormData] = useState({
     name: '',
@@ -135,47 +136,54 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     
     console.log('Validating form with data:', formData);
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Apartment name is required';
+    // Validate required fields with proper API field names
+    if (!formData.name?.trim()) {
+      newErrors.name = 'Apartment name is required (API field: name)';
     }
 
-    if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
+    if (!formData.location?.trim()) {
+      newErrors.location = 'Location is required. Must be "maadi" or "mokkattam"';
+    } else if (!['maadi', 'mokkattam'].includes(formData.location.toLowerCase())) {
+      newErrors.location = 'Location must be either "maadi" or "mokkattam"';
     }
 
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
+    if (!formData.address?.trim()) {
+      newErrors.address = 'Address is required (API field: address)';
     }
 
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
     }
 
-    if (!formData.price.trim()) {
-      newErrors.price = 'Price is required';
+    if (!formData.price?.toString().trim()) {
+      newErrors.price = 'Price is required (API expects string)';
     } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = 'Please enter a valid price';
+      newErrors.price = 'Please enter a valid price (positive number)';
     }
 
-    if (!formData.bedrooms.trim()) {
-      newErrors.bedrooms = 'Number of bedrooms is required';
-    } else if (isNaN(Number(formData.bedrooms)) || Number(formData.bedrooms) <= 0) {
-      newErrors.bedrooms = 'Please enter a valid number of bedrooms';
+    if (!formData.bedrooms?.toString().trim()) {
+      newErrors.bedrooms = 'Number of bedrooms is required (API expects integer)';
+    } else if (isNaN(Number(formData.bedrooms)) || Number(formData.bedrooms) <= 0 || !Number.isInteger(Number(formData.bedrooms))) {
+      newErrors.bedrooms = 'Please enter a valid number of bedrooms (positive integer)';
     }
 
     // CRITICAL: bathrooms must be enum string 'private' or 'shared', not a number
     if (!formData.bathrooms || (formData.bathrooms !== 'private' && formData.bathrooms !== 'shared')) {
-      newErrors.bathrooms = 'Bathroom type must be either private or shared';
+      newErrors.bathrooms = 'Bathroom type must be either "private" or "shared" (API enum requirement)';
+    } else {
+      console.log('✅ Bathroom validation passed:', formData.bathrooms);
     }
 
-    if (!formData.area.trim()) {
-      newErrors.area = 'Area is required';
+    if (!formData.area?.toString().trim()) {
+      newErrors.area = 'Area is required (API field: area, expects string)';
     } else if (isNaN(Number(formData.area)) || Number(formData.area) <= 0) {
-      newErrors.area = 'Please enter a valid area';
+      newErrors.area = 'Please enter a valid area (positive number)';
     }
 
-    if (!formData.apartmentNumber.trim()) {
-      newErrors.apartmentNumber = 'Apartment number is required';
+    if (!formData.apartmentNumber?.trim()) {
+      newErrors.apartmentNumber = 'Apartment number is required (API field: number)';
+    } else if (formData.apartmentNumber.trim().length < 1) {
+      newErrors.apartmentNumber = 'Apartment number cannot be empty';
     }
 
     // Floor is optional for sale apartments (not in backend schema requirements)
@@ -184,14 +192,17 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       newErrors.floor = 'Floor must be a valid number if provided';
     }
 
-    if (formData.photos.length === 0) {
-      newErrors.photos = 'At least one photo is required for the apartment';
-    }
+    // Photos are now optional - no validation required
+    // if (formData.photos.length === 0) {
+    //   newErrors.photos = 'At least one photo is required for the apartment';
+    // }
 
-    if (!formData.contactNumber.trim()) {
-      newErrors.contactNumber = 'Contact number is required';
-    } else if (!/^(\+201|01)[0-9]{9}$/.test(formData.contactNumber)) {
-      newErrors.contactNumber = 'Please enter a valid Egyptian mobile number (e.g., +201012345678 or 01012345678)';
+    if (!formData.contactNumber?.trim()) {
+      newErrors.contactNumber = 'Contact number is required (used for WhatsApp integration)';
+    } else if (!/^(\+201|01)[0-9]{9}$/.test(formData.contactNumber.trim())) {
+      newErrors.contactNumber = 'Please enter a valid Egyptian mobile number (format: +201XXXXXXXXX or 01XXXXXXXXX)';
+    } else {
+      console.log('✅ Contact number validation passed:', formData.contactNumber);
     }
 
     // Validate mapUrl if provided (optional field)
@@ -218,25 +229,35 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     console.log('📤 Preparing API data according to backend requirements...');
 
     try {
-      // Transform frontend data to match API requirements according to documentation
+      // Transform frontend data to match EXACT API requirements according to documentation
+      // CRITICAL: Sale apartments have DIFFERENT schema than rent apartments
       // REQUIRED FIELDS for sale: name, location, address, area, number, price, bedrooms, bathrooms
+      // ❌ DO NOT SEND: floor, total_parts, contact_number (these are for rent apartments only!)
       const apiData = {
-        name: formData.name.trim() || 'Unnamed Property', // REQUIRED: API expects 'name', not 'title'
-        location: formData.location ? formData.location.toLowerCase() : 'maadi', // REQUIRED: Must be lowercase: 'maadi' or 'mokkattam'
-        address: formData.address.trim() || 'Address not provided', // REQUIRED
-        area: formData.area && formData.area.toString().trim() ? formData.area.toString() : '50', // REQUIRED: API expects string, default 50 sqm
-        number: formData.apartmentNumber && formData.apartmentNumber.trim() ? formData.apartmentNumber.trim() : 'SALE-001', // REQUIRED: API field is 'number'
-        price: formData.price && formData.price.toString().trim() ? formData.price.toString() : '0', // REQUIRED: API expects string, not number
-        bedrooms: parseInt(formData.bedrooms) || 1, // REQUIRED: API expects integer
-        bathrooms: formData.bathrooms === 'shared' ? 'shared' : 'private', // REQUIRED: API expects string enum: 'private' or 'shared' ONLY
-        description: formData.description.trim() || 'No description provided', // Optional
+        // === REQUIRED FIELDS ===
+        name: formData.name.trim(), // API expects 'name', not 'title'
+        location: formData.location.toLowerCase(), // Must be lowercase: 'maadi' or 'mokkattam'
+        address: formData.address.trim(), // Full address string
+        area: formData.area.toString(), // API expects string (decimal)
+        number: formData.apartmentNumber.trim(), // API field is 'number' (e.g., "A-301")
+        price: formData.price.toString(), // API expects string (decimal), NOT number
+        bedrooms: parseInt(formData.bedrooms), // API expects integer
+        bathrooms: formData.bathrooms, // API expects enum string: 'private' or 'shared' ONLY
+        
+        // === OPTIONAL FIELDS ===
+        description: formData.description.trim() || '', // Optional description text
         photos_url: formData.photos && formData.photos.length > 0 
           ? formData.photos.map(photo => photo.preview) 
-          : [], // Optional: API expects 'photos_url', not 'images'
-        location_on_map: formData.mapUrl ? formData.mapUrl.trim() : '', // Optional: API field name
-        facilities_amenities: formData.facilities && formData.facilities.length > 0 ? formData.facilities.join(', ') : '' // Optional: API expects string, not array
-        // Note: contact_number is auto-filled by backend from admin's phone
-        // Note: floor and total_parts are NOT in sale apartment schema
+          : [], // API expects 'photos_url', not 'images'
+        location_on_map: formData.mapUrl ? formData.mapUrl.trim() : '', // Google Maps URL
+        facilities_amenities: formData.facilities && formData.facilities.length > 0 
+          ? formData.facilities.join(', ') 
+          : '' // API expects comma-separated string, not array
+        
+        // ❌ EXCLUDED FIELDS (not in sale apartment schema):
+        // - contact_number: Auto-filled by backend from admin's phone
+        // - floor: Only for rent apartments, not sale
+        // - total_parts: Only for rent apartments, not sale
       };
       
       console.log('📊 API Data prepared:', {
@@ -496,7 +517,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="photos">Apartment Photos *</label>
+            <label htmlFor="photos">Apartment Photos (Optional)</label>
             <div className="photo-upload-container">
               <input
                 type="file"
@@ -510,7 +531,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
               <label htmlFor="photos" className="photo-upload-label">
                 <div className="upload-icon">🏠</div>
                 <div className="upload-text">
-                  <strong>Click to upload apartment photos</strong>
+                  <strong>Click to upload apartment photos (optional)</strong>
                   <span>or drag and drop</span>
                 </div>
                 <div className="upload-hint">PNG, JPG, GIF up to 10MB each</div>

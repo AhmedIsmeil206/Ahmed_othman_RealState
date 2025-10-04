@@ -133,54 +133,90 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Apartment name is required';
+    // Basic required field validation with API field references
+    if (!formData.name?.trim()) {
+      newErrors.name = 'Apartment name is required (API field: name)';
+    } else {
+      console.log('✅ Apartment name validation passed:', formData.name);
     }
 
     if (!formData.location || !formData.location.trim() || (formData.location !== 'maadi' && formData.location !== 'mokkattam')) {
-      newErrors.location = 'Location is required and must be either Maadi or Mokkattam';
+      newErrors.location = 'Location is required and must be either "maadi" or "mokkattam" (API enum requirement)';
+    } else {
+      console.log('✅ Location validation passed:', formData.location);
     }
 
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
+    if (!formData.address?.trim()) {
+      newErrors.address = 'Address is required (API field: address)';
+    } else {
+      console.log('✅ Address validation passed:', formData.address);
     }
 
-    if (!formData.description.trim()) {
+    if (!formData.description?.trim()) {
       newErrors.description = 'Description is required';
+    } else {
+      console.log('✅ Description validation passed:', formData.description);
+    }
+
+    // Price validation (API field: price, expects string)
+    if (formData.price && (isNaN(Number(formData.price)) || Number(formData.price) < 0)) {
+      newErrors.price = 'Price must be a valid non-negative number (API expects string)';
+    } else if (formData.price) {
+      console.log('✅ Price validation passed:', formData.price);
+    }
+
+    // Bedrooms validation (API field: bedrooms, expects integer)
+    if (formData.bedrooms && (isNaN(Number(formData.bedrooms)) || Number(formData.bedrooms) <= 0 || !Number.isInteger(Number(formData.bedrooms)))) {
+      newErrors.bedrooms = 'Bedrooms must be a valid positive integer';
+    } else if (formData.bedrooms) {
+      console.log('✅ Bedrooms validation passed:', formData.bedrooms);
     }
 
     // Photos are optional - studios will have their own photos
+    // No photo validation required for rental apartments
     // if (formData.photos.length === 0) {
     //   newErrors.photos = 'At least one photo is required for the apartment';
     // }
 
-    // Floor validation - REQUIRED field for rental apartments
-    if (!formData.floor || !formData.floor.toString().trim()) {
-      newErrors.floor = 'Floor is required';
+    // Floor validation - REQUIRED field for rental apartments (API field: floor)
+    if (!formData.floor?.toString().trim()) {
+      newErrors.floor = 'Floor is required (API field: floor, expects integer)';
     } else if (isNaN(parseInt(formData.floor)) || parseInt(formData.floor) < 0) {
-      newErrors.floor = 'Floor must be a valid number';
+      newErrors.floor = 'Floor must be a valid non-negative integer';
+    } else {
+      console.log('✅ Floor validation passed:', formData.floor);
     }
 
-    // Number validation - REQUIRED field
-    if (!formData.number.trim()) {
-      newErrors.number = 'Apartment number is required';
+    // Number validation - REQUIRED field (API field: number)
+    if (!formData.number?.trim()) {
+      newErrors.number = 'Apartment number is required (API field: number)';
+    } else if (formData.number.trim().length < 1) {
+      newErrors.number = 'Apartment number cannot be empty';
+    } else {
+      console.log('✅ Apartment number validation passed:', formData.number);
     }
 
-    // Bathrooms validation - REQUIRED enum field
+    // Bathrooms validation - REQUIRED enum field (API field: bathrooms)
     if (!formData.bathrooms || (formData.bathrooms !== 'private' && formData.bathrooms !== 'shared')) {
-      newErrors.bathrooms = 'Bathroom type must be either private or shared';
+      newErrors.bathrooms = 'Bathroom type must be either "private" or "shared" (API enum requirement)';
+    } else {
+      console.log('✅ Bathroom type validation passed:', formData.bathrooms);
     }
 
-    // Total parts validation - REQUIRED field for rental apartments
-    if (!formData.totalParts || !formData.totalParts.toString().trim()) {
-      newErrors.totalParts = 'Total parts/studios is required';
+    // Total parts validation - REQUIRED field for rental apartments (API field: total_parts)
+    if (!formData.totalParts?.toString().trim()) {
+      newErrors.totalParts = 'Total parts/studios is required (API field: total_parts, expects integer)';
     } else if (isNaN(parseInt(formData.totalParts)) || parseInt(formData.totalParts) < 1) {
-      newErrors.totalParts = 'Total parts must be at least 1';
+      newErrors.totalParts = 'Total parts must be at least 1 (positive integer required)';
+    } else {
+      console.log('✅ Total parts validation passed:', formData.totalParts);
     }
 
-    // Area validation - must be valid if provided
+    // Area validation - must be valid if provided (API field: area, expects string)
     if (formData.area && (isNaN(parseFloat(formData.area)) || parseFloat(formData.area) <= 0)) {
-      newErrors.area = 'Area must be a valid positive number';
+      newErrors.area = 'Area must be a valid positive number (API expects string representation)';
+    } else if (formData.area) {
+      console.log('✅ Area validation passed:', formData.area);
     }
 
     // Validate mapUrl if provided (optional field)
@@ -257,6 +293,18 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         total_parts: parseInt(formData.totalParts) || 1 // REQUIRED: Always valid integer ≥ 1
       };
       
+      // Validation: Ensure no field is undefined or null
+      const validatedApiData = {
+        ...apiData,
+        name: apiData.name || 'Unnamed Apartment',
+        location: apiData.location || 'maadi',
+        address: apiData.address || 'Address not provided',
+        area: apiData.area || '50',
+        number: apiData.number || 'APT-001',
+        price: apiData.price || '0',
+        description: apiData.description || 'No description provided'
+      };
+      
       console.log('📤 API Data prepared:', {
         ...apiData,
         photos_url: apiData.photos_url.length > 0 ? `[${apiData.photos_url.length} photos]` : '[]'
@@ -280,7 +328,8 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       console.log('JSON.stringify(apiData):', JSON.stringify(apiData, null, 2));
 
       // Use real API call to create apartment
-      const result = await createRentApartment(apiData);
+      console.log('📤 Final validated API data:', validatedApiData);
+      const result = await createRentApartment(validatedApiData);
       
       if (result.success) {
         console.log('✅ Apartment created successfully:', result.apartment);
@@ -526,7 +575,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
               <label htmlFor="photos" className="photo-upload-label">
                 <div className="upload-icon">🏢</div>
                 <div className="upload-text">
-                  <strong>Click to upload apartment photos</strong>
+                  <strong>Click to upload apartment photos (optional)</strong>
                   <span>or drag and drop</span>
                 </div>
                 <div className="upload-hint">PNG, JPG, GIF up to 10MB each</div>
