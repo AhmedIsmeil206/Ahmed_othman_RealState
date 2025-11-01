@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useProperty } from '../../../hooks/useRedux';
+import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import './StudioMiniCard.css';
 
 const StudioMiniCard = ({ 
@@ -10,10 +10,22 @@ const StudioMiniCard = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { updateStudio, deleteStudio } = useProperty();
+  const { updateStudio, deleteStudio } = usePropertyManagement();
 
-  const handleDelete = () => {
-    deleteStudio(apartmentId, studio.id);
+  const handleDelete = async () => {
+
+    const result = await deleteStudio(studio.id);
+
+    if (result && result.success) {
+
+      alert('Studio deleted successfully!');
+      
+      // Auto-refresh page to show updated data
+      window.location.reload();
+    } else {
+      const errorMsg = result?.message || result?.error || 'Unknown error occurred';
+alert(`Failed to delete studio: ${errorMsg}`);
+    }
     setShowDeleteConfirm(false);
   };
 

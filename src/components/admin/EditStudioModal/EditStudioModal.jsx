@@ -53,31 +53,31 @@ const EditStudioModal = ({ studio, apartmentId, onStudioUpdated, onClose }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.title.trim()) {
+    if (!formData.title?.toString().trim()) {
       newErrors.title = 'Studio title is required';
     }
 
-    if (!formData.area.trim()) {
+    if (!formData.area?.toString().trim()) {
       newErrors.area = 'Area is required';
     }
 
-    if (!formData.floor.trim()) {
+    if (!formData.floor?.toString().trim()) {
       newErrors.floor = 'Floor is required';
     }
 
-    if (!formData.unitNumber.trim()) {
+    if (!formData.unitNumber?.toString().trim()) {
       newErrors.unitNumber = 'Unit number is required';
     }
 
-    if (!formData.price.trim()) {
+    if (!formData.price?.toString().trim()) {
       newErrors.price = 'Price is required';
     }
 
-    if (!formData.description.trim()) {
+    if (!formData.description?.toString().trim()) {
       newErrors.description = 'Description is required';
     }
 
-    if (!formData.location.trim()) {
+    if (!formData.location?.toString().trim()) {
       newErrors.location = 'Location is required';
     }
 
@@ -95,41 +95,27 @@ const EditStudioModal = ({ studio, apartmentId, onStudioUpdated, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      // Create updated studio object
+      // Transform data to match backend API schema
       const updatedStudio = {
-        ...studio,
-        title: formData.title,
-        price: formData.price.startsWith('EGP') ? formData.price : `EGP ${formData.price.replace(/[^0-9,]/g, '')}`,
-        pricePerMonth: formData.pricePerMonth,
-        area: formData.area + (formData.area.includes('sqm') ? '' : ' sqm'),
-        location: formData.location,
-        bedrooms: parseInt(formData.bedrooms),
-        bathrooms: parseInt(formData.bathrooms),
-        furnished: formData.furnished,
-        floor: formData.floor,
-        unitNumber: formData.unitNumber,
-        description: formData.description,
-        isAvailable: formData.isAvailable,
-        highlights: {
-          ...studio.highlights,
-          area: formData.area,
-          bedrooms: formData.bedrooms,
-          bathrooms: formData.bathrooms,
-          furnished: formData.furnished
-        },
-        details: {
-          ...studio.details,
-          furnished: formData.furnished,
-          parking: formData.parking,
-          floor: formData.floor,
-          balcony: formData.balcony
-        }
+        // Backend required fields with correct types
+        title: String(formData.title).trim(),
+        area: parseFloat(String(formData.area).replace(/[^0-9.]/g, '')) || 0,
+        floor: parseInt(String(formData.floor).replace(/[^0-9]/g, '')) || 1,
+        monthly_price: parseFloat(String(formData.price).replace(/[^0-9.]/g, '')) || 0,
+        bedrooms: parseInt(formData.bedrooms) || 1,
+        // Backend enum values (lowercase)
+        bathrooms: formData.bathrooms === '1' ? 'private' : 'shared',
+        furnished: formData.furnished === 'Yes' ? 'yes' : 'no',
+        balcony: formData.balcony === 'Yes' ? 'yes' : (formData.balcony === 'Shared' ? 'shared' : 'no'),
+        // Optional fields
+        description: String(formData.description || '').trim(),
+        status: formData.isAvailable ? 'available' : 'rented',
+        photos_url: studio.photos_url || []
       };
 
       onStudioUpdated(updatedStudio);
     } catch (error) {
-      console.error('Error updating studio:', error);
-      setErrors({ general: 'An error occurred while updating the studio. Please try again.' });
+setErrors({ general: 'An error occurred while updating the studio. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

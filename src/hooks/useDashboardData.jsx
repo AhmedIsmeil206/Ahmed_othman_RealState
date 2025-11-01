@@ -87,8 +87,7 @@ export const useDashboardData = () => {
           const contractsResponse = await rentalContractsApi.getAll();
           contracts = contractsResponse || [];
         } catch (contractError) {
-          console.warn('Failed to fetch contracts:', contractError);
-          // Continue without contracts if there's an error
+// Continue without contracts if there's an error
         }
       }
 

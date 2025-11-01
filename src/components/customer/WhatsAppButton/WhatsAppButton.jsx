@@ -1,21 +1,35 @@
 import React from 'react';
 import './WhatsAppButton.css';
 
-const WhatsAppButton = ({ phoneNumber, message = "Hello, I'm interested in this property" }) => {
+const WhatsAppButton = ({ 
+  phoneNumber, 
+  message = "Hello, I'm interested in this property",
+  label = null,
+  contactType = null // 'customer' or 'agency'
+}) => {
   const handleWhatsAppClick = () => {
-    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    // Clean phone number - remove all non-numeric characters
+    const cleanedPhone = phoneNumber.replace(/[^0-9]/g, '');
+
+    const whatsappUrl = `https://wa.me/${cleanedPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <button 
-      className="whatsapp-button"
-      onClick={handleWhatsAppClick}
-      type="button"
-    >
-      <span className="whatsapp-icon">📱</span>
-      WhatsApp
-    </button>
+    <div className="whatsapp-button-container">
+      {label && <div className="whatsapp-label">{label}</div>}
+      <button 
+        className={`whatsapp-button ${contactType ? `whatsapp-${contactType}` : ''}`}
+        onClick={handleWhatsAppClick}
+        type="button"
+        title={`Contact via WhatsApp: ${phoneNumber}`}
+      >
+        <span className="whatsapp-icon">📱</span>
+        <span className="whatsapp-text">
+          {contactType === 'customer' ? 'Contact Customer' : 'WhatsApp'}
+        </span>
+      </button>
+    </div>
   );
 };
 

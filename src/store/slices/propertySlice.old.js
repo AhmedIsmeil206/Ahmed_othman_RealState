@@ -14,8 +14,7 @@ const loadFromLocalStorage = (key) => {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error(`Error loading ${key} from localStorage:`, error);
-    return [];
+return [];
   }
 };
 
@@ -23,8 +22,7 @@ const saveToLocalStorage = (key, data) => {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
-    console.error(`Error saving ${key} to localStorage:`, error);
-  }
+}
 };
 
 // Initial state - load from localStorage

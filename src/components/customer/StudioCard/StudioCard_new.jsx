@@ -6,15 +6,13 @@ const StudioCard = ({ studio }) => {
   const navigate = useNavigate();
 
   const handleCardClick = useCallback((e) => {
-    console.log('🔥 Studio card clicked! ID:', studio.id);
-    
+
     // Stop any event bubbling
     e.preventDefault();
     e.stopPropagation();
     
     const path = `/studio/${studio.id}?source=customer-studios`;
-    console.log('🚀 Navigating to:', path);
-    
+
     // Force immediate navigation with window.location.assign (more reliable than href)
     window.location.assign(path);
   }, [studio.id]);

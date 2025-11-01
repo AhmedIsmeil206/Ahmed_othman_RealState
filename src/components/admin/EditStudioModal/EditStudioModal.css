@@ -1,20 +1,15 @@
-/* Edit Studio Modal Styles - Full Screen */
+/* Edit Studio Modal Styles - Centered Modal */
 @import '../AddStudioModal/AddStudioModal.css';
 
 .edit-studio-modal {
   background: white;
-  border-radius: 0;
-  width: 100vw;
-  height: 100vh;
-  max-width: none;
-  max-height: none;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
   overflow-y: auto;
-  box-shadow: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
   z-index: 9999;
   pointer-events: auto;
 }
@@ -32,6 +27,7 @@
   align-items: center;
   border-bottom: none;
   min-height: 60px;
+  border-radius: 12px 12px 0 0;
 }
 
 .edit-studio-modal .modal-header h2 {
@@ -75,33 +71,52 @@
 }
 
 .edit-studio-modal .studio-form {
-  padding: 40px;
-  max-width: 800px;
-  margin: 0 auto;
+  padding: 30px 40px;
 }
 
-.edit-studio-modal .modal-overlay {
-  padding: 0;
-  border-radius: 0;
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 9998;
-  background: rgba(0, 0, 0, 0.8);
-  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
-/* Responsive adjustments for full screen */
+/* Responsive adjustments for centered modal */
 @media (max-width: 768px) {
+  .edit-studio-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
   .edit-studio-modal .studio-form {
     padding: 20px;
   }
 }
 
 @media (max-width: 480px) {
+  .edit-studio-modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+  
+  .edit-studio-modal .modal-header {
+    border-radius: 0;
+  }
+  
   .edit-studio-modal .studio-form {
     padding: 16px;
+  }
+  
+  .modal-overlay {
+    padding: 0;
   }
 }

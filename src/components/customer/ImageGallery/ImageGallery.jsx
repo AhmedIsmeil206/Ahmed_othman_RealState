@@ -79,10 +79,6 @@ const ImageGallery = ({ images, title }) => {
               <button className="slider-nav next" onClick={nextImage}>›</button>
             </>
           )}
-          
-          <div className="image-counter">
-            📷 {currentIndex + 1} / {images.length}
-          </div>
         </div>
         
         {images.length > 1 && (

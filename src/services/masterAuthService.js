@@ -43,15 +43,15 @@ class MasterAuthService {
       }
 
       // Step 2: Attempt authentication against static database
-      console.log('🔍 Validating credentials against static database...');
+
       await this.validateWithBackend(identifier, password);
 
       // Step 3: Fetch and validate user profile
-      console.log('👤 Fetching user profile from database...');
+
       const userProfile = await this.fetchUserProfile();
 
       // Step 4: Verify master admin role
-      console.log('🛡️ Verifying master admin privileges...');
+
       const roleValidation = this.validateMasterRole(userProfile);
       if (!roleValidation.isValid) {
         authApi.logout(); // Clear token
@@ -59,7 +59,7 @@ class MasterAuthService {
       }
 
       // Step 5: Cross-validate credentials with profile
-      console.log('🔍 Cross-validating credentials with profile...');
+
       const crossValidation = this.crossValidateCredentials(identifier, userProfile);
       if (!crossValidation.isValid) {
         authApi.logout(); // Clear token
@@ -80,14 +80,6 @@ class MasterAuthService {
         authMethod: this.determineIdentifierType(identifier),
         sessionId: this.generateSessionId()
       };
-
-      console.log('✅ Master Admin Authentication Successful', {
-        userId: userProfile.id,
-        role: userProfile.role,
-        email: userProfile.email,
-        authMethod: successResult.authMethod,
-        sessionId: successResult.sessionId
-      });
 
       return successResult;
 
@@ -155,7 +147,6 @@ class MasterAuthService {
         throw new Error('No access token received from backend');
       }
 
-      console.log('✅ Backend authentication successful');
       return {
         success: true,
         token: loginResponse.access_token,
@@ -163,9 +154,7 @@ class MasterAuthService {
       };
 
     } catch (error) {
-      console.error('❌ Backend authentication failed:', error);
-      
-      if (error.status === 401) {
+if (error.status === 401) {
         throw new Error('Invalid email/phone or password. Please check your credentials.');
       } else if (error.status === 422) {
         throw new Error('Invalid input format. Please check your email or phone number.');
@@ -184,16 +173,10 @@ class MasterAuthService {
   async fetchUserProfile() {
     try {
       const userProfile = await adminApi.getMe();
-      console.log('✅ User profile fetched successfully:', {
-        id: userProfile.id,
-        email: userProfile.email,
-        role: userProfile.role,
-        fullName: userProfile.full_name
-      });
+
       return userProfile;
     } catch (error) {
-      console.error('❌ Failed to fetch user profile:', error);
-      throw new Error('Failed to retrieve user profile from database');
+throw new Error('Failed to retrieve user profile from database');
     }
   }
 
@@ -212,7 +195,6 @@ class MasterAuthService {
       };
     }
 
-    console.log('✅ Master admin role validated:', userProfile.role);
     return { isValid: true };
   }
 
@@ -230,11 +212,7 @@ class MasterAuthService {
       const inputEmail = identifier.toLowerCase();
       
       if (profileEmail !== inputEmail) {
-        console.error('❌ Email mismatch:', {
-          provided: inputEmail,
-          profile: profileEmail
-        });
-        return {
+return {
           isValid: false,
           error: 'Email validation failed: Login email does not match profile'
         };
@@ -245,18 +223,13 @@ class MasterAuthService {
       const normalizedProfilePhone = userProfile.phone?.replace(/[^0-9+]/g, '');
       
       if (normalizedProfilePhone !== normalizedInputPhone) {
-        console.error('❌ Phone mismatch:', {
-          provided: normalizedInputPhone,
-          profile: normalizedProfilePhone
-        });
-        return {
+return {
           isValid: false,
           error: 'Phone validation failed: Login phone does not match profile'
         };
       }
     }
 
-    console.log('✅ Credential cross-validation successful');
     return { isValid: true };
   }
 
@@ -289,7 +262,6 @@ class MasterAuthService {
       };
     }
 
-    console.log('✅ Security checks passed');
     return { isValid: true };
   }
 
@@ -342,7 +314,7 @@ class MasterAuthService {
    * Log out current user
    */
   logout() {
-    console.log('🚪 Master admin logout initiated');
+
     authApi.logout();
   }
 

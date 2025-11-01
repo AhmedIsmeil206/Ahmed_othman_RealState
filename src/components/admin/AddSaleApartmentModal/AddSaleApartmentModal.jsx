@@ -133,8 +133,6 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
-    console.log('Validating form with data:', formData);
 
     // Validate required fields with proper API field names
     if (!formData.name?.trim()) {
@@ -171,7 +169,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     if (!formData.bathrooms || (formData.bathrooms !== 'private' && formData.bathrooms !== 'shared')) {
       newErrors.bathrooms = 'Bathroom type must be either "private" or "shared" (API enum requirement)';
     } else {
-      console.log('✅ Bathroom validation passed:', formData.bathrooms);
+
     }
 
     if (!formData.area?.toString().trim()) {
@@ -202,7 +200,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     } else if (!/^(\+201|01)[0-9]{9}$/.test(formData.contactNumber.trim())) {
       newErrors.contactNumber = 'Please enter a valid Egyptian mobile number (format: +201XXXXXXXXX or 01XXXXXXXXX)';
     } else {
-      console.log('✅ Contact number validation passed:', formData.contactNumber);
+
     }
 
     // Validate mapUrl if provided (optional field)
@@ -210,23 +208,19 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       newErrors.mapUrl = 'Please enter a valid URL (must start with http:// or https://)';
     }
 
-    console.log('Validation errors found:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    console.log('🚀 Starting sale apartment form submission...');
-    
+
     if (!validateForm()) {
-      console.log('❌ Form validation failed');
+
       return;
     }
 
     setIsSubmitting(true);
-    console.log('📤 Preparing API data according to backend requirements...');
 
     try {
       // Transform frontend data to match EXACT API requirements according to documentation
@@ -259,19 +253,13 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         // - floor: Only for rent apartments, not sale
         // - total_parts: Only for rent apartments, not sale
       };
-      
-      console.log('📊 API Data prepared:', {
-        ...apiData,
-        photos_url: apiData.photos_url.length > 0 ? `[${apiData.photos_url.length} photos]` : '[]'
-      });
-      
+
       // Call the API using the property management hook
-      console.log('🔗 Calling createSaleApartment API...');
+
       const result = await createSaleApartment(apiData);
       
       if (result.success) {
-        console.log('✅ Sale apartment created successfully:', result.apartment);
-        
+
         // Notify parent component with the created apartment
         onApartmentAdded?.(result.apartment);
         onClose();
@@ -295,20 +283,17 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         });
         
         setErrors({});
-        console.log('✅ Form reset completed');
-        
+
       } else {
-        console.error('❌ API call failed:', result.message);
-        setErrors({ general: result.message || 'Failed to create apartment. Please try again.' });
+setErrors({ general: result.message || 'Failed to create apartment. Please try again.' });
       }
       
     } catch (error) {
-      console.error('💥 Error adding sale apartment:', error);
-      const errorMessage = error.message || 'An error occurred while adding the apartment. Please try again.';
+const errorMessage = error.message || 'An error occurred while adding the apartment. Please try again.';
       setErrors({ general: errorMessage });
     } finally {
       setIsSubmitting(false);
-      console.log('🏁 Form submission completed');
+
     }
   };
 

@@ -23,35 +23,32 @@ const AdminProtectedRoute = ({ children }) => {
       }
 
       setInitializationAttempted(true);
-      console.log('🔐 AdminProtectedRoute: Initializing admin authentication...');
 
       try {
         // Check if we have a JWT token
         const hasToken = authApi.isAuthenticated();
         
         if (hasToken && !currentAdmin) {
-          console.log('📋 AdminProtectedRoute: JWT token found, restoring admin session...');
-          
+
           // Initialize admin auth from token
           const result = await initializeAdminAuth();
           
           if (result.success) {
-            console.log('✅ AdminProtectedRoute: Admin session restored successfully');
+
           } else {
-            console.log('⚠️ AdminProtectedRoute: Failed to restore admin session:', result.message);
+
           }
         } else if (!hasToken) {
-          console.log('ℹ️ AdminProtectedRoute: No JWT token found');
+
         } else {
-          console.log('ℹ️ AdminProtectedRoute: Admin already authenticated');
+
         }
       } catch (error) {
-        console.error('❌ AdminProtectedRoute: Initialization error:', error);
-      } finally {
+} finally {
         // Small delay to ensure state updates are processed
         setTimeout(() => {
           setIsInitializing(false);
-          console.log('✅ AdminProtectedRoute: Initialization complete');
+
         }, 100);
       }
     };
@@ -76,14 +73,14 @@ const AdminProtectedRoute = ({ children }) => {
 
   // After initialization, check if admin is authenticated
   if (!currentAdmin) {
-    console.log('🔒 AdminProtectedRoute: Not authenticated, redirecting to login');
+
     // Redirect to admin login page
     const redirectUrl = `/admin/login?from=protected&path=${encodeURIComponent(location.pathname)}`;
     return <Navigate to={redirectUrl} replace />;
   }
 
   // Admin is authenticated, render protected content
-  console.log('✅ AdminProtectedRoute: Admin authenticated, rendering protected content');
+
   return children;
 };
 

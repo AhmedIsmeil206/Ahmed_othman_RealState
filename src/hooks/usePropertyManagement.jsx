@@ -73,11 +73,10 @@ export const usePropertyManagement = () => {
 
   // Transform frontend apartment data to backend format
   const transformRentApartmentToApi = (frontendApartment) => {
-    console.log('🔄 Transforming rental apartment data:', frontendApartment);
-    
+
     // If data is already in API format (has 'name' field), return as is
     if (frontendApartment.name !== undefined && typeof frontendApartment.name === 'string') {
-      console.log('✅ Data already in API format, using as-is');
+
       return frontendApartment;
     }
     
@@ -102,8 +101,7 @@ export const usePropertyManagement = () => {
       floor: parseInt(frontendApartment.floor) || 1,
       total_parts: parseInt(frontendApartment.total_parts || frontendApartment.totalParts || frontendApartment.totalStudios) || 1
     };
-    
-    console.log('🔄 Transformed rental apartment data:', transformed);
+
     return transformed;
   };
 
@@ -130,17 +128,28 @@ export const usePropertyManagement = () => {
     postedDate: apiStudio.created_at
   });
 
-  const transformStudioToApi = (frontendStudio) => ({
-    studio_number: frontendStudio.studioNumber || frontendStudio.title?.replace('Studio ', '') || '1',
-    area: parseFloat(frontendStudio.area) || 0,
-    price: parseFloat(frontendStudio.price) || 0,
-    furnished: frontendStudio.furnished || false,
-    amenities: frontendStudio.amenities || [],
-    images: frontendStudio.images || [],
-    description: frontendStudio.description || '',
-    is_available: frontendStudio.isAvailable !== false,
-    contact_number: frontendStudio.contactNumber || ''
-  });
+  const transformStudioToApi = (frontendStudio) => {
+    // Backend expects: title, area, monthly_price, bedrooms, bathrooms, furnished, balcony
+    // If data is already in API format (from AddStudioModal), return as-is
+    if (frontendStudio.title && frontendStudio.monthly_price && frontendStudio.bathrooms && frontendStudio.balcony) {
+
+      return frontendStudio;
+    }
+    
+    // Otherwise transform from frontend format
+
+    return {
+      title: frontendStudio.title || frontendStudio.studioNumber || 'Studio 1',
+      area: frontendStudio.area ? frontendStudio.area.toString() : '25',
+      monthly_price: frontendStudio.monthly_price || frontendStudio.price || '0',
+      bedrooms: parseInt(frontendStudio.bedrooms) || 1,
+      bathrooms: frontendStudio.bathrooms || 'private',
+      furnished: frontendStudio.furnished || 'yes',
+      balcony: frontendStudio.balcony || 'no',
+      description: frontendStudio.description || '',
+      photos_url: frontendStudio.photos_url || frontendStudio.images || []
+    };
+  };
 
   // Transform sale apartment data
   const transformSaleApartmentFromApi = (apiApartment) => ({
@@ -177,7 +186,7 @@ export const usePropertyManagement = () => {
   });
 
   const transformSaleApartmentToApi = (frontendApartment) => {
-    console.log('🔄 Transforming sale apartment data for API...');
+
     console.log('📋 Frontend data received:', JSON.stringify(frontendApartment, null, 2));
     
     // CRITICAL: Sale apartments have DIFFERENT schema than rent apartments
@@ -224,16 +233,16 @@ export const usePropertyManagement = () => {
     if (transformed.photos_url.length === 0) delete transformed.photos_url;
     
     // Validation logging
-    console.log('✅ Transformed data ready for POST /api/v1/apartments/sale:');
-    console.log('  - name:', transformed.name || '❌ MISSING');
-    console.log('  - location:', transformed.location || '❌ MISSING');
-    console.log('  - address:', transformed.address || '❌ MISSING');
-    console.log('  - price:', transformed.price || '❌ MISSING');
-    console.log('  - area:', transformed.area || '❌ MISSING');
-    console.log('  - number:', transformed.number || '❌ MISSING');
-    console.log('  - bedrooms:', transformed.bedrooms);
-    console.log('  - bathrooms:', transformed.bathrooms);
-    console.log('  - photos_url count:', transformed.photos_url?.length || 0);
+
+
+
+
+
+
+
+
+
+
     console.log('  - facilities_amenities:', transformed.facilities_amenities || '(not included)');
     console.log('  - description:', transformed.description || '(not included)');
     
@@ -505,15 +514,19 @@ export const usePropertyManagement = () => {
   // Delete sale apartment
   const deleteSaleApartment = async (apartmentId) => {
     try {
+
       dispatch(setLoading(true));
-      await saleApartmentsApi.delete(apartmentId);
+
+      const response = await saleApartmentsApi.delete(apartmentId);
+
       dispatch(deleteSaleApartmentAction(apartmentId));
+
       return { 
         success: true, 
         message: 'Sale apartment deleted successfully'
       };
     } catch (error) {
-      const errorMessage = handleApiError(error, 'Failed to delete sale apartment');
+const errorMessage = handleApiError(error, 'Failed to delete sale apartment');
       dispatch(setError(errorMessage));
       return { success: false, message: errorMessage };
     } finally {
@@ -563,8 +576,7 @@ export const usePropertyManagement = () => {
       const response = await rentApartmentsApi.getAll({ created_by: createdBy });
       return response.map(transformRentApartmentFromApi);
     } catch (error) {
-      console.error('Failed to fetch apartments by creator:', error);
-      return [];
+return [];
     }
   };
 
@@ -573,8 +585,7 @@ export const usePropertyManagement = () => {
       const response = await apartmentPartsApi.getAll({ created_by: createdBy });
       return response.map(transformStudioFromApi);
     } catch (error) {
-      console.error('Failed to fetch studios by creator:', error);
-      return [];
+return [];
     }
   };
 
@@ -583,8 +594,7 @@ export const usePropertyManagement = () => {
       const response = await saleApartmentsApi.getAll({ created_by: createdBy });
       return response.map(transformSaleApartmentFromApi);
     } catch (error) {
-      console.error('Failed to fetch sale apartments by creator:', error);
-      return [];
+return [];
     }
   };
 

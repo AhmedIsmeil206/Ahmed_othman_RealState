@@ -75,7 +75,6 @@ const MasterAdminSignupForm = ({ onSignupComplete }) => {
     }
 
     setIsLoading(true);
-    console.log('🚀 Starting Master Admin Signup...', { email: formData.email, phone: formData.mobilePhone });
 
     try {
       const signupData = {
@@ -84,12 +83,11 @@ const MasterAdminSignupForm = ({ onSignupComplete }) => {
         phone: formData.mobilePhone, 
         password: formData.password
       };
-      
-      console.log('📤 Sending signup data to API:', { ...signupData, password: '[HIDDEN]' });
+
       const resultAction = await signup(signupData);
       
       if (signupMasterAdmin.fulfilled.match(resultAction)) {
-        console.log('✅ Master Admin Signup Successful!', resultAction.payload);
+
         // Success - redirect to admin portal
         navigate('/admin', { replace: true });
         
@@ -98,13 +96,11 @@ const MasterAdminSignupForm = ({ onSignupComplete }) => {
           onSignupComplete();
         }
       } else if (signupMasterAdmin.rejected.match(resultAction)) {
-        console.error('❌ Master Admin Signup Failed:', resultAction.payload);
-        // Failed - show error
+// Failed - show error
         setErrors({ general: resultAction.payload || 'Signup failed. Please try again.' });
       }
     } catch (error) {
-      console.error('💥 Signup error:', error);
-      setErrors({ general: 'An error occurred. Please try again.' });
+setErrors({ general: 'An error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
     }

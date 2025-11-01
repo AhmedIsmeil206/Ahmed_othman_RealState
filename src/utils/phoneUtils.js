@@ -90,23 +90,22 @@ export const normalizePhoneInput = (phoneNumber) => {
   // Remove all spaces, dashes, parentheses
   const cleaned = phoneNumber.replace(/[\s\-()]/g, '');
   
-  // If has +20, remove it for user input
+  // Only allow digits
+  const digitsOnly = cleaned.replace(/[^0-9]/g, '');
+  
+  // If has +20 prefix, remove it for user input
   if (cleaned.startsWith('+20')) {
     return cleaned.substring(3);
   }
   
-  // If starts with 20, remove it
-  if (cleaned.startsWith('20')) {
+  // If starts with 20 (but not 0), assume it's +20 prefix without +
+  if (cleaned.startsWith('20') && !cleaned.startsWith('0')) {
     return cleaned.substring(2);
   }
   
-  // If starts with 0, remove it (Egyptian local format)
-  if (cleaned.startsWith('0')) {
-    return cleaned.substring(1);
-  }
-  
-  // Return as is if it's already in the right format (1xxxxxxxxx)
-  return cleaned;
+  // Keep leading 0 for Egyptian format (01XXXXXXXXX - 11 digits)
+  // This is the standard Egyptian mobile format
+  return digitsOnly;
 };
 
 /**
@@ -124,28 +123,31 @@ export const validateEgyptianPhone = (phoneNumber) => {
 
   const cleaned = phoneNumber.replace(/[\s\-()]/g, '');
   
+  // Only allow digits (and + at start)
+  const digitsOnly = cleaned.replace(/^\+/, '').replace(/[^0-9]/g, '');
+  
   // Primary format: 010/011/012/015 followed by 8 digits (11 total)
   // This is the standard Egyptian mobile format
-  if (/^(010|011|012|015)\d{8}$/.test(cleaned)) {
+  if (/^(010|011|012|015)\d{8}$/.test(digitsOnly)) {
     return {
       isValid: true,
       error: null
     };
   }
   
-  // Also allow with +20 prefix: +20 10/11/12/15 + 8 digits
-  if (/^\+?20(10|11|12|15)\d{8}$/.test(cleaned)) {
+  // Also allow with +20 or 20 prefix: +20 10/11/12/15 + 8 digits
+  if (/^(20)?(10|11|12|15)\d{8}$/.test(digitsOnly)) {
     return {
       isValid: true,
       error: null
     };
   }
   
-  // Also allow 10 digits starting with 1 (without leading 0)
-  if (/^1[0-5]\d{8}$/.test(cleaned)) {
+  // Check if user is still typing (allow partial input)
+  if (/^0[1]?[0-5]?$/.test(digitsOnly) || digitsOnly.length < 11) {
     return {
-      isValid: true,
-      error: null
+      isValid: false,
+      error: `Please enter 11 digits (currently ${digitsOnly.length}/11)`
     };
   }
   

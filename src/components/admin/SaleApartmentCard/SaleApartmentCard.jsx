@@ -10,30 +10,223 @@ const SaleApartmentCard = ({
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const { deleteSaleApartment } = usePropertyManagement();
   const navigate = useNavigate();
+
+  // Check if this apartment was deleted locally
+  React.useEffect(() => {
+    const deletedApartments = JSON.parse(localStorage.getItem('deletedSaleApartments') || '[]');
+    if (deletedApartments.includes(apartment.id)) {
+      setIsHidden(true);
+    }
+  }, [apartment.id]);
 
   const handleDeleteApartment = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
+    if (isDeleting) return;
+    
     setIsDeleting(true);
-    try {
-      console.log('🗑️ Deleting sale apartment:', apartment.id);
-      const result = await deleteSaleApartment(apartment.id);
+    
+    // COMPREHENSIVE PRE-FLIGHT CHECKS
+    const authToken = localStorage.getItem('api_access_token');
+    
+    console.group('🗑️ DELETE SALE APARTMENT - DIAGNOSTIC');
+
+
+
+
+    console.log('Auth Token (first 20 chars):', authToken ? authToken.substring(0, 20) + '...' : 'NONE');
+
+    console.log('Timestamp:', new Date().toISOString());
+    console.groupEnd();
+    
+    // Check 1: Authentication
+    if (!authToken) {
+const errorEl = document.createElement('div');
+      errorEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 20px 28px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600; max-width: 500px;';
+      errorEl.innerHTML = `
+        <div style="font-size: 18px; margin-bottom: 8px;">❌ Not Logged In</div>
+        <div style="font-size: 14px; line-height: 1.5; margin-bottom: 12px;">
+          You must be logged in as master admin to delete apartments.
+        </div>
+        <div style="font-size: 13px; opacity: 0.9;">
+          Redirecting to login page in 3 seconds...
+        </div>
+      `;
+      document.body.appendChild(errorEl);
       
-      if (result.success) {
-        console.log('✅ Sale apartment deleted successfully');
-        // Component will be removed from DOM by parent re-render
+      setTimeout(() => {
+        errorEl.remove();
+        window.location.href = '/master-admin/login';
+      }, 3000);
+      
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      return;
+    }
+    
+    // Check 2: Backend connectivity test
+
+    try {
+      const healthCheck = await fetch('http://localhost:8000/api/v1/admins/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!healthCheck.ok) {
+if (healthCheck.status === 401) {
+          const errorEl = document.createElement('div');
+          errorEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 20px 28px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600; max-width: 500px;';
+          errorEl.innerHTML = `
+            <div style="font-size: 18px; margin-bottom: 8px;">🔒 Session Expired</div>
+            <div style="font-size: 14px; line-height: 1.5;">
+              Your login session has expired. Please log in again.
+            </div>
+          `;
+          document.body.appendChild(errorEl);
+          
+          localStorage.removeItem('api_access_token');
+          
+          setTimeout(() => {
+            errorEl.remove();
+            window.location.href = '/master-admin/login';
+          }, 2500);
+          
+          setIsDeleting(false);
+          setShowDeleteConfirm(false);
+          return;
+        }
       } else {
-        console.error('❌ Failed to delete sale apartment:', result.message);
-        alert('Failed to delete apartment: ' + result.message);
+
+      }
+    } catch (healthError) {
+const errorEl = document.createElement('div');
+      errorEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 20px 28px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600; max-width: 550px;';
+      errorEl.innerHTML = `
+        <div style="font-size: 18px; margin-bottom: 8px;">❌ Backend Server Not Running</div>
+        <div style="font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
+          Cannot connect to backend server at <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;">http://localhost:8000</code>
+        </div>
+        <div style="font-size: 13px; opacity: 0.95; line-height: 1.5;">
+          <strong>Possible causes:</strong><br/>
+          • Backend server is not running<br/>
+          • Server is running on different port<br/>
+          • Network/firewall blocking connection<br/>
+          <br/>
+          <strong>Solution:</strong> Start your FastAPI backend server
+        </div>
+      `;
+      document.body.appendChild(errorEl);
+      setTimeout(() => errorEl.remove(), 8000);
+      
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      return;
+    }
+    
+    // Proceed with actual delete
+    try {
+
+      const result = await deleteSaleApartment(apartment.id);
+
+      if (result && result.success) {
+
+        setShowDeleteConfirm(false);
+        
+        // Show success message
+        const successMessage = document.createElement('div');
+        successMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600;';
+        successMessage.innerHTML = `
+          <div style="font-size: 16px; margin-bottom: 4px;">✅ Deleted Successfully!</div>
+          <div style="font-size: 13px;">"${apartment.name}" removed from database</div>
+        `;
+        document.body.appendChild(successMessage);
+        
+        // Refresh page to update the list
+        setTimeout(() => {
+          successMessage.remove();
+          window.location.reload();
+        }, 1500);
+      } else {
+const errorMsg = result?.message || result?.error || 'Delete operation failed';
+        
+        // Show error in UI
+        const errorEl = document.createElement('div');
+        errorEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600; max-width: 400px;';
+        errorEl.innerHTML = `
+          <div style="font-size: 16px; margin-bottom: 4px;">❌ Delete Failed</div>
+          <div style="font-size: 13px;">${errorMsg}</div>
+        `;
+        document.body.appendChild(errorEl);
+        setTimeout(() => errorEl.remove(), 5000);
+        
         setShowDeleteConfirm(false);
       }
     } catch (error) {
-      console.error('❌ Error deleting sale apartment:', error);
-      alert('Error deleting apartment');
+// Handle specific error types with appropriate user messages
+      if (error?.status === 401 || error?.message?.includes('Authentication failed')) {
+const authErrorEl = document.createElement('div');
+        authErrorEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600; max-width: 450px;';
+        authErrorEl.innerHTML = `
+          <div style="font-size: 16px; margin-bottom: 8px;">🔒 Session Expired</div>
+          <div style="font-size: 13px; line-height: 1.5;">Your login session has expired. Please log in again. Redirecting...</div>
+        `;
+        document.body.appendChild(authErrorEl);
+        
+        // Clear expired token
+        localStorage.removeItem('api_access_token');
+        
+        setTimeout(() => {
+          authErrorEl.remove();
+          window.location.href = '/master-admin/login';
+        }, 2500);
+        
+      } else if (error?.status === 403) {
+const permErrorEl = document.createElement('div');
+        permErrorEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600; max-width: 450px;';
+        permErrorEl.innerHTML = `
+          <div style="font-size: 16px; margin-bottom: 8px;">❌ Access Denied</div>
+          <div style="font-size: 13px; line-height: 1.5;">You don't have permission to delete this apartment. Only the creator or master admin can delete.</div>
+        `;
+        document.body.appendChild(permErrorEl);
+        setTimeout(() => permErrorEl.remove(), 5000);
+        
+      } else if (error?.status === 404) {
+// Hide card since it doesn't exist
+        setIsHidden(true);
+        
+        const notFoundEl = document.createElement('div');
+        notFoundEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #f59e0b; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600;';
+        notFoundEl.innerHTML = `
+          <div style="font-size: 16px; margin-bottom: 4px;">⚠️ Already Deleted</div>
+          <div style="font-size: 13px;">This apartment no longer exists.</div>
+        `;
+        document.body.appendChild(notFoundEl);
+        setTimeout(() => {
+          notFoundEl.remove();
+          window.location.reload();
+        }, 2000);
+        
+      } else {
+        // Generic error
+const genericErrorEl = document.createElement('div');
+        genericErrorEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; font-weight: 600; max-width: 450px;';
+        genericErrorEl.innerHTML = `
+          <div style="font-size: 16px; margin-bottom: 8px;">❌ Delete Failed</div>
+          <div style="font-size: 13px; line-height: 1.5;">${error?.message || 'Unable to delete apartment. Please try again.'}</div>
+        `;
+        document.body.appendChild(genericErrorEl);
+        setTimeout(() => genericErrorEl.remove(), 5000);
+      }
+      
       setShowDeleteConfirm(false);
+      
     } finally {
       setIsDeleting(false);
     }
@@ -52,8 +245,16 @@ const SaleApartmentCard = ({
   };
 
   const handleCardClick = () => {
-    // Navigate to apartment sale details page
-    navigate(`/admin/apartment-sale/${apartment.id}`);
+    // Determine navigation source based on current route
+    const currentPath = window.location.pathname;
+    let navigationSource = 'admin-dashboard';
+    
+    if (currentPath.includes('/master-admin/dashboard')) {
+      navigationSource = 'master-admin-dashboard';
+    }
+    
+    // Navigate to apartment sale details page with source parameter
+    navigate(`/admin/apartment-sale/${apartment.id}?source=${navigationSource}`);
   };
 
   const formatPrice = (price) => {
@@ -70,26 +271,26 @@ const SaleApartmentCard = ({
     return 'Available';
   };
 
+  // Don't render if apartment is hidden
+  if (isHidden) {
+    return null;
+  }
+
   return (
     <div className={`sale-apartment-card ${showDeleteConfirm ? 'delete-mode' : ''}`} onClick={!showDeleteConfirm ? handleCardClick : undefined}>
       {!showDeleteConfirm ? (
         <>
           <div className="sale-apartment-card__image-container">
             <img 
-              src={apartment.images && apartment.images.length > 0 ? apartment.images[0] : apartment.image || '/api/placeholder/400/300'} 
+              src={apartment.images && apartment.images.length > 0 ? apartment.images[0] : apartment.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect width="400" height="300" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="%236b7280"%3ENo Image%3C/text%3E%3C/svg%3E'} 
               alt={apartment.name}
               className="sale-apartment-card__image"
               onError={(e) => {
-                e.target.src = '/api/placeholder/400/300';
+                // Use inline SVG as fallback to prevent 404 loop
+                e.target.onerror = null; // Prevent infinite loop
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect width="400" height="300" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="%236b7280"%3ENo Image%3C/text%3E%3C/svg%3E';
               }}
             />
-            
-            {/* Photo count indicator */}
-            {apartment.images && apartment.images.length > 1 && (
-              <div className="sale-apartment-card__photo-count">
-                📷 {apartment.images.length} photos
-              </div>
-            )}
             
             {/* Availability Badge */}
             <div className="sale-apartment-card__availability">

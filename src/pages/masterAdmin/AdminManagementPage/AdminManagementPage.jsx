@@ -32,8 +32,7 @@ const AdminManagementPage = () => {
       const accounts = await getAllAdminAccounts(); // Now async API call
       setAdminAccounts(accounts);
     } catch (error) {
-      console.error('Failed to load admin accounts:', error);
-      setAdminAccounts([]);
+setAdminAccounts([]);
     }
   }, [getAllAdminAccounts]);
 

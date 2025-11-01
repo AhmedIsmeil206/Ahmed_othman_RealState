@@ -15,6 +15,7 @@ import StudioDetailsPage from './pages/customer/StudioDetailsPage/StudioDetailsP
 import BuyApartmentPage from './pages/customer/BuyApartmentPage/BuyApartmentPage';
 import ApartmentSaleDetailsPage from './pages/customer/ApartmentSaleDetailsPage/ApartmentSaleDetailsPage';
 import AdminApartmentSaleDetailsPage from './pages/admin/ApartmentSaleDetailsPage/ApartmentSaleDetailsPage';
+import ApartmentDetailPage from './pages/admin/ApartmentDetailPage/ApartmentDetailPage';
 import AdminLanding from './pages/admin/AdminLanding/AdminLanding';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import RentalAlertsPage from './pages/admin/RentalAlertsPage/RentalAlertsPage';
@@ -47,12 +48,11 @@ function AppContent() {
       // Note: We can't use the hook directly here, so we check token and restore session
       const token = localStorage.getItem('api_access_token');
       if (token) {
-        console.log('🔄 Regular Admin token found, session will be restored');
+
       }
     };
     initAdminAuth();
-    
-    console.log('🔄 App initialized - authentication states loaded');
+
   }, [dispatch]);
 
   return (
@@ -85,6 +85,7 @@ function AppContent() {
                 } 
               />
               <Route path="/admin/apartment-sale/:id" element={<AdminApartmentSaleDetailsPage />} />
+              <Route path="/apartment/:id" element={<ApartmentDetailPage />} />
               <Route path="/master-admin/login" element={<MasterAdminLoginForm />} />
               <Route path="/master-admin" element={<Navigate to="/master-admin/login" replace />} />
               <Route 

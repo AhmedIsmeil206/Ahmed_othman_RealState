@@ -30,8 +30,7 @@ const ProfileEditPage = () => {
           // Don't restore passwords for security
         }));
       } catch (error) {
-        console.error('Error loading saved form data:', error);
-      }
+}
     }
   }, [currentUser]);
 

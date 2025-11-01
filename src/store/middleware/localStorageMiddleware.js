@@ -34,8 +34,7 @@ const localStorageMiddleware = (store) => (next) => (action) => {
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('❌ localStorage sync error:', error);
-    }
+}
   }
   
   return result;

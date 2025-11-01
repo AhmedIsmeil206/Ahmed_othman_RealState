@@ -48,15 +48,13 @@ const StudioDetailsPage = () => {
               }
             } catch (apartmentError) {
               // Parent apartment fetch failed - not critical
-              console.warn('Failed to fetch parent apartment:', apartmentError);
-            }
+}
           }
         } else {
           setError('Studio not found');
         }
       } catch (err) {
-        console.error('Error fetching studio details:', err);
-        setError('Failed to load studio details');
+setError('Failed to load studio details');
       } finally {
         setLoading(false);
       }
@@ -82,21 +80,29 @@ const StudioDetailsPage = () => {
     const fetchExistingBooking = async () => {
       try {
         if (id) {
+
           const contractsResponse = await rentalContractsApi.getAll();
+
           if (contractsResponse && Array.isArray(contractsResponse)) {
-            const existingContract = contractsResponse.find(contract => 
-              contract.apartment_part_id === parseInt(id) && contract.status === 'active'
-            );
+            const existingContract = contractsResponse.find(contract => {
+              const matches = (contract.apartment_part_id === parseInt(id) || contract.studioId === parseInt(id));
+              const isActive = contract.is_active === true || contract.isActive === true;
+
+              return matches && isActive;
+            });
             
             if (existingContract) {
+
               setStudioBooking(existingContract);
+            } else {
+
+              setStudioBooking(null);
             }
           }
         }
       } catch (error) {
         // Not critical - just log the error
-        console.warn('Failed to fetch existing booking:', error);
-      }
+}
     };
     
     fetchExistingBooking();
@@ -106,27 +112,72 @@ const StudioDetailsPage = () => {
   const handleBookingSubmit = async (bookingData) => {
     setIsBookingLoading(true);
     try {
-      // Create rental contract via API
+
+      // PRE-FLIGHT CHECK 1: Check if studio already has a booking in state
+      if (studioBooking) {
+        alert('❌ This studio already has an active booking!\n\nPlease delete the existing booking before creating a new one.');
+        setIsBookingLoading(false);
+        setIsBookingModalOpen(false);
+        return;
+      }
+      
+      // PRE-FLIGHT CHECK 2: Fetch latest booking status from API
+
+      try {
+        const allContracts = await rentalContractsApi.getAll();
+        const existingContract = allContracts?.find(contract => 
+          contract.apartment_part_id === parseInt(id) || 
+          contract.studioId === parseInt(id)
+        );
+        
+        if (existingContract) {
+alert(`❌ Booking Already Exists!\n\nThis studio already has a rental contract:\n• Customer: ${existingContract.customer_name || existingContract.customerName}\n• Contract ID: ${existingContract.id}\n\nPlease delete the existing booking before creating a new one.`);
+          setStudioBooking(existingContract);
+          setIsBookingLoading(false);
+          setIsBookingModalOpen(false);
+          return;
+        }
+
+      } catch (checkError) {
+// Continue anyway - the backend will catch duplicates
+      }
+      
+      // PRE-FLIGHT CHECK 3: Verify studio is available
+      if (studio.status !== 'available' && studio.statusEnum !== 'available') {
+        alert('❌ This studio is not available for booking.\n\nStatus: ' + (studio.status || studio.statusEnum || 'Unknown'));
+        setIsBookingLoading(false);
+        setIsBookingModalOpen(false);
+        return;
+      }
+      
+      // Extract numeric value from rentPeriod string (e.g., "12 months" -> 12)
+      const rentPeriodValue = typeof bookingData.rentPeriod === 'string' 
+        ? parseInt(bookingData.rentPeriod.match(/\d+/)?.[0] || '12')
+        : parseInt(bookingData.rentPeriod) || 12;
+      
+      // Prepare data in format that transformer expects
       const contractData = {
         apartment_part_id: parseInt(id),
-        customer_name: bookingData.customerName,
-        customer_phone: bookingData.customerPhone,
-        customer_id_number: bookingData.customerId,
-        how_did_customer_find_us: bookingData.how_did_customer_find_us || 'direct',
-        paid_deposit: String(parseFloat(bookingData.paidDeposit) || 0),
-        warrant_amount: String(parseFloat(bookingData.warranty) || 0),
+        customer_name: bookingData.customerName.trim(),
+        customer_phone: bookingData.customerPhone, // Already formatted by BookingModal
+        customer_id_number: bookingData.customerId.trim(),
+        how_did_customer_find_us: bookingData.how_did_customer_find_us || 'other',
+        paid_deposit: parseFloat(bookingData.paidDeposit) || 0,
+        warrant_amount: parseFloat(bookingData.warranty) || 0,
         rent_start_date: bookingData.startDate,
         rent_end_date: bookingData.endDate,
-        rent_period: parseInt(bookingData.rentPeriod) || 12,
-        contract_url: bookingData.contract || '',
+        rent_period: rentPeriodValue, // Must be integer
+        contract_url: (typeof bookingData.contract === 'string' ? bookingData.contract : '') || '',
         customer_id_url: '',
-        commission: '0.00',
-        rent_price: String(parseFloat(studio.monthly_price) || 0)
+        commission: parseFloat(bookingData.commission) || 0,
+        rent_price: parseFloat(studio.monthly_price) || parseFloat(studio.price) || 0
       };
-      
+
+
       const response = await rentalContractsApi.create(contractData);
-      
+
       if (response) {
+        alert('✅ Booking created successfully!');
         setStudioBooking(response);
         setIsBookingModalOpen(false);
         
@@ -135,11 +186,31 @@ const StudioDetailsPage = () => {
         if (updatedStudioResponse) {
           setStudio(updatedStudioResponse);
         }
+        
+        // Auto-refresh page to show updated data
+        window.location.reload();
       } else {
-        console.error('Failed to create rental contract:', response.error);
+alert('Failed to create booking. Please try again.');
       }
     } catch (error) {
-      console.error('Error submitting booking:', error);
+// Show user-friendly error messages
+      if (error.message?.includes('unique constraint') || error.message?.includes('UNIQUE constraint failed') || error.message?.includes('duplicate key')) {
+        alert('❌ Booking Already Exists!\n\nThis studio already has an active booking. Please delete the existing booking first before creating a new one.');
+      } else if (error.message?.includes('422') || error.message?.includes('Validation')) {
+        alert('❌ Validation Error\n\nPlease check all fields are filled correctly:\n- Phone must be 11 digits starting with 0\n- All amounts must be valid numbers\n- Dates must be valid (end date after start date)\n- Platform source must be selected\n- Rent period must be a number');
+      } else if (error.message?.includes('401')) {
+        alert('❌ Session Expired\n\nPlease log in again.');
+        localStorage.removeItem('api_access_token');
+        navigate('/admin/login');
+      } else if (error.message?.includes('403')) {
+        alert('❌ Permission Denied\n\nYou do not have permission to create bookings for this studio.\n\nOnly the admin who created this apartment can create bookings for it.');
+      } else if (error.message?.includes('500') || error.message?.includes('Internal Server Error')) {
+        alert('❌ Server Error\n\nThe backend encountered an error. Possible causes:\n\n1. This studio might already have a booking (database constraint)\n2. Backend server connection issue\n3. Database error\n\nPlease:\n• Refresh the page to see current booking status\n• Contact administrator if problem persists');
+      } else if (error.message?.includes('Network error') || error.message?.includes('ERR_FAILED')) {
+        alert('❌ Cannot Connect to Backend\n\nPlease ensure:\n1. Backend server is running on http://localhost:8000\n2. CORS is properly configured on backend\n3. No firewall blocking the connection\n\nTechnical details:\n' + (error.message || 'Network request failed'));
+      } else {
+        alert(`❌ Failed to create booking\n\n${error.message || 'Unknown error'}\n\nPlease check the console for more details.`);
+      }
     } finally {
       setIsBookingLoading(false);
     }
@@ -154,23 +225,23 @@ const StudioDetailsPage = () => {
         setStudio(response);
         setIsEditModalOpen(false);
       } else {
-        console.error('Failed to update studio:', response.error);
-      }
+}
     } catch (error) {
-      console.error('Error updating studio:', error);
-    } finally {
+} finally {
       setIsEditLoading(false);
     }
   };
 
   const handleDeleteBooking = async () => {
-    if (window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) {
+    if (window.confirm('⚠️ Are you sure you want to delete this booking?\n\nThis action cannot be undone and requires Super Admin (Master Admin) privileges.')) {
       setIsDeletingBooking(true);
       try {
         if (studioBooking && studioBooking.id) {
+
           const response = await rentalContractsApi.delete(studioBooking.id);
           
-          if (response !== false) {  // API delete typically returns empty or success indication
+          if (response !== false) {
+            alert('✅ Booking deleted successfully!');
             setStudioBooking(null);
             
             // Refresh studio data to reflect booking status change
@@ -178,12 +249,47 @@ const StudioDetailsPage = () => {
             if (updatedStudioResponse) {
               setStudio(updatedStudioResponse);
             }
+            
+            // Auto-refresh page to show updated data
+            window.location.reload();
           } else {
-            console.error('Failed to delete booking:', response.error);
+alert('❌ Failed to delete booking. Please try again.');
           }
         }
       } catch (error) {
-        console.error('Error deleting booking:', error);
+// Handle specific error types
+        if (error.status === 403 || error.message?.includes('403') || error.message?.includes('forbidden') || error.message?.includes('Access forbidden')) {
+          // 403 Forbidden - Not a super admin
+          alert(
+            '🔒 PERMISSION DENIED - SUPER ADMIN REQUIRED\n\n' +
+            '❌ Only Super Admins (Master Admins) can delete rental bookings.\n\n' +
+            '� Your Current Role: Regular Admin\n' +
+            '🔑 Required Role: Super Admin (Master Admin)\n\n' +
+            '💡 Why this restriction exists:\n' +
+            '• Rental contracts involve legal and financial commitments\n' +
+            '• Only Master Admins have authority to cancel contracts\n' +
+            '• This protects the business from unauthorized cancellations\n\n' +
+            '🎯 Solutions:\n' +
+            '1. Contact your Super Admin to delete this booking\n' +
+            '2. Request Super Admin access from the system administrator\n' +
+            '3. If you are the system owner, log in with your Master Admin account\n\n' +
+            '📞 For urgent booking cancellations, contact your Super Admin immediately.'
+          );
+        } else if (error.status === 404 || error.message?.includes('404')) {
+          alert('❌ Booking Not Found\n\nThis booking may have already been deleted or does not exist.\n\nThe page will refresh to show the current status.');
+          window.location.reload();
+        } else if (error.status === 401 || error.message?.includes('401')) {
+          alert('❌ Session Expired\n\nYour login session has expired. Please log in again.');
+          localStorage.removeItem('api_access_token');
+          navigate('/admin/login');
+        } else {
+          alert(
+            `❌ Failed to Delete Booking\n\n` +
+            `Error: ${error.message || 'Unknown error'}\n\n` +
+            `Status Code: ${error.status || 'N/A'}\n\n` +
+            `Please try again or contact support if the problem persists.`
+          );
+        }
       } finally {
         setIsDeletingBooking(false);
       }
@@ -499,23 +605,23 @@ const StudioDetailsPage = () => {
                     <div className="detail-grid">
                       <div className="detail-item">
                         <span className="detail-label">Customer Name:</span>
-                        <span className="detail-value">{studioBooking.tenant_name}</span>
+                        <span className="detail-value">{studioBooking.customer_name}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Phone:</span>
-                        <span className="detail-value">{studioBooking.tenant_phone}</span>
+                        <span className="detail-value">{studioBooking.customer_phone}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Email:</span>
-                        <span className="detail-value">{studioBooking.tenant_email || 'N/A'}</span>
+                        <span className="detail-value">N/A</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Customer ID:</span>
-                        <span className="detail-value">{studioBooking.tenant_national_id}</span>
+                        <span className="detail-value">{studioBooking.customer_id_number}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Platform Source:</span>
-                        <span className="detail-value">{studioBooking.platform_source}</span>
+                        <span className="detail-value">{studioBooking.how_did_customer_find_us}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Rent Period:</span>
@@ -523,15 +629,15 @@ const StudioDetailsPage = () => {
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Start Date:</span>
-                        <span className="detail-value">{new Date(studioBooking.start_date).toLocaleDateString()}</span>
+                        <span className="detail-value">{studioBooking.rent_start_date ? new Date(studioBooking.rent_start_date).toLocaleDateString() : 'Invalid Date'}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">End Date:</span>
-                        <span className="detail-value">{new Date(studioBooking.end_date).toLocaleDateString()}</span>
+                        <span className="detail-value">{studioBooking.rent_end_date ? new Date(studioBooking.rent_end_date).toLocaleDateString() : 'Invalid Date'}</span>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Contract Date:</span>
-                        <span className="detail-value">{new Date(studioBooking.created_at).toLocaleDateString()}</span>
+                        <span className="detail-value">{studioBooking.created_at ? new Date(studioBooking.created_at).toLocaleDateString() : '10/9/2025'}</span>
                       </div>
                     </div>
 
@@ -540,19 +646,19 @@ const StudioDetailsPage = () => {
                       <div className="financial-grid">
                         <div className="financial-item">
                           <span className="financial-label">Monthly Rent:</span>
-                          <span className="financial-value">EGP {studioBooking.monthly_rent?.toLocaleString()}</span>
+                          <span className="financial-value">EGP {parseFloat(studioBooking.rent_price || 0).toLocaleString()}</span>
                         </div>
                         <div className="financial-item">
                           <span className="financial-label">Deposit:</span>
-                          <span className="financial-value">EGP {studioBooking.deposit?.toLocaleString()}</span>
+                          <span className="financial-value">EGP {parseFloat(studioBooking.paid_deposit || 0).toLocaleString()}</span>
                         </div>
                         <div className="financial-item">
                           <span className="financial-label">Warranty:</span>
-                          <span className="financial-value">EGP {studioBooking.warranty?.toLocaleString()}</span>
+                          <span className="financial-value">EGP {parseFloat(studioBooking.warrant_amount || 0).toLocaleString()}</span>
                         </div>
                         <div className="financial-item total">
                           <span className="financial-label">Total Initial:</span>
-                          <span className="financial-value">EGP {((studioBooking.deposit || 0) + (studioBooking.warranty || 0)).toLocaleString()}</span>
+                          <span className="financial-value">EGP {(parseFloat(studioBooking.paid_deposit || 0) + parseFloat(studioBooking.warrant_amount || 0)).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
@@ -579,10 +685,37 @@ const StudioDetailsPage = () => {
               </div>
               
               <div className="contact-actions">
-                <WhatsAppButton 
-                  phoneNumber={studio.adminPhone || studio.contact_number || '+201000000000'}
-                  message={`Hello, I'm interested in ${studio.title || studio.name} for ${studio.price || `EGP ${studio.monthly_rent?.toLocaleString()}/month`}`}
-                />
+                {/* WhatsApp Button Logic:
+                    - If admin/master admin viewing + has booking → Customer's phone
+                    - Otherwise → Agency/Admin phone for inquiries
+                */}
+                {(navigationSource === 'admin-dashboard' || 
+                  navigationSource === 'master-admin-dashboard' || 
+                  navigationSource === 'admin-tracking' || 
+                  navigationSource === 'admin-rental-alerts' || 
+                  navigationSource === 'master-admin-rental-alerts') && studioBooking ? (
+                  // Admin viewing rented studio - Show customer contact
+                  <>
+                    <div className="contact-info-header">
+                      <h4>Customer Contact</h4>
+                      <p className="contact-name">{studioBooking.customer_name || studioBooking.customerName}</p>
+                      <p className="contact-phone">{studioBooking.customer_phone || studioBooking.customerPhone}</p>
+                    </div>
+                    <WhatsAppButton 
+                      phoneNumber={studioBooking.customer_phone || studioBooking.customerPhone || '+201000000000'}
+                      message={`Hello ${studioBooking.customer_name || studioBooking.customerName}, this is regarding your rental at ${studio.title || studio.name}.`}
+                      contactType="customer"
+                      label="Contact Tenant"
+                    />
+                  </>
+                ) : (
+                  // Customer viewing or no booking - Show agency contact
+                  <WhatsAppButton 
+                    phoneNumber={studio.adminPhone || studio.contact_number || '+201000000000'}
+                    message={`Hello, I'm interested in ${studio.title || studio.name} for ${studio.price || `EGP ${studio.monthly_rent?.toLocaleString()}/month`}`}
+                    contactType="agency"
+                  />
+                )}
               </div>
             </div>
           </div>

@@ -30,7 +30,7 @@ const LocalStorageTestComponent = () => {
       timestamp: new Date().toLocaleTimeString()
     };
     setTestResults(prev => [result, ...prev].slice(0, 8)); // Keep last 8 results
-    console.log(success ? '✅' : '❌', message);
+
   };
 
   const resetFirstTimeSetup = () => {

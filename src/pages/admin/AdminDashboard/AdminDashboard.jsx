@@ -54,11 +54,20 @@ const AdminDashboard = () => {
       id: part.id,
       apartmentId: part.apartment_id,
       studioNumber: part.studio_number,
-      rentValue: parseFloat(part.rent_value) || 0,
-      price: parseFloat(part.rent_value) || 0,
+      title: part.title || `Studio ${part.studio_number}`,
+      unitNumber: part.studio_number,
+      rentValue: parseFloat(part.monthly_price) || parseFloat(part.rent_value) || 0,
+      price: `${parseFloat(part.monthly_price) || parseFloat(part.rent_value) || 0} EGP/month`,
+      area: `${parseFloat(part.area) || 0} sq ft`,
+      floor: `Floor ${part.floor || 'N/A'}`,
+      bedrooms: part.bedrooms || 1,
+      bathrooms: part.bathrooms || 'private',
+      furnished: part.furnished || 'no',
+      balcony: part.balcony || 'no',
+      description: part.description || '',
+      images: part.photos_url || [],
       status: part.status,
       isAvailable: part.status === 'available',
-      floor: part.floor,
       createdBy: part.created_by_admin_id,
       createdAt: part.created_at
     }))
@@ -92,24 +101,19 @@ const AdminDashboard = () => {
       setIsLoadingData(true);
       setDataError(null);
 
-      console.log('Fetching admin content from API...');
       const response = await myContentApi.getMyContent();
-      console.log('Admin content API response:', response);
 
       // Transform the data
       const rentApartments = (response.rent_apartments || []).map(transformRentApartmentData);
       const saleApartments = (response.sale_apartments || []).map(transformSaleApartmentData);
 
-      console.log('Transformed rent apartments:', rentApartments);
-      console.log('Transformed sale apartments:', saleApartments);
 
       setAdminApartments(rentApartments);
       setAdminSaleApartments(saleApartments);
 
       return { success: true, rentApartments, saleApartments };
     } catch (error) {
-      console.error('Failed to fetch admin content:', error);
-      const errorMessage = handleApiError(error, 'Failed to load your properties');
+const errorMessage = handleApiError(error, 'Failed to load your properties');
       setDataError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
@@ -131,8 +135,7 @@ const AdminDashboard = () => {
       logoutAdmin();
       navigate('/admin');
     } catch (error) {
-      console.error('Error during logout:', error);
-    }
+}
   };
 
   const handleAddStudio = (apartmentId = null) => {
@@ -147,25 +150,34 @@ const AdminDashboard = () => {
   const handleStudioAdded = async (studioData) => {
     setIsProcessingStudio(true);
     try {
-      console.log('Adding studio with data:', studioData);
+
+
+      // Use selectedApartmentId from state, not from studioData
+      const apartmentId = selectedApartmentId || studioData.apartmentId;
       
+      if (!apartmentId) {
+        throw new Error('No apartment ID available. Please select an apartment first.');
+      }
+
       // Use the real API to create studio
-      const result = await propertyManager.createStudio(studioData.apartmentId, studioData);
+      const result = await propertyManager.createStudio(apartmentId, studioData);
       
       if (result.success) {
-        console.log('Studio added successfully:', result.studio);
+
+        // Refresh admin's content to show the new studio
+        await fetchAdminContent();
+        
+        // Close modal and reset state after refresh
         setIsAddStudioModalOpen(false);
         setSelectedApartmentId(null);
         
-        // Refresh admin's content to show the new studio
-        await fetchAdminContent();
+        // Show success message
+        alert('✅ Studio added successfully!');
       } else {
-        console.error('Failed to add studio:', result.message);
-        // Could show error toast here
+alert('❌ Failed to add studio: ' + result.message);
       }
     } catch (error) {
-      console.error('Error adding studio:', error);
-    } finally {
+} finally {
       setIsProcessingStudio(false);
     }
   };
@@ -173,8 +185,7 @@ const AdminDashboard = () => {
   const handleApartmentAdded = async (apartmentData) => {
     setIsProcessingApartment(true);
     try {
-      console.log('Adding apartment with data:', apartmentData);
-      
+
       let result;
       if (adminRole === 'studio_rental') {
         // Add rental apartment
@@ -187,17 +198,14 @@ const AdminDashboard = () => {
       }
 
       if (result?.success) {
-        console.log('Apartment added successfully:', result.apartment);
-        
+
         // Refresh admin's content to show the new apartment
         await fetchAdminContent();
       } else {
-        console.error('Failed to add apartment:', result?.message);
-        // Could show error toast here
+// Could show error toast here
       }
     } catch (error) {
-      console.error('Error adding apartment:', error);
-    } finally {
+} finally {
       setIsProcessingApartment(false);
     }
   };
@@ -275,20 +283,6 @@ const AdminDashboard = () => {
                           </>
                         ) : (
                           '+ Add New Rental Apartment'
-                        )}
-                      </button>
-                      <button 
-                        onClick={() => handleAddStudio()}
-                        className="btn btn--secondary"
-                        disabled={isProcessingApartment || isProcessingStudio}
-                      >
-                        {isProcessingStudio ? (
-                          <>
-                            <LoadingSpinner size="small" color="white" inline />
-                            Processing...
-                          </>
-                        ) : (
-                          '+ Add Studio to Apartment'
                         )}
                       </button>
                     </>

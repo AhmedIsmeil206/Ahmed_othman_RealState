@@ -4,29 +4,83 @@ import BackButton from '../../../components/common/BackButton';
 import ImageGallery from '../../../components/customer/ImageGallery/ImageGallery';
 import WhatsAppButton from '../../../components/customer/WhatsAppButton/WhatsAppButton';
 import MapViewer from '../../../components/common/MapViewer';
-import { useProperty } from '../../../hooks/useRedux';
+import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
+import { saleApartmentsApi } from '../../../services/api';
 import './ApartmentSaleDetailsPage.css';
 
 const ApartmentSaleDetailsPage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { getSaleApartmentById } = useProperty();
   const [navigationSource, setNavigationSource] = useState('admin-dashboard');
-  
-  const apartment = getSaleApartmentById(id);
+  const [apartment, setApartment] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch apartment data from API
   useEffect(() => {
-    // Get the navigation source from URL parameters
+    const fetchApartment = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await saleApartmentsApi.getById(id);
+
+        // Transform API response to frontend format
+        const transformedApartment = {
+          id: response.id,
+          name: response.name,
+          title: response.name,
+          location: response.location,
+          address: response.address,
+          price: parseFloat(response.price) || 0,
+          area: parseFloat(response.area) || 0,
+          bedrooms: response.bedrooms,
+          bathrooms: response.bathrooms,
+          description: response.description,
+          images: response.photos_url || [],
+          contactNumber: response.contact_number,
+          floor: response.floor,
+          unitNumber: response.number,
+          apartmentNumber: response.number,
+          createdBy: response.listed_by_admin_id,
+          createdAt: response.created_at,
+          updatedAt: response.updated_at,
+          isAvailable: true,
+          listedAt: response.created_at,
+          facilities: response.facilities_amenities 
+            ? (typeof response.facilities_amenities === 'string' 
+                ? response.facilities_amenities.split(',').map(f => f.trim()) 
+                : response.facilities_amenities)
+            : [],
+          coordinates: response.location_on_map 
+            ? { url: response.location_on_map } 
+            : null
+        };
+        
+        setApartment(transformedApartment);
+      } catch (err) {
+setError('Failed to load apartment details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchApartment();
+    }
+  }, [id]);
+
+  // Get navigation source from URL
+  useEffect(() => {
     const source = searchParams.get('source');
     
     if (['master-admin-dashboard', 'customer-apartments', 'admin-dashboard'].includes(source)) {
       setNavigationSource(source);
     } else {
-      // Default to admin dashboard if no valid source in URL
       setNavigationSource('admin-dashboard');
     }
-  }, [id, searchParams]);
+  }, [searchParams]);
 
   // Determine the back link based on specific source
   const getBackLink = () => {
@@ -51,12 +105,26 @@ const ApartmentSaleDetailsPage = () => {
     return '← Back to Admin Dashboard'; // Default fallback
   };
 
-  if (!apartment) {
+  // Loading state
+  if (loading) {
     return (
       <div className="apartment-sale-details-page">
-        <div className="container">
+        <div className="container" style={{ textAlign: 'center', padding: '50px' }}>
+          <LoadingSpinner size="large" />
+          <p>Loading apartment details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !apartment) {
+    return (
+      <div className="apartment-sale-details-page">
+        <div className="container" style={{ textAlign: 'center', padding: '50px' }}>
           <h1>Apartment not found</h1>
-          <BackButton onClick={() => navigate(-1)} />
+          <p>{error || 'The apartment you are looking for does not exist.'}</p>
+          <BackButton onClick={() => navigate(getBackLink())} />
         </div>
       </div>
     );
@@ -98,10 +166,24 @@ const ApartmentSaleDetailsPage = () => {
 
       <div className="apartment-container">
         <div className="apartment-gallery-section">
-          <ImageGallery 
-            images={apartment.images && apartment.images.length > 0 ? apartment.images : [apartment.image]} 
-            title={apartment.name} 
-          />
+          {apartment.images && apartment.images.length > 0 ? (
+            <ImageGallery 
+              images={apartment.images} 
+              title={apartment.name} 
+            />
+          ) : (
+            <div className="no-images-placeholder" style={{
+              width: '100%',
+              height: '400px',
+              backgroundColor: '#f0f0f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '8px'
+            }}>
+              <p style={{ color: '#666', fontSize: '18px' }}>📷 No images available</p>
+            </div>
+          )}
         </div>
 
         <div className="apartment-content">

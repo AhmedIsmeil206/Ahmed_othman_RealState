@@ -48,13 +48,10 @@ const masterAuthSlice = createSlice({
         
         if (action.payload.currentUser) {
           state.currentUser = action.payload.currentUser;
-          console.log('✅ Redux: Master admin session restored from token', {
-            userId: state.currentUser.id,
-            email: state.currentUser.email
-          });
+
         } else {
           state.currentUser = null;
-          console.log('ℹ️ Redux: No active master admin session found');
+
         }
       })
       .addCase(initializeMasterAuth.rejected, (state, action) => {
@@ -62,7 +59,7 @@ const masterAuthSlice = createSlice({
         state.initialized = true;
         state.currentUser = null;
         state.error = action.payload;
-        console.log('⚠️ Redux: Failed to initialize master admin session');
+
       })
       
       // Login
@@ -84,10 +81,7 @@ const masterAuthSlice = createSlice({
           lastActivity: new Date().toISOString()
         };
         state.initialized = true;
-        console.log('✅ Redux: Master admin state updated successfully', {
-          userId: state.currentUser.id,
-          sessionId: state.currentUser.sessionId
-        });
+
       })
       .addCase(loginMasterAdmin.rejected, (state, action) => {
         state.isLoading = false;
@@ -176,9 +170,7 @@ export const loginMasterAdmin = createAsyncThunk(
     try {
       const { email, username, password } = loginData;
       const identifier = email || username; // Use either email or username (phone)
-      
-      console.log('📊 Redux: Initiating master admin authentication via service...');
-      
+
       // Use the comprehensive authentication service
       const authResult = await masterAuthService.authenticateMasterAdmin({
         identifier,
@@ -186,7 +178,7 @@ export const loginMasterAdmin = createAsyncThunk(
       });
       
       if (authResult.success) {
-        console.log('✅ Redux: Master admin authentication service completed successfully');
+
         return {
           user: authResult.user,
           authMethod: authResult.authMethod,
@@ -198,9 +190,7 @@ export const loginMasterAdmin = createAsyncThunk(
       }
       
     } catch (error) {
-      console.error('❌ Redux: Master admin authentication failed:', error.message);
-      
-      // Ensure clean state on failure
+// Ensure clean state on failure
       masterAuthService.logout();
       
       return rejectWithValue(error.message || 'Authentication failed. Please try again.');
@@ -250,54 +240,31 @@ export const updateMasterProfile = createAsyncThunk(
           delete updateData[key];
         }
       });
-      
-      console.log('🔄 Updating master admin profile via PUT /admins/me');
-      console.log('📝 Current user:', { 
-        id: masterAuth.currentUser.id,
-        full_name: masterAuth.currentUser.full_name,
-        email: masterAuth.currentUser.email,
-        phone: masterAuth.currentUser.phone 
-      });
-      console.log('📝 Target email:', email);
-      console.log('📝 Has password update:', !!newPassword);
-      console.log('📝 Update data to send:', { ...updateData, password: updateData.password ? '[REDACTED]' : undefined });
+
+
+
+
+
       console.log('📝 Update data keys:', Object.keys(updateData));
       
       // Use the correct API endpoint: PUT /admins/me
       // Note: Backend doesn't validate currentPassword for this endpoint
       const updatedUser = await adminApi.updateMe(updateData);
-      
-      console.log('✅ Profile updated successfully:', updatedUser);
-      
+
       return { user: updatedUser };
     } catch (error) {
-      console.error('❌ Profile update failed:', error);
-      console.error('❌ Error status:', error.status);
-      console.error('❌ Error data:', error.data);
-      
-      // Enhanced error logging for validation errors
+// Enhanced error logging for validation errors
       if (error.status === 422) {
         console.error('❌ Validation errors:', error.getValidationErrors?.());
-        console.error('❌ Raw validation data:', error.data?.detail);
-        
-        // Log each validation error in detail
+// Log each validation error in detail
         if (Array.isArray(error.data?.detail)) {
           error.data.detail.forEach((validationError, index) => {
-            console.error(`❌ Validation Error ${index + 1}:`, {
-              field: validationError.loc?.[validationError.loc.length - 1],
-              location: validationError.loc,
-              message: validationError.msg,
-              type: validationError.type,
-              input: validationError.input
-            });
-          });
+});
         }
       }
       
       const errorMessage = handleApiError(error, 'Update failed. Please try again.');
-      console.error('❌ Processed error message:', errorMessage);
-      
-      return rejectWithValue(errorMessage);
+return rejectWithValue(errorMessage);
     }
   }
 );

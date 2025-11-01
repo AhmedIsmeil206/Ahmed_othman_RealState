@@ -106,25 +106,19 @@ const StudiosListPage = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      console.log('🏢 Fetching studios from /apartments/parts endpoint...');
-      
+
       // Use apartmentPartsApi to fetch all apartment parts (studios)
       const response = await apartmentPartsApi.getAll();
       
       // Handle different response formats
       const parts = Array.isArray(response) ? response : (response?.data || response?.parts || []);
-      
-      console.log('✅ Fetched apartment parts:', parts, 'Response type:', typeof response);
-      
+
       if (parts && Array.isArray(parts) && parts.length > 0) {
         // Filter for available studios first, then transform the data
         const availableStudios = parts.filter(part => 
           !part.status || part.status === 'available'
         );
-        
-        console.log(`🔍 Found ${availableStudios.length} available studios from ${parts.length} total parts`);
-        
+
         // Transform studios and fetch admin contact info for each
         const transformedStudios = await Promise.all(
           availableStudios.map(async (part) => {
@@ -136,10 +130,9 @@ const StudiosListPage = () => {
                 const whatsappInfo = await rentApartmentsApi.getWhatsAppContact(part.apartment_id);
                 transformedStudio.adminPhone = whatsappInfo.admin_phone;
                 transformedStudio.contact_number = whatsappInfo.admin_phone; // Use admin's actual phone
-                console.log(`📱 Fetched admin phone for studio ${part.id}:`, whatsappInfo.admin_phone);
+
               } catch (error) {
-                console.warn(`⚠️ Could not fetch WhatsApp info for apartment ${part.apartment_id}:`, error);
-                // Use fallback - try to get from original part data or use default
+// Use fallback - try to get from original part data or use default
                 transformedStudio.contact_number = part.contact_number || '+201000000000';
                 transformedStudio.adminPhone = part.contact_number || '+201000000000';
               }
@@ -152,8 +145,7 @@ const StudiosListPage = () => {
             return transformedStudio;
           })
         );
-        
-        console.log('🏠 Transformed studios with admin contacts:', transformedStudios);
+
         setAllStudios(transformedStudios);
         
         // Load first batch for display
@@ -162,14 +154,12 @@ const StudiosListPage = () => {
         setCurrentPage(2);
         setHasMore(transformedStudios.length > STUDIOS_PER_PAGE);
       } else {
-        console.warn('⚠️ No parts data received or invalid format. Response:', typeof response, response);
-        setAllStudios([]);
+setAllStudios([]);
         setDisplayedStudios([]);
         setHasMore(false);
       }
     } catch (error) {
-      console.error('❌ Failed to fetch studios:', error);
-      const errorMessage = handleApiError(error, 'Failed to load studios');
+const errorMessage = handleApiError(error, 'Failed to load studios');
       setError(errorMessage);
       setAllStudios([]);
       setDisplayedStudios([]);

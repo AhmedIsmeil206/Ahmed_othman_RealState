@@ -3,15 +3,13 @@ import './StudioCard.css';
 
 const StudioCard = ({ studio }) => {
   const handleCardClick = useCallback((e) => {
-    console.log('🔥 Studio card clicked! ID:', studio.id);
-    
+
     // Stop any event bubbling
     e.preventDefault();
     e.stopPropagation();
     
     const path = `/studio/${studio.id}?source=customer-studios`;
-    console.log('🚀 Navigating to:', path);
-    
+
     // Force immediate navigation with window.location.assign (most reliable)
     window.location.assign(path);
   }, [studio.id]);

@@ -52,14 +52,7 @@ export const useErrorHandler = (showToast = null) => {
     }
 
     // Log error for debugging
-    console.error('Error handled:', {
-      operation,
-      field,
-      error,
-      message: errorMessage
-    });
-
-    return errorMessage;
+return errorMessage;
   }, [setFieldError, showToast]);
 
   // Wrapper for async operations with error handling

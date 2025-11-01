@@ -14,8 +14,7 @@ const useLocalStorage = (key, initialValue, encrypt = false) => {
       
       return JSON.parse(item);
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
+return initialValue;
     }
   });
 
@@ -30,8 +29,7 @@ const useLocalStorage = (key, initialValue, encrypt = false) => {
         window.localStorage.setItem(key, JSON.stringify(value));
       }
     } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
-    }
+}
   };
 
   const removeValue = () => {
@@ -39,8 +37,7 @@ const useLocalStorage = (key, initialValue, encrypt = false) => {
       window.localStorage.removeItem(key);
       setStoredValue(initialValue);
     } catch (error) {
-      console.error(`Error removing localStorage key "${key}":`, error);
-    }
+}
   };
 
   return [storedValue, setValue, removeValue];

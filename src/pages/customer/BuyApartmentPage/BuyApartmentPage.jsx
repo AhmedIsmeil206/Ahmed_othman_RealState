@@ -50,18 +50,14 @@ const BuyApartmentPage = () => {
       setIsLoading(true);
       setError(null);
 
-      console.log('Fetching sale apartments from API...');
       const response = await saleApartmentsApi.getAll();
-      console.log('Sale apartments API response:', response);
 
       const transformedApartments = response.map(transformSaleApartmentData);
-      console.log('Transformed sale apartments:', transformedApartments);
-      
+
       setAllSaleApartments(transformedApartments);
       return { success: true, apartments: transformedApartments };
     } catch (error) {
-      console.error('Failed to fetch sale apartments:', error);
-      const errorMessage = handleApiError(error, 'Failed to load apartments for sale');
+const errorMessage = handleApiError(error, 'Failed to load apartments for sale');
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {

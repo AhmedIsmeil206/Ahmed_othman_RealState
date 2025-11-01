@@ -9,8 +9,7 @@ const getStoredTheme = () => {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     return storedTheme || 'light'; // Default to light theme
   } catch (error) {
-    console.error('Error getting stored theme:', error);
-    return 'light';
+return 'light';
   }
 };
 
@@ -19,8 +18,7 @@ const saveTheme = (theme) => {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch (error) {
-    console.error('Error saving theme:', error);
-  }
+}
 };
 
 // Initial state
@@ -117,8 +115,7 @@ export const detectSystemTheme = () => (dispatch) => {
       return systemTheme;
     }
   } catch (error) {
-    console.error('Error detecting system theme:', error);
-  }
+}
   return 'light';
 };
 

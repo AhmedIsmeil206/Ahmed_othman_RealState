@@ -3,18 +3,19 @@ import { getValidOptions } from '../../../utils/apiEnums';
 import { formatPhoneForAPI, validateEgyptianPhone, normalizePhoneInput } from '../../../utils/phoneUtils';
 import './BookingModal.css';
 
-const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
+const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit, editMode = false, initialData = null }) => {
   const [formData, setFormData] = useState({
-    customerName: '',
-    customerPhone: '',
-    customerId: '',
+    customerName: initialData?.customer_name || initialData?.customerName || '',
+    customerPhone: initialData?.customer_phone || initialData?.customerPhone || '',
+    customerId: initialData?.customer_id_number || initialData?.customerId || '',
     contract: null,
-    paidDeposit: '',
-    warranty: '',
-    rentPeriod: '',
-    platformSource: '',
-    startDate: '',
-    endDate: ''
+    paidDeposit: initialData?.paid_deposit || initialData?.paidDeposit || '',
+    warranty: initialData?.warrant_amount || initialData?.warranty || '',
+    rentPeriod: initialData?.rent_period || initialData?.rentPeriod || '',
+    platformSource: initialData?.how_did_customer_find_us || initialData?.platformSource || '',
+    startDate: initialData?.rent_start_date || initialData?.startDate || '',
+    endDate: initialData?.rent_end_date || initialData?.endDate || '',
+    commission: initialData?.commission || '0'
   });
 
   const [errors, setErrors] = useState({});
@@ -122,7 +123,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
 
     try {
       const bookingData = {
-        id: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: editMode ? initialData?.id : `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         studioId: studio.id,
         studioTitle: studio.title,
         studioPrice: studio.price,
@@ -133,14 +134,15 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
         paidDeposit: parseFloat(formData.paidDeposit),
         warranty: parseFloat(formData.warranty),
         rentPeriod: formData.rentPeriod.trim(),
+        commission: parseFloat(formData.commission) || 0,
         how_did_customer_find_us: formData.platformSource, // API field name
         startDate: formData.startDate,
         endDate: formData.endDate,
-        bookingDate: new Date().toISOString(),
+        bookingDate: editMode ? (initialData?.created_at || initialData?.bookingDate) : new Date().toISOString(),
         totalAmount: parseFloat(formData.paidDeposit) + parseFloat(formData.warranty)
       };
 
-      onBookingSubmit(bookingData);
+      onBookingSubmit(bookingData, editMode);
       
       // Reset form
       setFormData({
@@ -158,8 +160,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
       
       onClose();
     } catch (error) {
-      console.error('Error submitting booking:', error);
-      setErrors({ general: 'An error occurred while submitting the booking. Please try again.' });
+setErrors({ general: 'An error occurred while submitting the booking. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -175,7 +176,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
     }}>
       <div className="booking-modal">
         <div className="modal-header">
-          <h2>Book Studio: {studio?.title}</h2>
+          <h2>{editMode ? '✏️ Edit Booking' : '📋 Book Studio'}: {studio?.title}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
@@ -208,7 +209,9 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
                 value={formData.customerPhone}
                 onChange={handleInputChange}
                 className={errors.customerPhone ? 'error' : ''}
-                placeholder="10xxxxxxxx or 01xxxxxxxxx"
+                placeholder="01012345678 (11 digits)"
+                maxLength="11"
+                inputMode="numeric"
               />
               {errors.customerPhone && <span className="error-text">{errors.customerPhone}</span>}
             </div>
@@ -240,7 +243,7 @@ const BookingModal = ({ isOpen, onClose, studio, onBookingSubmit }) => {
               >
                 <option value="">Select platform</option>
                 {platformOptions.map(platform => (
-                  <option key={platform} value={platform}>{platform}</option>
+                  <option key={platform.value} value={platform.value}>{platform.label}</option>
                 ))}
               </select>
               {errors.platformSource && <span className="error-text">{errors.platformSource}</span>}

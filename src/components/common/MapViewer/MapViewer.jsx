@@ -78,8 +78,7 @@ const MapViewer = ({
       }
 
     } catch (error) {
-      console.error('Error extracting coordinates from URL:', error);
-    }
+}
     return null;
   };
 

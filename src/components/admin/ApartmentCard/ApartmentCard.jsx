@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import StudioMiniCard from '../StudioMiniCard';
 import './ApartmentCard.css';
@@ -7,6 +8,8 @@ const ApartmentCard = ({
   apartment, 
   onAddStudio
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -21,20 +24,21 @@ const ApartmentCard = ({
     
     setIsDeleting(true);
     try {
-      console.log('🗑️ Deleting apartment:', apartment.id);
+
       const result = await deleteRentApartment(apartment.id);
       
       if (result.success) {
-        console.log('✅ Apartment deleted successfully');
-        // Component will be removed from DOM by parent re-render
+
+        alert('Rental apartment deleted successfully!');
+        
+        // Auto-refresh page to show updated data
+        window.location.reload();
       } else {
-        console.error('❌ Failed to delete apartment:', result.message);
-        alert('Failed to delete apartment: ' + result.message);
+alert('Failed to delete apartment: ' + result.message);
         setShowDeleteConfirm(false);
       }
     } catch (error) {
-      console.error('❌ Error deleting apartment:', error);
-      alert('Error deleting apartment');
+alert('Error deleting apartment');
       setShowDeleteConfirm(false);
     } finally {
       setIsDeleting(false);
@@ -51,6 +55,12 @@ const ApartmentCard = ({
     e.preventDefault();
     e.stopPropagation();
     setShowDeleteConfirm(false);
+  };
+
+  const handleCardClick = () => {
+    // Rental apartment cards are now NON-CLICKABLE in admin portals
+    // Removed navigation functionality
+    return;
   };
 
   return (
@@ -78,7 +88,7 @@ const ApartmentCard = ({
                 </div>
                 <button 
                   className="delete-apartment-btn"
-                  onClick={handleDeleteClick}
+                  onClick={(e) => { e.stopPropagation(); handleDeleteClick(e); }}
                   title="Delete Apartment"
                   disabled={isDeleting}
                 >
@@ -107,7 +117,7 @@ const ApartmentCard = ({
           <div className="apartment-card-actions">
             <button 
               className="expand-btn"
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
               disabled={isDeleting}
             >
               {isExpanded ? 'Hide Studios' : `View ${apartment.totalStudios || (apartment.studios ? apartment.studios.length : 0)} Studios`}
@@ -116,7 +126,7 @@ const ApartmentCard = ({
             
             <button 
               className="add-studio-btn"
-              onClick={() => onAddStudio(apartment.id)}
+              onClick={(e) => { e.stopPropagation(); onAddStudio(apartment.id); }}
               disabled={isDeleting}
             >
               + Add Studio

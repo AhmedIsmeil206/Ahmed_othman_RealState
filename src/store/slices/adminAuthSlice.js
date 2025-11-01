@@ -11,8 +11,7 @@ const encrypt = (text) => {
   try {
     return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
   } catch (error) {
-    console.error('Encryption error:', error);
-    return null;
+return null;
   }
 };
 
@@ -21,8 +20,7 @@ const decrypt = (encryptedText) => {
     const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
     return bytes.toString(CryptoJS.enc.Utf8);
   } catch (error) {
-    console.error('Decryption error:', error);
-    return null;
+return null;
   }
 };
 
@@ -76,8 +74,7 @@ const getStoredAdmins = () => {
     // Return empty array - no mock data, use API only
     return [];
   } catch (error) {
-    console.error('Error getting stored admins:', error);
-    return [];
+return [];
   }
 };
 
@@ -91,8 +88,7 @@ const saveAdmins = (admins) => {
     }
     return false;
   } catch (error) {
-    console.error('Error saving admins:', error);
-    return false;
+return false;
   }
 };
 
@@ -120,8 +116,7 @@ const getCurrentAdminSession = () => {
     }
     return null;
   } catch (error) {
-    console.error('Error loading admin session:', error);
-    localStorage.removeItem(CURRENT_ADMIN_KEY);
+localStorage.removeItem(CURRENT_ADMIN_KEY);
     return null;
   }
 };
@@ -288,72 +283,76 @@ export const loginAdmin = (accountOrMobileOrEmail, password) => async (dispatch,
     dispatch(loginFailure('Invalid credentials or account is inactive'));
     return { success: false, message: 'Invalid credentials or account is inactive' };
   } catch (error) {
-    console.error('Admin login error:', error);
-    dispatch(loginFailure('Login failed. Please try again.'));
+dispatch(loginFailure('Login failed. Please try again.'));
     return { success: false, message: 'Login failed. Please try again.' };
   }
 };
 
 export const createAdminAccount = (adminData) => async (dispatch, getState) => {
   try {
-    const { adminAuth } = getState();
-    const { username, account, password, mobileNumber, name, email, mobile, role } = adminData;
-    
-    // Support both formats
-    const adminName = username || name;
-    const adminAccount = account || email;
-    const adminMobile = mobileNumber || mobile;
-    const adminRole = role || 'studio_rental';
-    
-    // Check if account, email, or mobile number already exists
-    const existingAdmin = adminAuth.admins.find(admin => 
-      admin.account === adminAccount || 
-      admin.email === adminAccount ||
-      admin.mobileNumber === adminMobile ||
-      admin.mobile === adminMobile ||
-      admin.username === adminName ||
-      admin.name === adminName
-    );
-    
-    if (existingAdmin) {
-      return { 
-        success: false, 
-        message: 'Account, username, email, or mobile number already exists' 
-      };
-    }
 
-    const newAdminData = {
-      username: adminName?.trim(),
-      name: adminName?.trim(),
-      account: adminAccount?.trim(),
-      email: adminAccount?.trim(),
-      password: password,
-      mobileNumber: adminMobile?.trim(),
-      mobile: adminMobile?.trim(),
-      role: adminRole
+    // Import adminApi dynamically to avoid circular dependency
+    const { adminApi } = await import('../../services/api');
+    
+    // Transform to API format
+    const apiData = {
+      full_name: adminData.full_name || adminData.name || adminData.username,
+      email: adminData.email || adminData.account,
+      phone: adminData.phone || adminData.mobile || adminData.mobileNumber,
+      role: adminData.role || 'studio_rental',
+      password: adminData.password
     };
 
-    dispatch(addAdmin(newAdminData));
+    // Call the actual backend API
+    const response = await adminApi.create(apiData);
+
+    // Transform response and add to Redux store
+    const transformedAdmin = {
+      id: response.id,
+      username: response.full_name,
+      name: response.full_name,
+      full_name: response.full_name,
+      account: response.email,
+      email: response.email,
+      mobileNumber: response.phone,
+      mobile: response.phone,
+      phone: response.phone,
+      role: response.role,
+      createdAt: response.created_at || new Date().toISOString(),
+      isActive: response.is_active !== false
+    };
+    
+    dispatch(addAdmin(transformedAdmin));
     
     return { 
       success: true, 
       message: 'Admin account created successfully',
-      admin: {
-        id: newAdminData.id,
-        username: newAdminData.username,
-        name: newAdminData.name,
-        account: newAdminData.account,
-        email: newAdminData.email,
-        mobileNumber: newAdminData.mobileNumber,
-        mobile: newAdminData.mobile,
-        createdAt: newAdminData.createdAt,
-        role: newAdminData.role,
-        isActive: newAdminData.isActive
-      }
+      admin: transformedAdmin
     };
   } catch (error) {
-    console.error('Create admin account error:', error);
-    return { success: false, message: 'Failed to create admin account' };
+// Extract error message from backend
+    let errorMessage = 'Failed to create admin account';
+    
+    if (error.data?.detail) {
+      errorMessage = error.data.detail;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    return { success: false, error: errorMessage, message: errorMessage };
+  }
+};
+
+
+export const deleteAdminAccount = (adminId) => async (dispatch) => {
+  try {
+    const { adminApi } = await import('../../services/api');
+    const response = await adminApi.delete(adminId);
+    dispatch(deleteAdmin(adminId));
+    return { success: true, message: 'Admin deleted successfully', data: response };
+  } catch (error) {
+    const errorMessage = error.data?.detail || error.message || 'Failed to delete admin';
+    return { success: false, error: errorMessage, message: errorMessage };
   }
 };
 

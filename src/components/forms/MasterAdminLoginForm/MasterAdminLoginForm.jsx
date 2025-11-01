@@ -107,9 +107,7 @@ const MasterAdminLoginForm = () => {
         });
         
       } else if (loginMasterAdmin.rejected.match(resultAction)) {
-        console.error('❌ Master Admin Authentication Failed:', resultAction.payload);
-        
-        // Parse specific error types for better user feedback
+// Parse specific error types for better user feedback
         const errorMessage = resultAction.payload;
         
         if (errorMessage.includes('Invalid credentials')) {
@@ -140,8 +138,7 @@ const MasterAdminLoginForm = () => {
         }
       }
     } catch (error) {
-      console.error('💥 Authentication error:', error);
-      setErrors({ 
+setErrors({ 
         general: 'Network error occurred. Please check your connection and try again.' 
       });
     } finally {

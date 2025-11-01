@@ -304,7 +304,5 @@ console.log('Is authenticated:', store.getState().masterAuth.currentUser !== nul
 `
 };
 
-console.log('📋 Master Admin Authentication Testing Guide Loaded');
-console.log('Use MASTER_ADMIN_TEST_SCENARIOS for test cases');
-console.log('Use AUTHENTICATION_TESTING_CHECKLIST for validation');
-console.log('Monitor console logs as per CONSOLE_LOG_MONITORING guide');
+
+

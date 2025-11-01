@@ -31,18 +31,16 @@ const ApartmentSaleDetailsPage = () => {
           try {
             const whatsappInfo = await saleApartmentsApi.getWhatsAppContact(id);
             setAdminPhone(whatsappInfo.admin_phone);
-            console.log('📱 Fetched admin contact for sale apartment:', whatsappInfo.admin_phone);
+
           } catch (contactError) {
-            console.warn('⚠️ Could not fetch WhatsApp contact info:', contactError);
-            // Use fallback from apartment data
+// Use fallback from apartment data
             setAdminPhone(response.contact_number || '+201000000000');
           }
         } else {
           setError('Apartment not found');
         }
       } catch (err) {
-        console.error('Error fetching apartment details:', err);
-        setError('Failed to load apartment details');
+setError('Failed to load apartment details');
       } finally {
         setLoading(false);
       }

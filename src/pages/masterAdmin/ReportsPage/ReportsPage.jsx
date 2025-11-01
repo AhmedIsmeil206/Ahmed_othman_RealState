@@ -95,8 +95,7 @@ const ReportsPage = () => {
       setOverallStats(overall);
 
     } catch (error) {
-      console.error('Error loading reports data:', error);
-    } finally {
+} finally {
       setIsLoading(false);
     }
   }, [getAllAdmins, apartments, saleApartments]);

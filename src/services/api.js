@@ -9,7 +9,7 @@ import { convertToApiEnum, convertFromApiEnum, validateEnum, LOCATIONS, BATHROOM
 
 // API Configuration from environment variables only
 const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1',
+  BASE_URL: process.env.REACT_APP_API_BASE_URL,
   TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT) || 10000,
   HEADERS: {
     'Content-Type': 'application/json'
@@ -27,8 +27,7 @@ class TokenManager {
   static getToken() {
     // Ensure TOKEN_KEY is not null/undefined
     if (!this.TOKEN_KEY) {
-      console.warn('TOKEN_KEY is not set, using default');
-      this.TOKEN_KEY = 'api_access_token';
+this.TOKEN_KEY = 'api_access_token';
     }
     return localStorage.getItem(this.TOKEN_KEY);
   }
@@ -36,20 +35,18 @@ class TokenManager {
   static setToken(token) {
     // Ensure TOKEN_KEY is not null/undefined
     if (!this.TOKEN_KEY) {
-      console.warn('TOKEN_KEY is not set, using default');
-      this.TOKEN_KEY = 'api_access_token';
+this.TOKEN_KEY = 'api_access_token';
     }
     localStorage.setItem(this.TOKEN_KEY, token);
     if (API_CONFIG.ENABLE_LOGGING) {
-      console.log('Authentication token updated');
+
     }
   }
   
   static removeToken() {
     // Ensure TOKEN_KEY is not null/undefined
     if (!this.TOKEN_KEY) {
-      console.warn('TOKEN_KEY is not set, using default');
-      this.TOKEN_KEY = 'api_access_token';
+this.TOKEN_KEY = 'api_access_token';
     }
     localStorage.removeItem(this.TOKEN_KEY);
   }
@@ -63,31 +60,26 @@ class TokenManager {
 const validateConfig = () => {
   // Log environment variables status
   if (!process.env.REACT_APP_API_BASE_URL) {
-    console.warn('⚠️ REACT_APP_API_BASE_URL not set, using default');
-  }
+}
   
   if (!process.env.REACT_APP_ENVIRONMENT) {
-    console.warn('⚠️ REACT_APP_ENVIRONMENT not set, using default');
-  }
+}
   
   if (!process.env.REACT_APP_TOKEN_STORAGE_KEY) {
-    console.warn('⚠️ REACT_APP_TOKEN_STORAGE_KEY not set, using default: api_access_token');
-  }
+}
   
   // Ensure valid timeout
   if (isNaN(API_CONFIG.TIMEOUT) || API_CONFIG.TIMEOUT < 1000) {
-    console.warn('⚠️ Invalid timeout, setting to 10000ms');
-    API_CONFIG.TIMEOUT = 10000;
+API_CONFIG.TIMEOUT = 10000;
   }
   
   // Ensure valid max retries
   if (isNaN(API_CONFIG.MAX_RETRIES) || API_CONFIG.MAX_RETRIES < 0) {
-    console.warn('⚠️ Invalid max retries, setting to 3');
-    API_CONFIG.MAX_RETRIES = 3;
+API_CONFIG.MAX_RETRIES = 3;
   }
   
   if (API_CONFIG.ENABLE_LOGGING) {
-    console.log('✅ API Configuration loaded successfully');
+
   }
 };
 
@@ -211,6 +203,12 @@ class ApiClient {
     }
 
     try {
+      // Debug: log the outgoing request (method, url and headers) to help diagnose
+      if (API_CONFIG.ENABLE_LOGGING) {
+
+
+        if (body) console.log('   Body:', contentType === 'application/json' ? JSON.stringify(body) : body);
+      }
       // Create AbortController for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -224,11 +222,9 @@ class ApiClient {
     } catch (error) {
       // Log network errors but don't use mock data
       if (error.name === 'AbortError') {
-        console.error('❌ Request timeout - Backend server took too long to respond');
-        throw new ApiError('Request timeout', 408, { detail: 'Request timed out' });
+throw new ApiError('Request timeout', 408, { detail: 'Request timed out' });
       } else if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
-        console.error('❌ Backend connection failed');
-        console.error('Please ensure your backend server is running and accessible.');
+if (body) console.error('   Body at failure:', body);
         throw new ApiError('Network error', 0, { detail: 'Failed to connect to backend server' });
       }
       
@@ -262,6 +258,9 @@ class ApiClient {
   }
 
   async delete(endpoint) {
+    if (API_CONFIG.ENABLE_LOGGING) {
+
+    }
     return this.request(endpoint, {
       method: 'DELETE'
     });
@@ -463,6 +462,8 @@ export const saleApartmentsApi = {
 
   // Delete sale apartment
   async delete(apartmentId) {
+
+
     return apiClient.delete(`/apartments/sale/${apartmentId}`);
   },
 
@@ -527,16 +528,44 @@ export const rentalContractsApi = {
 
   // Create new rental contract
   async create(data) {
-    return apiClient.post('/rental-contracts/', data);
+
+
+    // Transform data to match backend schema
+    const transformedData = dataTransformers.transformContractToApi(data);
+
+
+    try {
+      const response = await apiClient.post('/rental-contracts/', transformedData);
+      
+      // Transform response back to frontend format
+      if (response) {
+
+        return dataTransformers.transformContractFromApi(response);
+      }
+      return response;
+    } catch (error) {
+throw error;
+    }
   },
 
   // Update rental contract
   async update(contractId, data) {
-    return apiClient.put(`/rental-contracts/${contractId}`, data);
+    // Transform data to match backend schema
+    const transformedData = dataTransformers.transformContractToApi(data);
+    
+    const response = await apiClient.put(`/rental-contracts/${contractId}`, transformedData);
+    
+    // Transform response back to frontend format
+    if (response) {
+      return dataTransformers.transformContractFromApi(response);
+    }
+    return response;
   },
 
   // Delete rental contract (super admin only)
   async delete(contractId) {
+
+
     return apiClient.delete(`/rental-contracts/${contractId}`);
   },
 
@@ -601,8 +630,7 @@ export const dataTransformers = {
       validateEnum(locationValue, LOCATIONS, 'location');
       validateEnum(bathroomsValue, BATHROOM_TYPES, 'bathrooms');
     } catch (error) {
-      console.error('Enum validation failed during apartment transformation:', error.message);
-      throw new Error(`Data validation failed: ${error.message}`);
+throw new Error(`Data validation failed: ${error.message}`);
     }
 
     return {
@@ -686,8 +714,7 @@ export const dataTransformers = {
         validateEnum(statusValue, PART_STATUS, 'status');
       }
     } catch (error) {
-      console.error('Enum validation failed during studio transformation:', error.message);
-      throw new Error(`Studio data validation failed: ${error.message}`);
+throw new Error(`Studio data validation failed: ${error.message}`);
     }
 
     return {
@@ -747,8 +774,7 @@ export const dataTransformers = {
     try {
       validateEnum(customerSourceValue, CUSTOMER_SOURCES, 'customer_source');
     } catch (error) {
-      console.error('Enum validation failed during contract transformation:', error.message);
-      throw new Error(`Contract data validation failed: ${error.message}`);
+throw new Error(`Contract data validation failed: ${error.message}`);
     }
 
     return {
@@ -793,7 +819,6 @@ export const dataTransformers = {
       rent_end_date: backendData.rent_end_date,
       endDate: backendData.rent_end_date,
       rent_period: backendData.rent_period,
-      contractPeriod: backendData.rent_period,
       contract_url: backendData.contract_url,
       contractDocument: backendData.contract_url,
       customer_id_url: backendData.customer_id_url,
@@ -819,8 +844,7 @@ export const dataTransformers = {
     try {
       validateEnum(roleValue, ADMIN_ROLES, 'admin_role');
     } catch (error) {
-      console.error('Enum validation failed during admin transformation:', error.message);
-      throw new Error(`Admin data validation failed: ${error.message}`);
+throw new Error(`Admin data validation failed: ${error.message}`);
     }
 
     return {
@@ -852,8 +876,7 @@ export const dataTransformers = {
 // Enhanced error handler for UI with better user feedback
 export const handleApiError = (error, defaultMessage = 'An error occurred') => {
   if (API_CONFIG.ENABLE_LOGGING) {
-    console.error('API request failed');
-  }
+}
   
   if (error instanceof ApiError) {
     if (error.status === 422) {
@@ -948,7 +971,7 @@ export const createRetryFunction = (apiCall, maxRetries = API_CONFIG.MAX_RETRIES
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         if (API_CONFIG.ENABLE_LOGGING && attempt > 0) {
-          console.log('API retry attempt initiated');
+
         }
         return await apiCall(...args);
       } catch (error) {

@@ -38,7 +38,7 @@ import {
   createAdminAccount,
   logout as adminLogout,
   updateAdminStatus,
-  deleteAdmin,
+  deleteAdmin, deleteAdminAccount,
   updateAdminPassword,
   clearError as clearAdminError,
   // Admin auth selectors
@@ -187,13 +187,11 @@ export const useProperty = () => {
       const totalApartments = apartments.length;
       const totalStudios = getAllStudios().length;
       const availableStudios = getAllAvailableStudios().length;
-      
-      console.log('📊 Property Data Consistency Check:');
-      console.log(`- Total Apartments: ${totalApartments}`);
-      console.log(`- Total Studios: ${totalStudios}`);
+
+
+
       console.log(`- Available Studios (Customer View): ${availableStudios}`);
-      console.log('- Apartments with Studios:');
-      
+
       apartments.forEach(apartment => {
         console.log(`  • ${apartment.name}: ${apartment.studios.length} studios (${apartment.studios.filter(s => s.isAvailable).length} available)`);
       });
@@ -238,12 +236,40 @@ export const useAdminAuth = () => {
     createAdminAccount: (adminData) => dispatch(createAdminAccount(adminData)),
     logoutAdmin: () => dispatch(adminLogout()),
     updateAdminStatus: (adminId, isActive) => dispatch(updateAdminStatus({ adminId, isActive })),
-    deleteAdminAccount: (adminId) => dispatch(deleteAdmin(adminId)),
+    deleteAdminAccount: (adminId) => dispatch(deleteAdminAccount(adminId)),
     updateAdminPassword: (adminId, newPassword) => 
       dispatch(updateAdminPassword({ adminId, newPassword })),
     clearError: () => dispatch(clearAdminError()),
     isAdminAuthenticated: () => isAuthenticated,
-    getAllAdminAccounts: () => allAdminAccounts
+    getAllAdminAccounts: async () => {
+      // Fetch fresh data from API instead of returning cached Redux state
+      const { adminApi } = await import('../services/api');
+      try {
+
+        const response = await adminApi.getAll();
+
+        if (Array.isArray(response)) {
+          // Transform to consistent format
+          return response.map(admin => ({
+            id: admin.id,
+            username: admin.full_name,
+            name: admin.full_name,
+            full_name: admin.full_name,
+            account: admin.email,
+            email: admin.email,
+            mobileNumber: admin.phone,
+            mobile: admin.phone,
+            phone: admin.phone,
+            role: admin.role,
+            createdAt: admin.created_at || new Date().toISOString(),
+            isActive: admin.is_active !== false
+          }));
+        }
+        return [];
+      } catch (error) {
+return [];
+      }
+    }
   }), [dispatch, isAuthenticated, allAdminAccounts]);
 
   return {

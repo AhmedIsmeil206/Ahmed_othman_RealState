@@ -24,21 +24,40 @@ export const useAdminAuth = () => {
   const allAdminAccounts = useSelector(selectAllAdminAccounts);
 
   // Transform API admin data to frontend format
-  const transformAdminFromApi = (apiAdmin) => ({
-    id: apiAdmin.id,
-    username: apiAdmin.full_name,
-    name: apiAdmin.full_name,
-    account: apiAdmin.email,
-    email: apiAdmin.email,
-    phone: apiAdmin.phone,
-    mobileNumber: apiAdmin.phone,
-    mobile: apiAdmin.phone,
-    role: apiAdmin.role,
-    isActive: apiAdmin.is_active !== false,
-    createdAt: apiAdmin.created_at || new Date().toISOString(),
-    updatedAt: apiAdmin.updated_at || new Date().toISOString(),
-    loginTime: new Date().toISOString()
-  });
+  const transformAdminFromApi = (apiAdmin) => {
+    // Backend returns: id, full_name, email, phone, role, created_at, updated_at
+    // We need to preserve ALL fields and create aliases for compatibility
+    return {
+      // Original backend fields (preserve exactly as received)
+      ...apiAdmin,
+      
+      // Aliases for frontend compatibility
+      id: apiAdmin.id,
+      full_name: apiAdmin.full_name,
+      username: apiAdmin.full_name,
+      name: apiAdmin.full_name,
+      
+      // Email aliases
+      email: apiAdmin.email,
+      account: apiAdmin.email,
+      
+      // Phone aliases  
+      phone: apiAdmin.phone,
+      mobile: apiAdmin.phone,
+      mobileNumber: apiAdmin.phone,
+      
+      // Status and role
+      role: apiAdmin.role,
+      isActive: apiAdmin.is_active !== false,
+      
+      // Timestamps
+      created_at: apiAdmin.created_at,
+      createdAt: apiAdmin.created_at || new Date().toISOString(),
+      updated_at: apiAdmin.updated_at,
+      updatedAt: apiAdmin.updated_at || new Date().toISOString(),
+      loginTime: new Date().toISOString()
+    };
+  };
 
   // Admin login with API
   const loginAdmin = async (accountOrMobileOrEmail, password) => {
@@ -94,8 +113,7 @@ export const useAdminAuth = () => {
       }
       return { success: false, message: 'No active session' };
     } catch (error) {
-      console.error('Admin auth initialization error:', error);
-      return { success: false, message: 'Initialization failed' };
+return { success: false, message: 'Initialization failed' };
     }
   };
 
@@ -106,11 +124,14 @@ export const useAdminAuth = () => {
 
   // Legacy compatibility methods
   const createAdminAccount = async (adminData) => {
+
+
     try {
-      console.log('🔨 Creating admin account via API with data:', {
-        ...adminData,
-        password: '[HIDDEN]'
-      });
+
+      // Quick network sanity check
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+return { success: false, error: 'No network connection. Please check your internet or backend server.' };
+      }
       
       // Transform to API format
       const apiData = {
@@ -120,30 +141,19 @@ export const useAdminAuth = () => {
         role: adminData.role || 'studio_rental',
         password: adminData.password
       };
-      
-      console.log('📤 Sending to API:', {
-        ...apiData,
-        password: '[HIDDEN]'
-      });
-      
+
+
+
+
       const response = await adminApi.create(apiData);
-      console.log('📨 API Response:', response);
-      
+
       return { 
         success: true, 
         message: 'Admin account created successfully',
         admin: transformAdminFromApi(response)
       };
     } catch (error) {
-      console.error('❌ Failed to create admin account:', error);
-      console.error('❌ Error details:', {
-        status: error.status,
-        data: error.data,
-        detail: error.data?.detail,
-        message: error.message
-      });
-      
-      // Extract the detail message from the backend
+// Extract the detail message from the backend
       let errorMessage = 'Failed to create admin account';
       
       if (error.data?.detail) {
@@ -159,21 +169,18 @@ export const useAdminAuth = () => {
   const getAllAdminAccounts = async () => {
     // Make API call to fetch all admin accounts
     try {
-      console.log('🔍 Fetching all admin accounts from API...');
+
       const response = await adminApi.getAll();
-      console.log('📨 Admin accounts API response:', response);
-      
+
       if (Array.isArray(response)) {
         const transformedAdmins = response.map(transformAdminFromApi);
-        console.log('✅ Transformed admins:', transformedAdmins.length, 'accounts');
+
         return transformedAdmins;
       } else {
-        console.warn('⚠️ API response is not an array:', response);
-        return [];
+return [];
       }
     } catch (error) {
-      console.error('❌ Failed to fetch admin accounts:', error);
-      return [];
+return [];
     }
   };
 

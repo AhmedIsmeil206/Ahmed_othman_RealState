@@ -80,39 +80,34 @@ const MasterAdminDashboard = () => {
     if (!currentUser) return;
     
     setLoading(true);
-    console.log('🔄 Fetching master admin dashboard data...');
-    
+
     try {
       // Set up timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
-        console.warn('⚠️ API calls taking too long, setting loading to false');
-        setLoading(false);
+setLoading(false);
       }, 10000); // 10 second timeout
       
       // Fetch rental and sale apartments using correct API endpoints
-      console.log('🏠 Fetching rental apartments...');
+
       let rentResult;
       try {
         rentResult = await Promise.race([
           fetchRentApartments(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Rent apartments timeout')), 5000))
         ]);
-        console.log('Rental apartments result:', rentResult);
+
       } catch (rentError) {
-        console.error('❌ Failed to fetch rental apartments:', rentError);
-      }
-      
-      console.log('🏢 Fetching sale apartments...');
+}
+
       let saleResult;
       try {
         saleResult = await Promise.race([
           fetchSaleApartments(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Sale apartments timeout')), 5000))
         ]);
-        console.log('Sale apartments result:', saleResult);
+
       } catch (saleError) {
-        console.error('❌ Failed to fetch sale apartments:', saleError);
-      }
+}
       
       // Clear the timeout if we reach here
       clearTimeout(timeoutId);
@@ -124,45 +119,39 @@ const MasterAdminDashboard = () => {
           apartmentPartsApi.getAll(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Studios timeout')), 5000))
         ]);
-        console.log('Studios/Parts API response:', studiosResponse);
+
         setAllStudios(studiosResponse || []);
       } catch (studioError) {
-        console.error('❌ Failed to fetch studios:', studioError);
-        setAllStudios([]);
+setAllStudios([]);
       }
 
       // Fetch all admins using API
-      console.log('👥 Fetching all admins...');
+
       try {
         const adminsResult = await Promise.race([
           getAllAdminAccounts(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Admins timeout')), 5000))
         ]);
-        console.log('Admins API result:', adminsResult);
-        
+
         if (Array.isArray(adminsResult)) {
           setAllAdmins(adminsResult);
           setExistingAdmins(adminsResult);
-          console.log('✅ Admins loaded successfully:', adminsResult.length, 'admins');
+
         } else if (adminsResult?.success && Array.isArray(adminsResult.data)) {
           setAllAdmins(adminsResult.data);
           setExistingAdmins(adminsResult.data);
-          console.log('✅ Admins loaded successfully:', adminsResult.data.length, 'admins');
+
         } else {
-          console.warn('⚠️ Admins API returned unexpected format:', adminsResult);
-          setAllAdmins([]);
+setAllAdmins([]);
           setExistingAdmins([]);
         }
       } catch (adminError) {
-        console.error('❌ Failed to fetch admins:', adminError);
-        setAllAdmins([]);
+setAllAdmins([]);
         setExistingAdmins([]);
       }
-      
-      console.log('✅ Master admin dashboard data fetching completed');
+
     } catch (error) {
-      console.error('💥 Error fetching dashboard data:', error);
-      setAllAdmins([]);
+setAllAdmins([]);
       setExistingAdmins([]);
       setAllStudios([]);
     } finally {
@@ -189,8 +178,7 @@ const MasterAdminDashboard = () => {
     
     // Emergency timeout - force loading to false after 15 seconds
     const emergencyTimeout = setTimeout(() => {
-      console.warn('🚨 Emergency timeout - forcing loading to false');
-      setLoading(false);
+setLoading(false);
       isFetching.current = false;
     }, 15000);
     
@@ -201,9 +189,50 @@ const MasterAdminDashboard = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount - do not add dependencies
   
+  // Memoize apartments enriched with their studios
+  const apartmentsWithStudios = useMemo(() => {
+    if (!apartments || apartments.length === 0 || !allStudios) {
+      return apartments || [];
+    }
+
+    // Combine apartments with their studios
+    return apartments.map(apartment => {
+      // Find all studios that belong to this apartment
+      const apartmentStudios = allStudios
+        .filter(studio => studio.apartment_id === apartment.id)
+        .map(studio => ({
+          id: studio.id,
+          apartmentId: studio.apartment_id,
+          studioNumber: studio.studio_number,
+          title: studio.title || `Studio ${studio.studio_number}`,
+          unitNumber: studio.studio_number,
+          rentValue: parseFloat(studio.monthly_price) || parseFloat(studio.rent_value) || 0,
+          price: `${parseFloat(studio.monthly_price) || parseFloat(studio.rent_value) || 0} EGP/month`,
+          area: `${parseFloat(studio.area) || 0} sq ft`,
+          floor: `Floor ${studio.floor || 'N/A'}`,
+          bedrooms: studio.bedrooms || 1,
+          bathrooms: studio.bathrooms || 'private',
+          furnished: studio.furnished || 'no',
+          balcony: studio.balcony || 'no',
+          description: studio.description || '',
+          images: studio.photos_url || [],
+          status: studio.status,
+          isAvailable: studio.status === 'available',
+          createdBy: studio.created_by_admin_id,
+          createdAt: studio.created_at
+        }));
+
+      return {
+        ...apartment,
+        studios: apartmentStudios,
+        totalStudios: apartment.total_parts || apartmentStudios.length
+      };
+    });
+  }, [apartments, allStudios]);
+
   // Memoize filtered properties to prevent recalculation on every render
   const filteredProperties = useMemo(() => {
-    let properties = propertyTypeFilter === 'rental' ? apartments : saleApartments;
+    let properties = propertyTypeFilter === 'rental' ? apartmentsWithStudios : saleApartments;
     
     if (selectedAdminFilter !== 'all') {
       properties = properties.filter(property => 
@@ -213,7 +242,7 @@ const MasterAdminDashboard = () => {
     }
     
     return properties;
-  }, [apartments, saleApartments, propertyTypeFilter, selectedAdminFilter]);
+  }, [apartmentsWithStudios, saleApartments, propertyTypeFilter, selectedAdminFilter]);
 
   // Note: Removed localStorage persistence to prevent unnecessary re-renders
   // Forms will reset when modals are closed, improving performance
@@ -233,7 +262,7 @@ const MasterAdminDashboard = () => {
 
   // Edit Profile Modal Functions
   const openEditProfileModal = () => {
-    console.log('Opening Edit Profile Modal');
+
     setEditType('email'); // Default to email editing
     setProfileForm({
       email: currentUser?.email || '',
@@ -244,7 +273,7 @@ const MasterAdminDashboard = () => {
     setProfileErrors({});
     setProfileMessage({ type: '', text: '' });
     setIsEditProfileModalOpen(true);
-    console.log('Edit Profile Modal state set to true');
+
   };
 
   const closeEditProfileModal = () => {
@@ -336,13 +365,7 @@ const MasterAdminDashboard = () => {
         currentPassword: profileForm.currentPassword,
         newPassword: passwordToUpdate
       };
-      
-      console.log('🔄 Updating master admin profile with data:', { 
-        ...updateData, 
-        currentPassword: '[HIDDEN]', 
-        newPassword: updateData.newPassword ? '[HIDDEN]' : undefined 
-      });
-      
+
       const result = await updateProfile(updateData);
 
       if (result.success) {
@@ -369,8 +392,7 @@ const MasterAdminDashboard = () => {
       }
 
     } catch (error) {
-      console.error('Error updating profile:', error);
-      setProfileMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+setProfileMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
     } finally {
       setIsProfileSubmitting(false);
     }
@@ -378,31 +400,41 @@ const MasterAdminDashboard = () => {
 
   // Manage Admins Modal Functions
   const openManageAdminsModal = async () => {
-    console.log('Opening Manage Admins Modal');
+
+    // CRITICAL: Fetch fresh admin list FIRST before opening modal
+
+    try {
+      const adminsResponse = await getAllAdminAccounts();
+
+      if (adminsResponse && Array.isArray(adminsResponse)) {
+
+        console.log('📧 All emails:', adminsResponse.map(a => a.email).join(', '));
+        console.log('📱 All phones:', adminsResponse.map(a => a.phone || a.mobile).join(', '));
+        
+        setAllAdmins(adminsResponse);
+        setExistingAdmins(adminsResponse);
+      } else {
+setAllAdmins([]);
+        setExistingAdmins([]);
+      }
+    } catch (error) {
+showToast('Failed to load admin list. Please try again.', 'error');
+      // Don't open modal if we can't load the list
+      return;
+    }
+    
+    // Clear form and open modal AFTER loading data
     setAdminForm({
       name: '',
       email: '',
       password: '',
       mobile: '',
-      role: 'studio_rental' // Set default role when opening modal
+      role: 'studio_rental'
     });
     setAdminErrors({});
     setAdminMessage({ type: '', text: '' });
     setIsManageAdminsModalOpen(true);
-    console.log('Manage Admins Modal state set to true');
-    
-    // Fetch latest admin list when opening modal
-    try {
-      console.log('🔄 Fetching admin list for modal...');
-      const adminsResponse = await getAllAdminAccounts();
-      if (adminsResponse && Array.isArray(adminsResponse)) {
-        console.log('✅ Fetched', adminsResponse.length, 'admins');
-        setAllAdmins(adminsResponse);
-        setExistingAdmins(adminsResponse);
-      }
-    } catch (error) {
-      console.error('❌ Failed to fetch admins:', error);
-    }
+
   };
 
   const closeManageAdminsModal = () => {
@@ -443,8 +475,7 @@ const MasterAdminDashboard = () => {
 
   const validateAdminForm = () => {
     const errors = {};
-    console.log('Validating admin form:', adminForm);
-    
+
     if (!adminForm.name?.trim()) {
       errors.name = 'Name is required';
     }
@@ -471,99 +502,79 @@ const MasterAdminDashboard = () => {
     }
     
     // Simplified role validation for debugging
-    console.log('Role validation check:', {
-      role: adminForm.role,
-      roleType: typeof adminForm.role,
-      hasRole: !!adminForm.role
-    });
-    
+
     if (!adminForm.role) {
-      console.log('Role validation failed - no role');
+
       errors.role = 'Please select a valid admin role';
     }
-    
-    console.log('Validation errors:', errors);
+
     setAdminErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted, starting validation...');
-    
+
     if (!validateAdminForm()) {
-      console.log('Validation failed, stopping submission');
+
       return;
     }
 
-    console.log('Validation passed, checking for duplicates...');
-    
     // Fetch fresh admin list to ensure we have latest data
-    console.log('🔄 Fetching fresh admin list for duplicate checking...');
+
     let freshAdmins = [];
     try {
       freshAdmins = await getAllAdminAccounts() || [];
-      console.log('📊 Fresh admin list:', freshAdmins.length, 'admins');
+
       console.log('📧 Existing emails:', freshAdmins.map(a => a.email));
       console.log('📱 Existing phones:', freshAdmins.map(a => a.phone || a.mobile));
     } catch (error) {
-      console.warn('⚠️ Could not fetch fresh admin list:', error);
-      freshAdmins = existingAdmins; // Fallback to cached list
+freshAdmins = existingAdmins; // Fallback to cached list
     }
     
     // Check for duplicate email
     const emailToCheck = adminForm.email.toLowerCase().trim();
+
+    console.log('📧 All admin emails in system:', freshAdmins.map(a => a.email));
+    
     const existingAdminWithEmail = freshAdmins.find(admin => 
       admin.email?.toLowerCase() === emailToCheck
     );
     
     if (existingAdminWithEmail) {
-      const errorMsg = `❌ Email "${adminForm.email}" is already registered to ${existingAdminWithEmail.name || existingAdminWithEmail.full_name}. Please use a different email address.`;
-      console.error('❌ Duplicate email found:', {
-        inputEmail: emailToCheck,
-        existingAdmin: existingAdminWithEmail.name || existingAdminWithEmail.full_name,
-        adminId: existingAdminWithEmail.id
-      });
-      setAdminMessage({ type: 'error', text: errorMsg });
+      const errorMsg = `This email is already registered. An admin account with "${adminForm.email}" already exists. Please use a different email address.`;
+setAdminMessage({ type: 'error', text: errorMsg });
       showToast(errorMsg, 'error');
+      setIsAdminSubmitting(false);
       return;
     }
     
     // Check for duplicate phone
     const phoneToCheck = formatPhoneForAPI(adminForm.mobile.trim());
+
+    console.log('📱 All admin phones in system:', freshAdmins.map(a => a.phone || a.mobile || a.mobileNumber));
+    
     const existingAdminWithPhone = freshAdmins.find(admin => {
-      const adminPhone = admin.phone || admin.mobile || '';
+      const adminPhone = admin.phone || admin.mobile || admin.mobileNumber || '';
       return adminPhone === phoneToCheck;
     });
     
     if (existingAdminWithPhone) {
-      const errorMsg = `❌ Phone number "${adminForm.mobile}" is already registered to ${existingAdminWithPhone.name || existingAdminWithPhone.full_name}. Please use a different phone number.`;
-      console.error('❌ Duplicate phone found:', {
-        inputPhone: phoneToCheck,
-        existingAdmin: existingAdminWithPhone.name || existingAdminWithPhone.full_name,
-        adminId: existingAdminWithPhone.id
-      });
-      setAdminMessage({ type: 'error', text: errorMsg });
+      const errorMsg = `This phone number is already registered. An admin account with "${adminForm.mobile}" already exists. Please use a different phone number.`;
+setAdminMessage({ type: 'error', text: errorMsg });
       showToast(errorMsg, 'error');
+      setIsAdminSubmitting(false);
       return;
     }
-    
-    console.log('✅ No duplicates found in frontend check, proceeding to API...');
-    console.log('� Current existing admins:', existingAdmins.length);
-    
-    console.log('✅ No duplicates found in frontend check, proceeding to API...');
+
+
+
     setIsAdminSubmitting(true);
     setAdminMessage({ type: '', text: '' });
 
     try {
-      console.log('🚀 Creating admin account with API data...');
-      console.log('📋 Form data before transformation:', {
-        name: adminForm.name,
-        email: adminForm.email,
-        mobile: adminForm.mobile,
-        role: adminForm.role
-      });
-      
+
+
       // Transform form data to match API requirements  
       const apiData = {
         full_name: adminForm.name.trim(),
@@ -578,20 +589,9 @@ const MasterAdminDashboard = () => {
         formatted: apiData.phone,
         length: apiData.phone.length
       });
-      
-      console.log('📤 API Data for admin creation:', {
-        ...apiData,
-        password: '[HIDDEN]'
-      });
-      
+
       // Create admin account via API
-      console.log('🌐 Sending request to backend with:', {
-        full_name: apiData.full_name,
-        email: apiData.email,
-        phone: apiData.phone,
-        role: apiData.role
-      });
-      
+
       const response = await createAdminAccount(apiData);
       console.log('📨 Full API Response:', JSON.stringify(response, null, 2));
 
@@ -611,50 +611,62 @@ const MasterAdminDashboard = () => {
         setAdminMessage({ type: '', text: '' });
         
         // Refresh admins list immediately after creation
-        console.log('🔄 Refreshing admin list after creation...');
+
         const adminsResponse = await getAllAdminAccounts();
         if (adminsResponse && Array.isArray(adminsResponse)) {
-          console.log('✅ Refreshed admin list:', adminsResponse.length, 'admins');
+
           setAllAdmins(adminsResponse);
           setExistingAdmins(adminsResponse);
         } else {
-          console.warn('⚠️ Failed to refresh admin list');
-        }
+}
         
         // Close modal after a short delay
         setTimeout(() => {
           closeManageAdminsModal();
         }, 2000);
       } else {
-        console.error('❌ Admin creation failed from backend:', response);
-        console.error('🔍 Debugging info:', {
-          sentEmail: apiData.email,
-          sentPhone: apiData.phone,
-          errorMessage: response.error || response.message,
-          fullResponse: response
-        });
-        
-        let errorMsg = response.error || response.message || 'Failed to create admin account. Please try again.';
+let errorMsg = response.error || response.message || 'Failed to create admin account. Please try again.';
         
         // Make error message more user-friendly
         if (errorMsg.toLowerCase().includes('already') || errorMsg.toLowerCase().includes('exists') || errorMsg.toLowerCase().includes('duplicate')) {
-          console.log('🔄 Backend rejected with duplicate error, fetching admin list to identify the issue...');
-          
+
           // Fetch fresh admin list to identify exactly what's duplicate
           try {
             const freshAdmins = await getAllAdminAccounts();
-            console.log('📊 Fresh admins for duplicate analysis:', freshAdmins?.length || 0);
-            
+
             if (freshAdmins && Array.isArray(freshAdmins)) {
-              // Check email match
-              const matchingEmail = freshAdmins.find(a => 
-                a.email?.toLowerCase() === apiData.email.toLowerCase()
-              );
+              console.log('📋 RAW backend response:', JSON.stringify(freshAdmins, null, 2));
+              console.log('📋 All admins from backend:', freshAdmins.map(a => ({
+                id: a.id,
+                name: a.full_name || a.name,
+                email: a.email,
+                account: a.account,
+                phone: a.phone,
+                mobile: a.mobile,
+                mobileNumber: a.mobileNumber
+              })));
               
-              // Check phone match
-              const matchingPhone = freshAdmins.find(a => 
-                (a.phone || a.mobile) === apiData.phone
-              );
+              console.log('🎯 Searching for duplicates:', {
+                searchEmail: apiData.email.toLowerCase(),
+                searchPhone: apiData.phone
+              });
+              
+              // Check email match - check BOTH 'email' and 'account' fields
+              const matchingEmail = freshAdmins.find(a => {
+                const adminEmail = (a.email || a.account || '').toLowerCase();
+                const searchEmail = apiData.email.toLowerCase();
+                const match = adminEmail === searchEmail;
+
+                return match;
+              });
+              
+              // Check phone match - check ALL possible phone field variations
+              const matchingPhone = freshAdmins.find(a => {
+                const adminPhone = a.phone || a.mobile || a.mobileNumber || '';
+                const match = adminPhone === apiData.phone;
+                console.log(`  Phone check - Admin ${a.id} (${a.full_name || a.name}): "${adminPhone}" === "${apiData.phone}"? ${match}`);
+                return match;
+              });
               
               console.log('🔍 Duplicate analysis results:', {
                 emailMatch: matchingEmail ? `${matchingEmail.email} (${matchingEmail.name || matchingEmail.full_name})` : 'No match',
@@ -665,31 +677,23 @@ const MasterAdminDashboard = () => {
               
               if (matchingEmail && matchingPhone && matchingEmail.id === matchingPhone.id) {
                 // Same admin has both email and phone
-                errorMsg = `❌ Both email and phone are already registered to "${matchingEmail.name || matchingEmail.full_name}"\n\n` +
-                          `• Email: ${apiData.email}\n` +
-                          `• Phone: ${apiData.phone}\n\n` +
-                          `Please use different email AND phone number.`;
-              } else if (matchingEmail) {
+                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
+} else if (matchingEmail) {
                 // Email is duplicate
-                errorMsg = `❌ Email "${apiData.email}" is already registered to "${matchingEmail.name || matchingEmail.full_name}".\n\nPlease use a different email address.`;
-              } else if (matchingPhone) {
+                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
+} else if (matchingPhone) {
                 // Phone is duplicate
-                errorMsg = `❌ Phone number "${apiData.phone}" is already registered to "${matchingPhone.name || matchingPhone.full_name}".\n\nPlease use a different phone number.`;
-              } else {
-                // Backend says duplicate but we can't find it - might be a sync issue
-                errorMsg = `❌ Backend detected a duplicate but it's not showing in our admin list.\n\n` +
-                          `This might be a database sync issue.\n\n` +
-                          `Tried to create:\n` +
-                          `• Email: ${apiData.email}\n` +
-                          `• Phone: ${apiData.phone}\n\n` +
-                          `Try refreshing the page or use completely different values.`;
+                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
+} else {
+                // Backend says duplicate but we can't find it - THIS IS THE ACTUAL PROBLEM
+console.error('📊 Full admin list:', JSON.stringify(freshAdmins, null, 2));
+errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
               }
             } else {
               errorMsg = `❌ Backend says duplicate exists but could not fetch admin list to identify the issue.\n\nPlease try different email and phone number.`;
             }
           } catch (fetchError) {
-            console.error('❌ Failed to fetch admin list for duplicate analysis:', fetchError);
-            errorMsg = `❌ Backend detected duplicate values but could not verify details.\n\nPlease try different email and phone number.`;
+errorMsg = `❌ Backend detected duplicate values but could not verify details.\n\nPlease try different email and phone number.`;
           }
         }
         
@@ -701,8 +705,7 @@ const MasterAdminDashboard = () => {
       }
 
     } catch (error) {
-      console.error('💥 Exception creating admin account:', error);
-      const errorMsg = error.message || 'Failed to create admin account. Please try again.';
+const errorMsg = error.message || 'Failed to create admin account. Please try again.';
       setAdminMessage({ type: 'error', text: errorMsg });
       showToast(errorMsg, 'error');
     } finally {
@@ -716,28 +719,37 @@ const MasterAdminDashboard = () => {
       return;
     }
 
+
     setIsDeletingAdmin(true);
     setDeleteAdminMessage({ type: '', text: '' });
 
     try {
-      // Find the admin by email to get the ID
-      const adminToDelete = existingAdmins.find(admin => admin.email === selectedAdminToDelete);
+      // Find the admin by ID
+      const adminToDelete = existingAdmins.find(admin => admin.id === parseInt(selectedAdminToDelete));
+      
       if (!adminToDelete) {
-        setDeleteAdminMessage({ type: 'error', text: 'Admin not found.' });
+setDeleteAdminMessage({ type: 'error', text: 'Admin not found in the list.' });
         setIsDeletingAdmin(false);
         return;
       }
 
+      // Call API to delete admin
+
       const response = await deleteAdminAccount(adminToDelete.id);
-      
+
       if (response && response.success) {
+
         setDeleteAdminMessage({ 
           type: 'success', 
-          text: 'Admin account deleted successfully!' 
+          text: `Admin "${adminToDelete.full_name || adminToDelete.name}" deleted successfully!` 
         });
         
+        showToast('Admin account deleted successfully!', 'success');
+        
         // Refresh the admin list
+
         const adminsResponse = await getAllAdminAccounts();
+
         if (adminsResponse) {
           setAllAdmins(adminsResponse);
           setExistingAdmins(adminsResponse);
@@ -747,25 +759,29 @@ const MasterAdminDashboard = () => {
         setSelectedAdminToDelete('');
         
         // If the deleted admin was selected in filter, reset to 'all'
-        // Compare with string conversion since filter uses admin ID
         if (selectedAdminFilter === String(adminToDelete.id)) {
+
           setSelectedAdminFilter('all');
         }
         
+        // Clear success message after 3 seconds
         setTimeout(() => {
           setDeleteAdminMessage({ type: '', text: '' });
         }, 3000);
       } else {
-        setDeleteAdminMessage({ 
+setDeleteAdminMessage({ 
           type: 'error', 
-          text: (response && response.error) || 'Failed to delete admin account.' 
+          text: (response && response.error) || (response && response.message) || 'Failed to delete admin account.' 
         });
+        showToast('Failed to delete admin account', 'error');
       }
     } catch (error) {
-      console.error('Error deleting admin:', error);
-      setDeleteAdminMessage({ type: 'error', text: 'Failed to delete admin account. Please try again.' });
+const errorMessage = error.data?.detail || error.message || 'Failed to delete admin account. Please try again.';
+      setDeleteAdminMessage({ type: 'error', text: errorMessage });
+      showToast(errorMessage, 'error');
     } finally {
       setIsDeletingAdmin(false);
+
     }
   };
 
@@ -781,8 +797,7 @@ const MasterAdminDashboard = () => {
       setIsAddStudioModalOpen(false);
       setSelectedApartmentId(null);
     } catch (error) {
-      console.error('Error adding studio:', error);
-    }
+}
   };
 
   const handleApartmentAdded = async (newApartment) => {
@@ -795,8 +810,7 @@ const MasterAdminDashboard = () => {
         setIsAddSaleApartmentModalOpen(false);
       }
     } catch (error) {
-      console.error('Error adding apartment:', error);
-    }
+}
   };
 
   const handleSaleApartmentAdded = async (newSaleApartment) => {
@@ -804,8 +818,7 @@ const MasterAdminDashboard = () => {
       await addSaleApartment(newSaleApartment);
       setIsAddSaleApartmentModalOpen(false);
     } catch (error) {
-      console.error('Error adding sale apartment:', error);
-    }
+}
   };
 
   // Memoize statistics calculations to prevent recalculation on every render
@@ -826,12 +839,12 @@ const MasterAdminDashboard = () => {
 
   // Safety check for user authentication
   if (!currentUser) {
-    console.log('❌ No current user, redirecting...');
+
     return null; // Let the auth system handle the redirect
   }
 
   if (loading) {
-    console.log('⏳ Dashboard loading...');
+
     return (
       <div className="master-admin-dashboard loading">
         <div className="loading-container">
@@ -840,12 +853,6 @@ const MasterAdminDashboard = () => {
       </div>
     );
   }
-
-  console.log('Render - Modal States:', {
-    isEditProfileModalOpen,
-    isManageAdminsModalOpen,
-    currentUser
-  });
 
   return (
     <div className="master-admin-dashboard">
@@ -944,7 +951,7 @@ const MasterAdminDashboard = () => {
                   <option value="all">All Admins</option>
                   {existingAdmins.map(admin => (
                     <option key={admin.id} value={admin.id}>
-                      {admin.full_name || admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : admin.role === 'apartment_sale' ? 'Apartment Sales' : admin.role}
+                      {admin.full_name || admin.name || admin.username}
                     </option>
                   ))}
                 </select>
@@ -1210,6 +1217,79 @@ const MasterAdminDashboard = () => {
             </div>
             
             <div className="admin-management-content">
+              {/* Existing Admins Section */}
+              <div className="tab-section" style={{backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '24px'}}>
+                <h3 style={{fontSize: '1.1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                  👥 Existing Admin Accounts ({existingAdmins.length})
+                  <button 
+                    type="button" 
+                    onClick={async () => {
+
+                      try {
+                        const freshAdmins = await getAllAdminAccounts();
+                        setAllAdmins(freshAdmins);
+                        setExistingAdmins(freshAdmins);
+                        showToast('Admin list refreshed!', 'success');
+                      } catch (error) {
+showToast('Failed to refresh admin list', 'error');
+                      }
+                    }}
+                    style={{
+                      padding: '4px 12px',
+                      fontSize: '0.85rem',
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      marginLeft: 'auto'
+                    }}
+                  >
+                    🔄 Refresh
+                  </button>
+                </h3>
+                {existingAdmins.length === 0 ? (
+                  <p style={{color: '#6b7280', fontSize: '0.9rem', margin: '8px 0'}}>No admins found. Create the first admin below.</p>
+                ) : (
+                  <div style={{maxHeight: '200px', overflowY: 'auto'}}>
+                    <table style={{width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse'}}>
+                      <thead style={{position: 'sticky', top: 0, backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb'}}>
+                        <tr>
+                          <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>Name</th>
+                          <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>Email</th>
+                          <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>Phone</th>
+                          <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>Role</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {existingAdmins.map(admin => (
+                          <tr key={admin.id} style={{borderBottom: '1px solid #e5e7eb'}}>
+                            <td style={{padding: '8px'}}>{admin.full_name || admin.name || admin.username || 'N/A'}</td>
+                            <td style={{padding: '8px', color: '#3b82f6'}}>{admin.email}</td>
+                            <td style={{padding: '8px', color: '#10b981'}}>{admin.phone || admin.mobile || admin.mobileNumber || 'N/A'}</td>
+                            <td style={{padding: '8px'}}>
+                              <span style={{
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                backgroundColor: admin.role === 'super_admin' ? '#fef3c7' : '#dbeafe',
+                                color: admin.role === 'super_admin' ? '#92400e' : '#1e40af'
+                              }}>
+                                {admin.role === 'super_admin' ? '👑 Super Admin' : 
+                                 admin.role === 'studio_rental' ? '🏢 Studio Rental' : '🏠 Apt Sales'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <p style={{color: '#6b7280', fontSize: '0.8rem', marginTop: '8px', fontStyle: 'italic'}}>
+                  ℹ️ Make sure to use unique email and phone number when creating new admin
+                </p>
+              </div>
+
               <div className="tab-section">
                 <h3>Create New Admin</h3>
                 <form onSubmit={handleAdminSubmit} className="modal-form">
@@ -1241,10 +1321,52 @@ const MasterAdminDashboard = () => {
                       name="email"
                       value={adminForm.email}
                       onChange={handleAdminInputChange}
+                      onBlur={(e) => {
+                        const emailValue = e.target.value.toLowerCase().trim();
+                        if (!emailValue) return;
+
+
+                        console.log('📧 Existing emails:', existingAdmins.map(a => ({
+                          email: a.email,
+                          account: a.account
+                        })));
+                        
+                        // Check BOTH email and account fields
+                        const matchingAdmin = existingAdmins.find(a => {
+                          const adminEmail = (a.email || a.account || '').toLowerCase();
+                          return adminEmail === emailValue;
+                        });
+                        
+                        if (matchingAdmin) {
+
+                          setAdminErrors(prev => ({
+                            ...prev,
+                            email: `⚠️ Email already used by: ${matchingAdmin.full_name || matchingAdmin.name || 'existing admin'}`
+                          }));
+                        } else {
+
+                          // Clear email error if it was previously set
+                          setAdminErrors(prev => {
+                            const newErrors = {...prev};
+                            delete newErrors.email;
+                            return newErrors;
+                          });
+                        }
+                      }}
                       className={adminErrors.email ? 'error' : ''}
-                      placeholder="Enter admin's email"
+                      placeholder="Enter admin's email (must be unique)"
                     />
                     {adminErrors.email && <span className="error-text">{adminErrors.email}</span>}
+                    {adminForm.email && !adminErrors.email && existingAdmins.length > 0 && (
+                      <small style={{color: '#10b981', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
+                        ✓ Email is available
+                      </small>
+                    )}
+                    {adminForm.email && !adminErrors.email && existingAdmins.length === 0 && (
+                      <small style={{color: '#f59e0b', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
+                        ⚠️ Unable to verify - admin list not loaded
+                      </small>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -1279,14 +1401,55 @@ const MasterAdminDashboard = () => {
                       name="mobile"
                       value={adminForm.mobile}
                       onChange={handleAdminInputChange}
+                      onBlur={(e) => {
+                        const phoneValue = e.target.value.trim();
+                        if (!phoneValue) return;
+                        
+                        if (/^(010|011|012|015)\d{8}$/.test(phoneValue)) {
+                          const formattedPhone = formatPhoneForAPI(phoneValue);
+
+
+                          console.log('📱 Existing phones:', existingAdmins.map(a => a.phone || a.mobile || a.mobileNumber));
+                          
+                          const matchingAdmin = existingAdmins.find(a => 
+                            (a.phone || a.mobile || a.mobileNumber) === formattedPhone
+                          );
+                          
+                          if (matchingAdmin) {
+
+                            setAdminErrors(prev => ({
+                              ...prev,
+                              mobile: `⚠️ Phone already used by: ${matchingAdmin.full_name || matchingAdmin.name}`
+                            }));
+                          } else {
+
+                            // Clear mobile error if it was previously set
+                            setAdminErrors(prev => {
+                              const newErrors = {...prev};
+                              delete newErrors.mobile;
+                              return newErrors;
+                            });
+                          }
+                        }
+                      }}
                       className={adminErrors.mobile ? 'error' : ''}
-                      placeholder="01012345678"
+                      placeholder="01012345678 (must be unique)"
                       maxLength="11"
                       inputMode="numeric"
                       pattern="[0-9]*"
                     />
                     {adminErrors.mobile && <span className="error-text">{adminErrors.mobile}</span>}
-                    {!adminErrors.mobile && (
+                    {!adminErrors.mobile && adminForm.mobile && /^(010|011|012|015)\d{8}$/.test(adminForm.mobile) && existingAdmins.length > 0 && (
+                      <small style={{color: '#10b981', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
+                        ✓ Phone number is valid and available
+                      </small>
+                    )}
+                    {!adminErrors.mobile && adminForm.mobile && /^(010|011|012|015)\d{8}$/.test(adminForm.mobile) && existingAdmins.length === 0 && (
+                      <small style={{color: '#f59e0b', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
+                        ⚠️ Unable to verify - admin list not loaded
+                      </small>
+                    )}
+                    {!adminErrors.mobile && (!adminForm.mobile || !/^(010|011|012|015)\d{8}$/.test(adminForm.mobile)) && (
                       <small className="field-hint" style={{color: '#6b7280', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
                         Enter 11 digits starting with 010, 011, 012, or 015
                       </small>
@@ -1315,20 +1478,38 @@ const MasterAdminDashboard = () => {
                     <button 
                       type="button" 
                       className="btn-secondary" 
+                      onClick={() => {
+                        // Clear the form
+                        setAdminForm({
+                          name: '',
+                          email: '',
+                          password: '',
+                          mobile: '',
+                          role: 'studio_rental'
+                        });
+                        setAdminErrors({});
+                        setAdminMessage({ type: '', text: '' });
+                        showToast('Form cleared!', 'success');
+                      }}
+                    >
+                      🗑️ Clear Form
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
                       onClick={async () => {
-                        console.log('🔄 Refreshing admin list manually...');
+
                         try {
                           const freshAdmins = await getAllAdminAccounts();
                           setAllAdmins(freshAdmins);
                           setExistingAdmins(freshAdmins);
                           showToast('Admin list refreshed!', 'success');
                         } catch (error) {
-                          console.error('Failed to refresh:', error);
-                          showToast('Failed to refresh admin list', 'error');
+showToast('Failed to refresh admin list', 'error');
                         }
                       }}
                     >
-                      🔄 Refresh Admin List
+                      🔄 Refresh List
                     </button>
                     <button type="submit" className="btn-primary" disabled={isAdminSubmitting}>
                       {isAdminSubmitting ? 'Creating...' : 'Create Admin'}
@@ -1350,16 +1531,24 @@ const MasterAdminDashboard = () => {
                   <select 
                     id="admin-to-delete"
                     value={selectedAdminToDelete} 
-                    onChange={(e) => setSelectedAdminToDelete(e.target.value)}
+                    onChange={(e) => {
+
+                      setSelectedAdminToDelete(e.target.value);
+                    }}
                     className="admin-select"
                   >
                     <option value="">-- Select Admin --</option>
                     {existingAdmins.map(admin => (
-                      <option key={admin.id} value={admin.email}>
-                        {admin.full_name || admin.name} ({admin.email}) - {admin.role === 'studio_rental' ? 'Studio Rental' : admin.role === 'apartment_sale' ? 'Apartment Sales' : admin.role}
+                      <option key={admin.id} value={admin.id}>
+                        {admin.full_name || admin.name || admin.username}
                       </option>
                     ))}
                   </select>
+                  {existingAdmins.length === 0 && (
+                    <small className="field-hint" style={{color: '#6b7280', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
+                      No admins available to delete. Create an admin first.
+                    </small>
+                  )}
                 </div>
 
                 <div className="modal-actions">
@@ -1368,6 +1557,10 @@ const MasterAdminDashboard = () => {
                     className="btn-danger" 
                     onClick={handleDeleteAdmin}
                     disabled={isDeletingAdmin || !selectedAdminToDelete}
+                    style={{
+                      opacity: isDeletingAdmin || !selectedAdminToDelete ? 0.5 : 1,
+                      cursor: isDeletingAdmin || !selectedAdminToDelete ? 'not-allowed' : 'pointer'
+                    }}
                   >
                     {isDeletingAdmin ? 'Deleting...' : 'Delete Admin'}
                   </button>

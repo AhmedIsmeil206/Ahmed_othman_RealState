@@ -53,8 +53,7 @@ const RentalAlertsPage = () => {
             availableStudios
           });
         } catch (error) {
-          console.error('Error fetching admin stats:', error);
-          // Set default stats on error
+// Set default stats on error
           setAdminStats({
             totalApartments: 0,
             totalStudios: 0,

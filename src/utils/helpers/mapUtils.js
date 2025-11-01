@@ -59,8 +59,7 @@ export const extractCoordinatesFromUrl = (url) => {
 
     return null;
   } catch (error) {
-    console.error('Error extracting coordinates from URL:', error);
-    return null;
+return null;
   }
 };
 

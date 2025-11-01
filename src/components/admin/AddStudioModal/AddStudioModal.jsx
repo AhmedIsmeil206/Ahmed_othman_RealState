@@ -66,8 +66,7 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
         }));
       }
     } catch (error) {
-      console.error('Error uploading photos:', error);
-      setErrors(prev => ({
+setErrors(prev => ({
         ...prev,
         photos_url: 'Error uploading photos. Please try again.'
       }));
@@ -123,17 +122,6 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
       newErrors.balcony = 'Balcony type must be yes, shared, or no';
     }
 
-    console.log('🔍 Studio form validation:', {
-      title: formData.title,
-      area: formData.area, 
-      monthly_price: formData.monthly_price,
-      description: formData.description,
-      bathrooms: formData.bathrooms,
-      furnished: formData.furnished,
-      balcony: formData.balcony,
-      errors: newErrors
-    });
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -142,16 +130,15 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      console.log('❌ Studio form validation failed - stopping submission');
+
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      console.log('🏗️ Creating studio for apartment ID:', apartmentId);
-      console.log('📝 Raw form data:', formData);
-      
+
+
       // FAILSAFE: Ensure we have minimum required data
       if (!formData.title?.trim() || !formData.area || !formData.monthly_price) {
         throw new Error(`Missing required studio data: title=${formData.title}, area=${formData.area}, monthly_price=${formData.monthly_price}`);
@@ -170,23 +157,20 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
         description: formData.description?.trim() || 'No description provided', // Optional
         photos_url: (formData.photos_url && formData.photos_url.length > 0) ? formData.photos_url : [] // Optional
       };
-      
-      console.log('🔄 Transformed API data for studio:', apiData);
-      console.log('🔍 API Data validation check:');
-      console.log('  title:', `"${apiData.title}"`);
-      console.log('  area:', `"${apiData.area}"`);
-      console.log('  monthly_price:', `"${apiData.monthly_price}"`);
-      console.log('  bedrooms:', apiData.bedrooms);
-      console.log('  bathrooms:', `"${apiData.bathrooms}"`);
-      console.log('  furnished:', `"${apiData.furnished}"`);
-      console.log('  balcony:', `"${apiData.balcony}"`);
+
+
+
+
+
+
+
+
+
       console.log('📨 Full JSON being sent to API:', JSON.stringify(apiData, null, 2));
-      console.log('🎯 Endpoint:', `POST /apartments/rent/${apartmentId}/parts`);
-      
+
       // Use the correct API endpoint: POST /apartments/rent/{apartment_id}/parts
       const createdStudio = await apartmentPartsApi.create(apartmentId, apiData);
-      console.log('✅ Studio created successfully:', createdStudio);
-      
+
       // Notify parent component
       if (onStudioAdded) {
         onStudioAdded(createdStudio);
@@ -208,14 +192,7 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
       setErrors({});
       
     } catch (error) {
-      console.error('❌ Error creating studio:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        status: error.status,
-        data: error.data
-      });
-      
-      // Specific error messages based on error type
+// Specific error messages based on error type
       let errorMessage = 'Failed to create studio';
       
       if (error.message === 'Network error' || error.message?.includes('CORS')) {

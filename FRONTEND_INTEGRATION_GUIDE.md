@@ -255,21 +255,71 @@ Authorization: Bearer <token>
 #### POST `/api/v1/admins/`
 **Purpose:** Create new admin (super admin only)
 
-**Request:**
+**⚠️ IMPORTANT:** This endpoint requires authentication. You MUST send the Bearer token in the Authorization header.
+
+**Headers:**
+```
+Authorization: Bearer <your_jwt_token>
+Content-Type: application/json
+```
+
+**Request Body:**
 ```json
 {
-  "full_name": "New Admin",
-  "email": "newadmin@example.com",
-  "phone": "+201234567890",
-  "password": "password123",
-  "role": "apartment_sale"
+  "full_name": "Ahmed Ali",
+  "email": "ahmed@example.com",
+  "phone": "+201001725607",
+  "password": "123789",
+  "role": "studio_rental"
 }
 ```
 
+**Field Requirements:**
+- ✅ `full_name` (string, required) - Admin's full name
+- ✅ `email` (string, required) - Must be unique, valid email format
+- ✅ `phone` (string, required) - Must be unique, Egyptian format with +20 prefix (e.g., +201012345678)
+- ✅ `password` (string, required) - Admin's password
+- ✅ `role` (string, required) - One of the valid roles below
+
 **Valid Roles:**
-- `super_admin`: Full system access
-- `studio_rental`: Can manage studio rentals
-- `apartment_sale`: Can manage apartment sales
+- `super_admin`: Full system access (master admin)
+- `studio_rental`: Can manage studio rentals only
+- `apartment_sale`: Can manage apartment sales only
+
+**Success Response (201):**
+```json
+{
+  "id": 2,
+  "full_name": "Ahmed Ali",
+  "email": "ahmed@example.com",
+  "phone": "+201001725607",
+  "role": "studio_rental",
+  "created_at": "2025-10-31T12:00:00",
+  "updated_at": null
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Duplicate email/phone or validation error
+  ```json
+  {
+    "detail": "Account, username, email, or mobile number already exists"
+  }
+  ```
+- `401 Unauthorized`: Not authenticated or token expired
+- `403 Forbidden`: Not super admin
+- `422 Validation Error`: Invalid field format
+  ```json
+  {
+    "detail": [
+      {
+        "type": "missing",
+        "loc": ["body", "full_name"],
+        "msg": "Field required"
+      }
+    ]
+  }
+  ```
 
 #### PUT `/api/v1/admins/{admin_id}`
 **Purpose:** Update admin information (super admin only)
@@ -727,9 +777,17 @@ Authorization: Bearer <token>
 ```
 
 #### POST `/api/v1/apartments/rent/{apartment_id}/parts`
-**Purpose:** Create new apartment part for rent apartment (admin only)
+**Purpose:** Create new apartment part (studio) for rent apartment (admin only)
 
-**Request:**
+**⚠️ IMPORTANT:** Replace `{apartment_id}` with the actual apartment ID (integer). All fields marked as REQUIRED must be included.
+
+**Headers:**
+```
+Authorization: Bearer <your_jwt_token>
+Content-Type: application/json
+```
+
+**Request Body:**
 ```json
 {
   "title": "Studio S-102",
@@ -745,6 +803,19 @@ Authorization: Bearer <token>
   ]
 }
 ```
+
+**Field Requirements:**
+- ✅ `title` (string, REQUIRED) - Studio/part name or number (e.g., "Studio S-102")
+- ✅ `area` (string decimal, REQUIRED) - Area in square meters (e.g., "35.00")
+- ✅ `monthly_price` (string decimal, REQUIRED) - Monthly rent price (e.g., "3800.00")
+- ✅ `bedrooms` (integer, REQUIRED) - Number of bedrooms (typically 1 for studio)
+- ✅ `bathrooms` (string enum, REQUIRED) - Either "private" or "shared"
+- ✅ `furnished` (string enum, REQUIRED) - Either "yes" or "no"
+- ✅ `balcony` (string enum, REQUIRED) - Either "yes", "shared", or "no"
+- ⚪ `description` (string, optional) - Description of the studio/part
+- ⚪ `photos_url` (array of strings, optional) - Array of image URLs
+- ⚪ `status` (string enum, optional) - Either "available", "rented", or "upcoming_end" (defaults to "available")
+- ⚪ `floor` (integer, optional) - Floor number (inherited from parent apartment if not provided)
 
 **Response:**
 ```json
@@ -1082,22 +1153,100 @@ Authorization: Bearer <token>
 ```
 
 **Required Fields:**
-- `apartment_part_id` (integer)
-- `customer_name` (string)
-- `customer_phone` (string)
-- `customer_id_number` (string)
-- `how_did_customer_find_us` (enum: "facebook" | "instagram" | "google" | "referral" | "walk_in" | "other")
-- `paid_deposit` (decimal as string)
-- `warrant_amount` (decimal as string)
-- `rent_start_date` (date: "YYYY-MM-DD")
-- `rent_end_date` (date: "YYYY-MM-DD")
-- `rent_period` (integer: months)
-- `commission` (decimal as string)
-- `rent_price` (decimal as string)
+- `apartment_part_id` (integer) - ID of the studio/apartment part
+- `customer_name` (string) - Full name of the customer
+- `customer_phone` (string) - Phone in format +201234567890 (must start with +20)
+- `customer_id_number` (string) - National ID or passport number
+- `how_did_customer_find_us` (enum) - Must be one of: `facebook`, `instagram`, `google`, `referral`, `walk_in`, `other`
+- `paid_deposit` (decimal as string) - Amount paid as deposit (e.g., "3800.00")
+- `warrant_amount` (decimal as string) - Warranty/security deposit amount
+- `rent_start_date` (date string) - Format: "YYYY-MM-DD"
+- `rent_end_date` (date string) - Format: "YYYY-MM-DD" (must be after start date)
+- `rent_period` (integer) - **MUST BE INTEGER** Number of months (e.g., 12, not "12")
+- `commission` (decimal as string) - Commission amount
+- `rent_price` (decimal as string) - Monthly rent price
 
 **Optional Fields:**
-- `contract_url` (string: URL to contract document)
-- `customer_id_url` (string: URL to customer ID document)
+- `contract_url` (string) - URL to uploaded contract document
+- `customer_id_url` (string) - URL to uploaded customer ID document
+
+**⚠️ CRITICAL DATA TYPE REQUIREMENTS:**
+- `rent_period` MUST be an integer (number), not a string
+  - ✅ Correct: `"rent_period": 12`
+  - ❌ Wrong: `"rent_period": "12"` or `"rent_period": "12 months"`
+- All decimal fields (deposit, warrant, commission, rent_price) should be strings with decimal format
+- Phone must include country code (+20 for Egypt)
+- Dates must be in ISO format (YYYY-MM-DD)
+
+**Frontend Implementation Example:**
+```javascript
+// Extract numeric value from rentPeriod string
+const rentPeriodValue = typeof bookingData.rentPeriod === 'string' 
+  ? parseInt(bookingData.rentPeriod.match(/\d+/)?.[0] || '12')
+  : parseInt(bookingData.rentPeriod) || 12;
+
+const contractData = {
+  apartment_part_id: parseInt(studioId),
+  customer_name: bookingData.customerName.trim(),
+  customer_phone: bookingData.customerPhone, // Already formatted as +201234567890
+  customer_id_number: bookingData.customerId.trim(),
+  how_did_customer_find_us: bookingData.how_did_customer_find_us || 'other',
+  paid_deposit: parseFloat(bookingData.paidDeposit) || 0,
+  warrant_amount: parseFloat(bookingData.warranty) || 0,
+  rent_start_date: bookingData.startDate, // "2025-11-01"
+  rent_end_date: bookingData.endDate,     // "2025-11-06"
+  rent_period: rentPeriodValue,           // 12 (integer, not string!)
+  contract_url: bookingData.contract || '',
+  customer_id_url: '',
+  commission: parseFloat(bookingData.commission) || 0,
+  rent_price: parseFloat(studio.monthly_price) || 0
+};
+
+// The API client will transform these to strings where needed
+const response = await rentalContractsApi.create(contractData);
+```
+
+**Common Validation Errors (422):**
+- `rent_period` sent as string instead of integer
+- Phone number not in correct format
+- Invalid `how_did_customer_find_us` enum value
+- End date before or equal to start date
+- Negative amounts for deposit/warranty
+- Missing required fields
+
+**Common Server Errors (500):**
+- **UNIQUE CONSTRAINT VIOLATION**: Studio already has an active booking
+  - Solution: Delete existing booking first, or check booking status before creating
+  - Database constraint: `apartment_part_id` must be unique per rental_contract
+- **Backend server crashed**: Check backend logs for Python errors
+- **Database connection failed**: Ensure PostgreSQL/SQLite is running
+- **Permission error**: Regular admin trying to book studio from apartment they didn't create
+
+**CORS Errors:**
+- **"Access-Control-Allow-Origin" header missing**: Backend CORS not configured
+  - Backend must allow origin: http://localhost:3000
+  - Check FastAPI CORS middleware configuration
+- **Network error / ERR_FAILED**: Backend server not running
+  - Ensure backend is running on http://localhost:8000
+  - Check if uvicorn process is active
+
+**Troubleshooting 500 Errors:**
+```javascript
+// Always check for existing bookings before creating
+const allContracts = await rentalContractsApi.getAll();
+const existingContract = allContracts?.find(contract => 
+  contract.apartment_part_id === studioId
+);
+
+if (existingContract) {
+  console.error('Studio already has a booking:', existingContract);
+  // Delete existing booking or show error to user
+  return;
+}
+
+// Then create new booking
+const newBooking = await rentalContractsApi.create(contractData);
+```
 
 **Response:**
 ```json
@@ -1166,14 +1315,76 @@ Authorization: Bearer <token>
 ```
 
 #### DELETE `/api/v1/rental-contracts/{contract_id}`
-**Purpose:** Delete rental contract (super admin only)
+**Purpose:** Delete rental contract (**SUPER ADMIN ONLY** 🔒)
 
-**Response:**
+**⚠️ CRITICAL AUTHORIZATION REQUIREMENT:**
+- **ONLY Super Admin (Master Admin) role can delete rental contracts**
+- **Regular admins will ALWAYS receive `403 Forbidden` error**
+- This is a backend security policy - cannot be bypassed from frontend
+
+**Why This Restriction Exists:**
+- Deleting rental contracts affects financial records
+- Impacts property availability status
+- Requires highest level of authority to prevent accidental data loss
+
+**Headers:**
+```
+Authorization: Bearer <super_admin_token>
+```
+
+**Response (Success):**
 ```json
 {
   "message": "Rental contract deleted successfully"
 }
 ```
+
+**Error Responses:**
+- `401 Unauthorized` - Not logged in or token expired
+- `403 Forbidden` - **User is not a super admin** (most common for regular admins)
+  - Backend response: `{"detail": "Not enough permissions. Super admin access required"}`
+- `404 Not Found` - Contract does not exist or already deleted
+
+**Frontend Implementation:**
+```javascript
+// Proper error handling for delete operation
+const handleDeleteBooking = async (contractId) => {
+  try {
+    const response = await rentalContractsApi.delete(contractId);
+    alert('✅ Booking deleted successfully!');
+    window.location.reload();
+  } catch (error) {
+    if (error.message?.includes('403') || error.message?.includes('forbidden')) {
+      // Show helpful message for regular admins
+      alert(
+        '🔒 PERMISSION DENIED\n\n' +
+        '❌ Only Super Admins can delete rental contracts.\n\n' +
+        '📋 Your Role: Regular Admin\n' +
+        '🔑 Required: Super Admin (Master Admin)\n\n' +
+        '💡 Solutions:\n' +
+        '1. Contact a Super Admin to delete this booking\n' +
+        '2. Request Super Admin access from administrator\n' +
+        '3. Use "Mark as Inactive" as alternative (if available)'
+      );
+    } else if (error.message?.includes('404')) {
+      alert('Booking not found. May have been already deleted.');
+      window.location.reload();
+    } else if (error.message?.includes('401')) {
+      alert('Session expired. Please log in again.');
+      // Redirect to login
+    } else {
+      alert(`Delete failed: ${error.message}`);
+    }
+  }
+};
+```
+
+**Important Notes:**
+- 🚫 DO NOT hide delete button based on role - show clear error instead
+- ✅ DO provide helpful error messages explaining permission requirements
+- ✅ DO suggest contacting Super Admin when regular admin attempts deletion
+- ✅ DO log user's current role for debugging
+- 💡 Consider alternative: Allow regular admins to "mark as inactive" instead of delete
 
 ## 📊 Data Types and Enums
 
@@ -1527,6 +1738,116 @@ Content-Type: application/json
 1. **Check Network Tab**: Inspect request/response headers and body
 2. **Console Logs**: Log API responses for debugging
 3. **Token Validation**: Verify JWT token is valid and not expired
+
+## 📱 WhatsApp Integration (Customer Contact Feature)
+
+### Overview
+The WhatsApp button in the studio details page dynamically shows different contact information based on the viewer's role and the studio's booking status.
+
+### Behavior
+
+**For Admins/Master Admins viewing rented studios:**
+- WhatsApp button shows **customer's phone number** from rental contract
+- Allows direct contact with tenant
+- Blue-colored button with customer icon (👤)
+- Shows customer name and phone above the button
+
+**For Regular Customers or Unbooked Studios:**
+- WhatsApp button shows **agency/admin phone number**
+- Allows inquiries about the property
+- Green-colored standard WhatsApp button
+
+### Implementation
+
+**Component:** `WhatsAppButton.jsx`
+```jsx
+<WhatsAppButton 
+  phoneNumber={customerPhone}           // From rental contract
+  message="Custom message text"         // Personalized greeting
+  contactType="customer"                // 'customer' or 'agency'
+  label="Contact Tenant"                // Optional label above button
+/>
+```
+
+**Data Source:**
+```javascript
+// Customer phone from rental contract
+const customerPhone = studioBooking.customer_phone || studioBooking.customerPhone;
+
+// Booking data structure
+{
+  customer_name: "Ahmed",
+  customer_phone: "+201005638425",
+  customer_id_number: "5614656165",
+  // ... other booking fields
+}
+```
+
+**Logic Flow:**
+1. Check if viewer is admin/master admin (from `navigationSource`)
+2. Check if studio has active booking (`studioBooking` state)
+3. If both true → Show customer contact
+4. Otherwise → Show agency contact
+
+**Phone Number Formatting:**
+- Backend stores: `+201005638425` (with country code)
+- WhatsApp link uses: `201005638425` (cleaned, no special chars)
+- Component automatically strips non-numeric characters
+
+**Example Messages:**
+```javascript
+// For customer contact (admin → tenant)
+`Hello ${customerName}, this is regarding your rental at ${studioTitle}.`
+
+// For agency contact (customer → agency)
+`Hello, I'm interested in ${studioTitle} for EGP ${price}/month`
+```
+
+### UI Differences
+
+**Customer Contact Button:**
+- Background: `#0088cc` (Blue)
+- Icon: 👤 (Person icon)
+- Text: "Contact Customer"
+- Shows customer info card above button
+
+**Agency Contact Button:**
+- Background: `#25D366` (WhatsApp Green)
+- Icon: 📱 (Phone icon)
+- Text: "WhatsApp"
+- Standard agency info display
+
+### Error Handling
+
+```javascript
+// Default fallback if phone missing
+const phoneNumber = studioBooking.customer_phone || '+201000000000';
+
+// Console logging for debugging
+console.log('📱 Opening WhatsApp:', {
+  originalPhone: phoneNumber,
+  cleanedPhone: cleanedPhone,
+  contactType: contactType,
+  message: message
+});
+```
+
+### Testing
+
+**Test Case 1: Admin viewing rented studio**
+- Expected: Blue button saying "Contact Customer"
+- Phone: Customer's number from booking
+- Message: Personalized to customer name
+
+**Test Case 2: Customer viewing available studio**
+- Expected: Green WhatsApp button
+- Phone: Agency contact number
+- Message: Inquiry about property
+
+**Test Case 3: Admin viewing available studio**
+- Expected: Green WhatsApp button (no booking)
+- Phone: Agency contact number
+- Message: Inquiry about property
 4. **Role Verification**: Check admin role and permissions before making requests
 
 ---
