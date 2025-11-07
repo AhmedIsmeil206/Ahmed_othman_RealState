@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faStar, faEye, faChartBar, faDollarSign } from '@fortawesome/free-solid-svg-icons';
 import { useMasterAuth, useProperty, useAdminAuth } from '../../../hooks/useRedux';
 import BackButton from '../../../components/common/BackButton';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './ReportsPage.css';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const ReportsPage = () => {
   const navigate = useNavigate();
@@ -177,7 +180,7 @@ const ReportsPage = () => {
             text="← Back" 
             variant="transparent"
           />
-          <div className="brand">Ahmed Othman Group</div>
+          <div className="brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></div>
           <div className="nav-actions">
             <button 
               className="logout-btn"
@@ -383,7 +386,7 @@ const ReportsPage = () => {
                         </div>
                         <div className="performance-badge">
                           {stat.performanceScore >= 80 ? '🏆 Excellent' :
-                           stat.performanceScore >= 60 ? '⭐ Good' :
+                           stat.performanceScore >= 60 ? <><FontAwesomeIcon icon={faStar} /> Good</> :
                            stat.performanceScore >= 40 ? '📈 Average' : '📉 Needs Improvement'}
                         </div>
                       </div>
@@ -397,7 +400,7 @@ const ReportsPage = () => {
                             alert(`Detailed view for ${stat.admin.name || stat.admin.email} coming soon!`);
                           }}
                         >
-                          👁️ View Details
+                          <FontAwesomeIcon icon={faEye} /> View Details
                         </button>
                       </div>
                     </td>
@@ -432,7 +435,7 @@ const ReportsPage = () => {
             </div>
             
             <div className="insight-card">
-              <h3>📊 Occupancy Leader</h3>
+              <h3><FontAwesomeIcon icon={faChartBar} /> Occupancy Leader</h3>
               <div className="insight-content">
                 {(() => {
                   const bestOccupancy = adminStats.reduce((best, current) => 
@@ -456,7 +459,7 @@ const ReportsPage = () => {
             </div>
             
             <div className="insight-card">
-              <h3>💰 Revenue Leader</h3>
+              <h3><FontAwesomeIcon icon={faDollarSign} /> Revenue Leader</h3>
               <div className="insight-content">
                 {(() => {
                   const bestRevenue = adminStats.reduce((best, current) => 

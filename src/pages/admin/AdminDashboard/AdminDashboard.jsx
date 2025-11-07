@@ -11,6 +11,7 @@ import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpi
 import { myContentApi, handleApiError } from '../../../services/api';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './AdminDashboard.css';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -235,7 +236,7 @@ alert('❌ Failed to add studio: ' + result.message);
             {/* Navigation */}
             <nav className="admin-nav">
               <div className="admin-brand">
-                <h1>Ahmed Othman Group</h1>
+                <h1><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></h1>
                 <span className="admin-portal-text">Admin Portal</span>
               </div>
               <div className="admin-nav-actions">

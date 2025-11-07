@@ -260,8 +260,7 @@ export const DATABASE_REQUIREMENTS = {
 
   apiEndpoints: [
     "POST /auth/login - Must accept username/email and password in form data",
-    "GET /admins/me - Must return authenticated user profile",
-    "GET /auth/check-master-admin - Optional: Check if master admin exists"
+    "GET /admins/me - Must return authenticated user profile"
   ]
 };
 

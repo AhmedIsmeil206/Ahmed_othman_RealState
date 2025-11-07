@@ -322,13 +322,6 @@ export const authApi = {
     });
   },
 
-  // Check if master admin exists
-  async checkMasterAdminExists() {
-    return apiClient.get('/auth/check-master-admin', {
-      includeAuth: false
-    });
-  },
-
   // Validate master admin credentials against static database
   async validateMasterCredentials(identifier, password) {
     try {
@@ -430,11 +423,6 @@ export const rentApartmentsApi = {
   // Delete rent apartment
   async delete(apartmentId) {
     return apiClient.delete(`/apartments/rent/${apartmentId}`);
-  },
-
-  // Get WhatsApp contact info for apartment inquiry
-  async getWhatsAppContact(apartmentId) {
-    return apiClient.get(`/apartments/rent/${apartmentId}/whatsapp`);
   }
 };
 
@@ -465,11 +453,6 @@ export const saleApartmentsApi = {
 
 
     return apiClient.delete(`/apartments/sale/${apartmentId}`);
-  },
-
-  // Get WhatsApp contact info for sale apartment inquiry
-  async getWhatsAppContact(apartmentId) {
-    return apiClient.get(`/apartments/sale/${apartmentId}/whatsapp`);
   }
 };
 

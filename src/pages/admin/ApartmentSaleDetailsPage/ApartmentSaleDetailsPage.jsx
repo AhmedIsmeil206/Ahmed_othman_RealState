@@ -7,6 +7,7 @@ import MapViewer from '../../../components/common/MapViewer';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import { saleApartmentsApi } from '../../../services/api';
 import './ApartmentSaleDetailsPage.css';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const ApartmentSaleDetailsPage = () => {
   const { id } = useParams();
@@ -160,7 +161,7 @@ setError('Failed to load apartment details');
           to={navigationSource === 'master-admin-dashboard' ? '/master-admin/dashboard' : '/admin/dashboard'} 
           className="brand"
         >
-          Ahmed Othman Group
+          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
         </Link>
       </nav>
 
@@ -356,7 +357,7 @@ setError('Failed to load apartment details');
             <div className="contact-card">
               <h3>Listed by agency</h3>
               <div className="agency-info">
-                <div className="agency-name">Ahmed Othman Group</div>
+                <div className="agency-name">AYG</div>
                 <div className="agency-rating">⭐ 4 C</div>
                 <div className="agency-member">Member since Sept 2024</div>
               </div>

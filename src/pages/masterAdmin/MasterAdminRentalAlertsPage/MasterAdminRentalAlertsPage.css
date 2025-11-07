@@ -73,7 +73,7 @@
 
 .master-alerts-portal-text {
   font-size: 14px;
-  color: #f59e0b;
+  color: var(--primary-teal);
   font-weight: 600;
 }
 
@@ -90,9 +90,9 @@
 }
 
 .back-to-dashboard-btn {
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #f59e0b;
+  background: rgba(0, 188, 212, 0.2);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  color: var(--primary-teal);
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -105,8 +105,8 @@
 }
 
 .back-to-dashboard-btn:hover {
-  background: rgba(245, 158, 11, 0.3);
-  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(0, 188, 212, 0.3);
+  border-color: rgba(0, 188, 212, 0.6);
   transform: translateY(-1px);
 }
 
@@ -130,7 +130,7 @@
 }
 
 .master-alerts-title .accent {
-  color: #f59e0b;
+  color: var(--primary-teal);
 }
 
 .master-alerts-subtitle {
@@ -170,8 +170,8 @@
 }
 
 .stat-card.warning {
-  border-color: rgba(245, 158, 11, 0.4);
-  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(0, 188, 212, 0.4);
+  background: rgba(0, 188, 212, 0.1);
 }
 
 .stat-card.info {
@@ -190,7 +190,7 @@
 }
 
 .stat-card.warning .stat-number {
-  color: #f59e0b;
+  color: var(--primary-teal);
 }
 
 .stat-card.info .stat-number {
@@ -214,6 +214,24 @@
 .master-alerts-container {
   max-width: 1400px;
   margin: 0 auto;
+}
+
+/* Section Header */
+.master-alerts-section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.master-alerts-section-header h3 {
+  font-size: 2rem;
+  color: #1f2937;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.master-alerts-section-header p {
+  color: #6b7280;
+  font-size: 1.1rem;
 }
 
 /* Controls */
@@ -314,7 +332,7 @@
 }
 
 .master-alert-card.expiring-soon {
-  border-left-color: #f59e0b;
+  border-left-color: var(--primary-teal);
 }
 
 .master-alert-card.renewal-reminder {
@@ -414,7 +432,7 @@
 }
 
 .detail-item .urgent {
-  color: #f59e0b;
+  color: var(--primary-teal);
   font-weight: 600;
 }
 

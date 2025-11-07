@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import StudioCard from '../../../components/customer/StudioCard/StudioCard';
+import Footer from '../../../components/common/Footer';
 import { apartmentPartsApi, rentApartmentsApi, handleApiError } from '../../../services/api';
 import { convertFromApiEnum, getValidOptions } from '../../../utils/apiEnums';
 import './StudiosListPage.css';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const StudiosListPage = () => {
   // State management
@@ -124,22 +126,25 @@ const StudiosListPage = () => {
           availableStudios.map(async (part) => {
             const transformedStudio = transformApartmentPartToStudio(part);
             
-            // If we have apartment_id, fetch the admin's WhatsApp contact info
+            // If we have apartment_id, fetch the apartment data to get admin's contact number
             if (part.apartment_id) {
               try {
-                const whatsappInfo = await rentApartmentsApi.getWhatsAppContact(part.apartment_id);
-                transformedStudio.adminPhone = whatsappInfo.admin_phone;
-                transformedStudio.contact_number = whatsappInfo.admin_phone; // Use admin's actual phone
-
+                const apartmentData = await rentApartmentsApi.getById(part.apartment_id);
+                // The contact_number in apartment data is the admin's phone
+                // Check if created by master admin (typically ID 1) and use special number
+                const isMasterAdmin = apartmentData.listed_by_admin_id === 1;
+                const masterAdminPhone = '+201029936060';
+                transformedStudio.adminPhone = isMasterAdmin ? masterAdminPhone : (apartmentData.contact_number || '+201000000000');
+                transformedStudio.contact_number = isMasterAdmin ? masterAdminPhone : (apartmentData.contact_number || '+201000000000');
               } catch (error) {
-// Use fallback - try to get from original part data or use default
-                transformedStudio.contact_number = part.contact_number || '+201000000000';
-                transformedStudio.adminPhone = part.contact_number || '+201000000000';
+                // Use fallback if apartment fetch fails
+                transformedStudio.contact_number = '+201000000000';
+                transformedStudio.adminPhone = '+201000000000';
               }
             } else {
               // No apartment_id, use fallback
-              transformedStudio.contact_number = part.contact_number || '+201000000000';
-              transformedStudio.adminPhone = part.contact_number || '+201000000000';
+              transformedStudio.contact_number = '+201000000000';
+              transformedStudio.adminPhone = '+201000000000';
             }
             
             return transformedStudio;
@@ -182,9 +187,8 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
       // Price filter
       if (priceRange !== 'all') {
         const price = studio.pricePerMonth;
-        if (priceRange === 'low' && price > 15000) return false;
-        if (priceRange === 'medium' && (price <= 15000 || price > 20000)) return false;
-        if (priceRange === 'high' && price <= 20000) return false;
+        if (priceRange === 'low' && price >= 3000) return false;
+        if (priceRange === 'high' && price < 3000) return false;
       }
       
       // Location filter - use enum values for comparison
@@ -276,7 +280,7 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
     <div className="studios-list-page">
       <nav className="studios-nav">
         <BackButton text="← Back" />
-        <Link to="/admin" className="brand">Ahmed Othman Group</Link>
+        <div className="brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></div>
       </nav>
 
       <div className="studios-container">
@@ -350,9 +354,8 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
                 className="filter-select"
               >
                 <option value="all">All Prices</option>
-                <option value="low">Under 15,000 EGP</option>
-                <option value="medium">15,000 - 20,000 EGP</option>
-                <option value="high">Above 20,000 EGP</option>
+                <option value="low">Under 3,000 EGP</option>
+                <option value="high">Above 3,000 EGP</option>
               </select>
             </div>
           </div>
@@ -409,6 +412,8 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
           </div>
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 };

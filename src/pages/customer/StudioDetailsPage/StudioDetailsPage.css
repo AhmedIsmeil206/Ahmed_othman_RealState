@@ -13,14 +13,14 @@
 }
 
 .back-link {
-  color: #007bff;
+  color: var(--primary-teal);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease;
 }
 
 .back-link:hover {
-  color: #0056b3;
+  color: var(--primary-dark-teal);
 }
 
 .brand {
@@ -33,7 +33,7 @@
 }
 
 .brand:hover {
-  color: #007bff;
+  color: var(--primary-teal);
   transform: scale(1.05);
 }
 
@@ -94,11 +94,11 @@
 }
 
 .studio-location:hover {
-  color: #007bff;
+  color: var(--primary-teal);
 }
 
 .location-link {
-  color: #007bff;
+  color: var(--primary-teal);
   font-size: 14px;
 }
 
@@ -208,7 +208,7 @@
 }
 
 .location-button {
-  background: #007bff;
+  background: var(--primary-teal);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -218,7 +218,7 @@
 }
 
 .location-button:hover {
-  background: #0056b3;
+  background: var(--primary-dark-teal);
 }
 
 .studio-sidebar {
@@ -376,12 +376,12 @@
 }
 
 .edit-studio-btn {
-  background: #f59e0b;
+  background: var(--primary-teal);
   color: white;
 }
 
 .edit-studio-btn:hover {
-  background: #d97706;
+  background: var(--primary-dark-teal);
   transform: translateY(-1px);
 }
 
@@ -402,8 +402,8 @@
 .creator-info-section {
   margin: 16px 0;
   padding: 16px;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
+  background: var(--teal-transparent);
+  border: 1px solid var(--primary-teal);
   border-radius: 12px;
 }
 
@@ -421,7 +421,7 @@
 
 .creator-label {
   font-weight: 500;
-  color: #92400e;
+  color: var(--primary-black);
   font-size: 14px;
 }
 
@@ -586,8 +586,8 @@
 }
 
 .contract-info {
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
+  background: var(--teal-transparent);
+  border: 1px solid var(--primary-teal);
   border-radius: 12px;
   padding: 20px;
   margin-top: 20px;
@@ -595,7 +595,7 @@
 
 .contract-info h4 {
   margin: 0 0 12px 0;
-  color: #92400e;
+  color: var(--primary-black);
   font-size: 1.1rem;
   display: flex;
   align-items: center;
@@ -606,8 +606,8 @@
   background: white;
   padding: 12px 16px;
   border-radius: 8px;
-  border: 1px solid #fbbf24;
-  color: #92400e;
+  border: 1px solid var(--primary-teal);
+  color: var(--primary-black);
   font-weight: 500;
 }
 

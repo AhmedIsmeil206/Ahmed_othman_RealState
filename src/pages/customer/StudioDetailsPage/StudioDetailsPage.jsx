@@ -6,8 +6,10 @@ import WhatsAppButton from '../../../components/customer/WhatsAppButton/WhatsApp
 import BookingModal from '../../../components/admin/BookingModal';
 import EditStudioModal from '../../../components/admin/EditStudioModal';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
+import Footer from '../../../components/common/Footer';
 import { apartmentPartsApi, rentApartmentsApi, rentalContractsApi } from '../../../services/api';
 import './StudioDetailsPage.css';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const StudioDetailsPage = () => {
   const { id } = useParams();
@@ -37,7 +39,6 @@ const StudioDetailsPage = () => {
         
         if (studioResponse) {
           const studioData = studioResponse;
-          setStudio(studioData);
           
           // Also try to get parent apartment info if apartmentId exists
           if (studioData.apartment_id) {
@@ -45,11 +46,25 @@ const StudioDetailsPage = () => {
               const apartmentResponse = await rentApartmentsApi.getById(studioData.apartment_id);
               if (apartmentResponse) {
                 setParentApartment(apartmentResponse);
+                // Set admin phone from parent apartment's contact_number
+                // Check if created by master admin (typically ID 1) and use special number
+                const isMasterAdmin = apartmentResponse.listed_by_admin_id === 1;
+                const masterAdminPhone = '+201029936060';
+                studioData.adminPhone = isMasterAdmin ? masterAdminPhone : (apartmentResponse.contact_number || '+201000000000');
+                studioData.contact_number = isMasterAdmin ? masterAdminPhone : (apartmentResponse.contact_number || '+201000000000');
               }
             } catch (apartmentError) {
-              // Parent apartment fetch failed - not critical
-}
+              // Parent apartment fetch failed - use fallback
+              studioData.adminPhone = '+201000000000';
+              studioData.contact_number = '+201000000000';
+            }
+          } else {
+            // No apartment_id, use fallback
+            studioData.adminPhone = '+201000000000';
+            studioData.contact_number = '+201000000000';
           }
+          
+          setStudio(studioData);
         } else {
           setError('Studio not found');
         }
@@ -77,7 +92,20 @@ setError('Failed to load studio details');
     }
 
     // Check for existing booking for this studio using rental contracts API
+    // ONLY fetch if user is admin or master admin (not customer)
     const fetchExistingBooking = async () => {
+      // Only fetch rental contracts for admin/master admin views
+      const isAdminView = source === 'admin-dashboard' || 
+                          source === 'master-admin-dashboard' || 
+                          source === 'admin-tracking' || 
+                          source === 'admin-rental-alerts' || 
+                          source === 'master-admin-rental-alerts';
+      
+      if (!isAdminView) {
+        // Customer view - don't fetch rental contracts (requires auth)
+        return;
+      }
+      
       try {
         if (id) {
 
@@ -309,9 +337,9 @@ alert('❌ Failed to delete booking. Please try again.');
     } else if (navigationSource === 'master-admin-rental-alerts') {
       return '/master-admin/rental-alerts';
     } else if (navigationSource === 'customer-studios') {
-      return '/studios';
+      return '/'; // Changed to landing page
     }
-    return '/studios'; // Default fallback
+    return '/'; // Changed default to landing page
   };
 
   const getBackText = () => {
@@ -400,7 +428,7 @@ alert('❌ Failed to delete booking. Please try again.');
           to={navigationSource === 'master-admin' ? '/master-admin/dashboard' : '/'} 
           className="brand"
         >
-          Ahmed Othman Group
+          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
         </Link>
       </nav>
 
@@ -679,7 +707,7 @@ alert('❌ Failed to delete booking. Please try again.');
             <div className="contact-card">
               <h3>Listed by agency</h3>
               <div className="agency-info">
-                <div className="agency-name">Ahmed Othman Group</div>
+                <div className="agency-name">AYG</div>
                 <div className="agency-rating">⭐ 4 C</div>
                 <div className="agency-member">Member since Sept 2024</div>
               </div>
@@ -743,6 +771,9 @@ alert('❌ Failed to delete booking. Please try again.');
           isLoading={isEditLoading}
         />
       )}
+      
+      {/* Footer - Only show for customer views */}
+      {navigationSource === 'customer-studios' && <Footer />}
     </div>
   );
 };

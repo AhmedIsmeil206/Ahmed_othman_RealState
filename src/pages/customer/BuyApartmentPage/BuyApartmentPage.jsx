@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import ApartmentSaleCard from '../../../components/customer/ApartmentSaleCard/ApartmentSaleCard';
+import Footer from '../../../components/common/Footer';
 import { saleApartmentsApi, handleApiError } from '../../../services/api';
 import './BuyApartmentPage.css';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const BuyApartmentPage = () => {
   const [allSaleApartments, setAllSaleApartments] = useState([]);
@@ -74,11 +76,9 @@ const errorMessage = handleApiError(error, 'Failed to load apartments for sale')
     // Price range filter
     if (priceRange === 'all') {
       // Continue to next filter
-    } else if (priceRange === 'low' && apartment.price > 5000000) {
+    } else if (priceRange === 'low' && apartment.price >= 4000000) {
       return false;
-    } else if (priceRange === 'medium' && (apartment.price <= 5000000 || apartment.price > 10000000)) {
-      return false;
-    } else if (priceRange === 'high' && apartment.price <= 10000000) {
+    } else if (priceRange === 'high' && apartment.price < 4000000) {
       return false;
     }
 
@@ -120,7 +120,7 @@ const errorMessage = handleApiError(error, 'Failed to load apartments for sale')
     <div className="buy-apartment-page">
       <nav className="apartments-nav">
         <BackButton text="← Back" />
-        <Link to="/admin" className="brand">Ahmed Othman Group</Link>
+        <div className="brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></div>
       </nav>
 
       <div className="apartments-container">
@@ -193,9 +193,8 @@ const errorMessage = handleApiError(error, 'Failed to load apartments for sale')
                 className="filter-select"
               >
                 <option value="all">All Prices</option>
-                <option value="low">Under 5M EGP</option>
-                <option value="medium">5M - 10M EGP</option>
-                <option value="high">Above 10M EGP</option>
+                <option value="low">Under 4M EGP</option>
+                <option value="high">Above 4M EGP</option>
               </select>
             </div>
 
@@ -240,6 +239,8 @@ const errorMessage = handleApiError(error, 'Failed to load apartments for sale')
           </div>
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 };

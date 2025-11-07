@@ -2,9 +2,9 @@
 
 .back-button {
   /* Base styles */
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #f59e0b;
+  background: rgba(0, 188, 212, 0.2);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  color: var(--primary-teal);
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -24,19 +24,19 @@
 }
 
 .back-button:hover {
-  background: rgba(245, 158, 11, 0.3);
-  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(0, 188, 212, 0.3);
+  border-color: rgba(0, 188, 212, 0.6);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 188, 212, 0.2);
 }
 
 .back-button:active {
   transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 1px 4px rgba(0, 188, 212, 0.3);
 }
 
 .back-button:focus {
-  outline: 2px solid rgba(245, 158, 11, 0.5);
+  outline: 2px solid rgba(0, 188, 212, 0.5);
   outline-offset: 2px;
 }
 
@@ -57,27 +57,27 @@
 .back-button--link {
   background: transparent;
   border: none;
-  color: #007bff;
+  color: var(--primary-teal);
   padding: 4px 8px;
   text-decoration: none;
 }
 
 .back-button--link:hover {
   background: rgba(0, 123, 255, 0.1);
-  color: #0056b3;
+  color: var(--primary-dark-teal);
   transform: none;
   box-shadow: none;
 }
 
 .back-button--primary {
-  background: #007bff;
-  border: 1px solid #007bff;
+  background: var(--primary-teal);
+  border: 1px solid var(--primary-teal);
   color: white;
 }
 
 .back-button--primary:hover {
-  background: #0056b3;
-  border-color: #0056b3;
+  background: var(--primary-dark-teal);
+  border-color: var(--primary-dark-teal);
   color: white;
   box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }

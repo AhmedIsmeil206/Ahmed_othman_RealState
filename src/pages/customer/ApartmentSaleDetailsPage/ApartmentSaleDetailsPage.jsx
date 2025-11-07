@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import ImageGallery from '../../../components/customer/ImageGallery/ImageGallery';
 import WhatsAppButton from '../../../components/customer/WhatsAppButton/WhatsAppButton';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
+import Footer from '../../../components/common/Footer';
 import { saleApartmentsApi } from '../../../services/api';
 import './ApartmentSaleDetailsPage.css';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const ApartmentSaleDetailsPage = () => {
   const { id } = useParams();
@@ -27,15 +29,12 @@ const ApartmentSaleDetailsPage = () => {
         if (response) {
           setApartment(response);
           
-          // Also fetch the admin's WhatsApp contact info
-          try {
-            const whatsappInfo = await saleApartmentsApi.getWhatsAppContact(id);
-            setAdminPhone(whatsappInfo.admin_phone);
-
-          } catch (contactError) {
-// Use fallback from apartment data
-            setAdminPhone(response.contact_number || '+201000000000');
-          }
+          // Get admin's contact number from apartment data
+          // The contact_number field contains the admin's phone number
+          // Check if created by master admin (typically ID 1) and use special number
+          const isMasterAdmin = response.listed_by_admin_id === 1;
+          const masterAdminPhone = '+201029936060';
+          setAdminPhone(isMasterAdmin ? masterAdminPhone : (response.contact_number || '+201000000000'));
         } else {
           setError('Apartment not found');
         }
@@ -84,7 +83,7 @@ setError('Failed to load apartment details');
       <div className="apartment-details-page">
         <div className="container">
           <h1>Apartment not found</h1>
-          <BackButton onClick={() => navigate(-1)} />
+          <BackButton onClick={() => navigate('/')} />
         </div>
       </div>
     );
@@ -109,8 +108,8 @@ setError('Failed to load apartment details');
   return (
     <div className="apartment-details-page">
       <nav className="apartment-nav">
-        <BackButton onClick={() => navigate(-1)} />
-        <Link to="/" className="brand">Ahmed Othman Group</Link>
+        <BackButton onClick={() => navigate('/')} />
+        <div className="brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></div>
       </nav>
 
       <div className="apartment-container">
@@ -234,7 +233,7 @@ setError('Failed to load apartment details');
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Listed By</span>
-                  <span className="detail-value">{apartment.created_by || 'Ahmed Othman Group'}</span>
+                  <span className="detail-value">{apartment.created_by || 'AYG'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Property Type</span>
@@ -276,6 +275,8 @@ setError('Failed to load apartment details');
 
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };

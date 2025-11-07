@@ -1,5 +1,22 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faEdit, 
+  faUsers, 
+  faBell, 
+  faSignOutAlt,
+  faEye,
+  faEyeSlash,
+  faEnvelope,
+  faPhone,
+  faInfoCircle,
+  faExclamationTriangle,
+  faCheckCircle,
+  faTimesCircle,
+  faBuilding,
+  faHome
+} from '@fortawesome/free-solid-svg-icons';
 import { useMasterAuth, useAdminAuth } from '../../../hooks/useRedux';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import { apartmentPartsApi } from '../../../services/api';
@@ -11,6 +28,7 @@ import AddSaleApartmentModal from '../../../components/admin/AddSaleApartmentMod
 import { formatPhoneForAPI, validateEgyptianPhone, normalizePhoneInput } from '../../../utils/phoneUtils';
 import './MasterAdminDashboard.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const MasterAdminDashboard = () => {
   const navigate = useNavigate();
@@ -865,39 +883,33 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
         
         <nav className="dashboard-nav">
           <div className="nav-left">
-            <h1 className="dashboard-brand">Ahmed Othman Group</h1>
+            <h1 className="dashboard-brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></h1>
           </div>
           
           <div className="nav-right">
             <button 
-              className="nav-btn tracking-reports-btn"
-              onClick={() => navigate('/master-admin/reports')}
-            >
-              📊 Admin Tracking & Reports
-            </button>
-            <button 
               className="nav-btn edit-profile-btn"
               onClick={openEditProfileModal}
             >
-              📝 Edit Profile
+              <FontAwesomeIcon icon={faEdit} /> Edit Profile
             </button>
             <button 
               className="nav-btn manage-admins-btn"
               onClick={openManageAdminsModal}
             >
-              👥 Manage Admins
+              <FontAwesomeIcon icon={faUsers} /> Manage Admins
             </button>
             <button 
               className="nav-btn rental-alerts-btn"
               onClick={() => navigate('/master-admin/rental-alerts')}
             >
-              🔔 Rental Alerts
+              <FontAwesomeIcon icon={faBell} /> Rental Alerts
             </button>
             <button 
               className="nav-btn logout-btn"
               onClick={handleLogout}
             >
-              🚪 Logout
+              <FontAwesomeIcon icon={faSignOutAlt} /> Logout
             </button>
           </div>
         </nav>
@@ -1078,14 +1090,14 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
                       className={`choice-btn ${editType === 'email' ? 'active' : ''}`}
                       onClick={() => setEditType('email')}
                     >
-                      📧 Update Email
+                      <FontAwesomeIcon icon={faEnvelope} /> Update Email
                     </button>
                     <button
                       type="button"
                       className={`choice-btn ${editType === 'password' ? 'active' : ''}`}
                       onClick={() => setEditType('password')}
                     >
-                      🔒 Update Password
+                      <FontAwesomeIcon icon={faEdit} /> Update Password
                     </button>
                   </div>
                 </div>
@@ -1128,7 +1140,7 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
                           onClick={() => setShowNewPassword(!showNewPassword)}
                           aria-label="Toggle password visibility"
                         >
-                          👁️
+                          <FontAwesomeIcon icon={showNewPassword ? faEye : faEyeSlash} />
                         </button>
                       </div>
                       {profileErrors.newPassword && <span className="error-text">{profileErrors.newPassword}</span>}
@@ -1152,7 +1164,7 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           aria-label="Toggle password visibility"
                         >
-                          👁️
+                          <FontAwesomeIcon icon={showConfirmPassword ? faEye : faEyeSlash} />
                         </button>
                       </div>
                       {profileErrors.confirmPassword && <span className="error-text">{profileErrors.confirmPassword}</span>}
@@ -1182,7 +1194,7 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                       aria-label="Toggle password visibility"
                     >
-                      👁️
+                      <FontAwesomeIcon icon={showCurrentPassword ? faEye : faEyeSlash} />
                     </button>
                   </div>
                   {profileErrors.currentPassword && <span className="error-text">{profileErrors.currentPassword}</span>}
@@ -1275,8 +1287,8 @@ showToast('Failed to refresh admin list', 'error');
                                 backgroundColor: admin.role === 'super_admin' ? '#fef3c7' : '#dbeafe',
                                 color: admin.role === 'super_admin' ? '#92400e' : '#1e40af'
                               }}>
-                                {admin.role === 'super_admin' ? '👑 Super Admin' : 
-                                 admin.role === 'studio_rental' ? '🏢 Studio Rental' : '🏠 Apt Sales'}
+                                {admin.role === 'super_admin' ? '★ Super Admin' : 
+                                 admin.role === 'studio_rental' ? <><FontAwesomeIcon icon={faBuilding} /> Studio Rental</> : <><FontAwesomeIcon icon={faHome} /> Apt Sales</>}
                               </span>
                             </td>
                           </tr>
@@ -1286,7 +1298,7 @@ showToast('Failed to refresh admin list', 'error');
                   </div>
                 )}
                 <p style={{color: '#6b7280', fontSize: '0.8rem', marginTop: '8px', fontStyle: 'italic'}}>
-                  ℹ️ Make sure to use unique email and phone number when creating new admin
+                  <FontAwesomeIcon icon={faInfoCircle} /> Make sure to use unique email and phone number when creating new admin
                 </p>
               </div>
 
@@ -1359,12 +1371,12 @@ showToast('Failed to refresh admin list', 'error');
                     {adminErrors.email && <span className="error-text">{adminErrors.email}</span>}
                     {adminForm.email && !adminErrors.email && existingAdmins.length > 0 && (
                       <small style={{color: '#10b981', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
-                        ✓ Email is available
+                        <FontAwesomeIcon icon={faCheckCircle} /> Email is available
                       </small>
                     )}
                     {adminForm.email && !adminErrors.email && existingAdmins.length === 0 && (
                       <small style={{color: '#f59e0b', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
-                        ⚠️ Unable to verify - admin list not loaded
+                        <FontAwesomeIcon icon={faExclamationTriangle} /> Unable to verify - admin list not loaded
                       </small>
                     )}
                   </div>
@@ -1387,7 +1399,7 @@ showToast('Failed to refresh admin list', 'error');
                         onClick={() => setShowAdminPassword(!showAdminPassword)}
                         aria-label="Toggle password visibility"
                       >
-                        👁️
+                        <FontAwesomeIcon icon={showAdminPassword ? faEye : faEyeSlash} />
                       </button>
                     </div>
                     {adminErrors.password && <span className="error-text">{adminErrors.password}</span>}
@@ -1441,12 +1453,12 @@ showToast('Failed to refresh admin list', 'error');
                     {adminErrors.mobile && <span className="error-text">{adminErrors.mobile}</span>}
                     {!adminErrors.mobile && adminForm.mobile && /^(010|011|012|015)\d{8}$/.test(adminForm.mobile) && existingAdmins.length > 0 && (
                       <small style={{color: '#10b981', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
-                        ✓ Phone number is valid and available
+                        <FontAwesomeIcon icon={faCheckCircle} /> Phone number is valid and available
                       </small>
                     )}
                     {!adminErrors.mobile && adminForm.mobile && /^(010|011|012|015)\d{8}$/.test(adminForm.mobile) && existingAdmins.length === 0 && (
                       <small style={{color: '#f59e0b', fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
-                        ⚠️ Unable to verify - admin list not loaded
+                        <FontAwesomeIcon icon={faExclamationTriangle} /> Unable to verify - admin list not loaded
                       </small>
                     )}
                     {!adminErrors.mobile && (!adminForm.mobile || !/^(010|011|012|015)\d{8}$/.test(adminForm.mobile)) && (
@@ -1582,7 +1594,7 @@ showToast('Failed to refresh admin list', 'error');
         <div className={`toast toast-${toast.type}`}>
           <div className="toast-content">
             <span className="toast-icon">
-              {toast.type === 'success' ? '✅' : '❌'}
+              <FontAwesomeIcon icon={toast.type === 'success' ? faCheckCircle : faTimesCircle} />
             </span>
             <span className="toast-message">{toast.message}</span>
           </div>

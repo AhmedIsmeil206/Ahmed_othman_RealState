@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../hooks/useAdminAuth';
 import { apartmentPartsApi, rentalContractsApi, rentApartmentsApi } from '../../../services/api';
@@ -7,6 +7,7 @@ import RentalAlerts from '../../../components/admin/RentalAlerts/RentalAlerts';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './RentalAlertsPage.css';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const RentalAlertsPage = () => {
   const navigate = useNavigate();
@@ -19,55 +20,62 @@ const RentalAlertsPage = () => {
     availableStudios: 0
   });
 
-  useEffect(() => {
-    const fetchAdminStats = async () => {
-      if (currentAdmin?.id || currentAdmin?.email) {
-        setIsLoading(true);
-        try {
-          // Fetch apartments created by this admin
-          const apartmentsResponse = await rentApartmentsApi.getAll();
-          const adminApartments = Array.isArray(apartmentsResponse) ? 
-            apartmentsResponse.filter(apt => apt.created_by === currentAdmin.email) : [];
+  const fetchAdminStats = useCallback(async () => {
+    if (currentAdmin?.id || currentAdmin?.email) {
+      setIsLoading(true);
+      try {
+        // Fetch apartments created by this admin
+        const apartmentsResponse = await rentApartmentsApi.getAll();
+        const adminApartments = Array.isArray(apartmentsResponse) ? 
+          apartmentsResponse.filter(apt => apt.listed_by_admin_id === currentAdmin.id) : [];
 
-          // Fetch studios created by this admin
-          const studiosResponse = await apartmentPartsApi.getAll();
-          const adminStudios = Array.isArray(studiosResponse) ? 
-            studiosResponse.filter(studio => studio.created_by === currentAdmin.email) : [];
+        // Fetch all studios
+        const studiosResponse = await apartmentPartsApi.getAll();
+        const allStudios = Array.isArray(studiosResponse) ? studiosResponse : [];
+        
+        // Filter studios that belong to admin's apartments
+        const adminApartmentIds = adminApartments.map(apt => apt.id);
+        const adminStudios = allStudios.filter(studio => 
+          adminApartmentIds.includes(studio.apartment_id)
+        );
 
-          // Get rental contracts to determine rented/available status
-          const contractsResponse = await rentalContractsApi.getAll();
-          const activeContracts = Array.isArray(contractsResponse) ? 
-            contractsResponse.filter(contract => contract.status === 'active') : [];
+        // Get active rental contracts
+        const contractsResponse = await rentalContractsApi.getAll({ is_active: true });
+        const activeContracts = Array.isArray(contractsResponse) ? contractsResponse : [];
 
-          // Calculate statistics
-          const rentedStudios = adminStudios.filter(studio => 
-            activeContracts.some(contract => contract.apartment_part_id === studio.id)
-          ).length;
-          
-          const availableStudios = adminStudios.length - rentedStudios;
+        // Calculate rented studios
+        const rentedStudioIds = new Set(activeContracts.map(contract => contract.apartment_part_id));
+        const rentedStudios = adminStudios.filter(studio => rentedStudioIds.has(studio.id)).length;
+        const availableStudios = adminStudios.length - rentedStudios;
 
-          setAdminStats({
-            totalApartments: adminApartments.length,
-            totalStudios: adminStudios.length,
-            rentedStudios,
-            availableStudios
-          });
-        } catch (error) {
-// Set default stats on error
-          setAdminStats({
-            totalApartments: 0,
-            totalStudios: 0,
-            rentedStudios: 0,
-            availableStudios: 0
-          });
-        } finally {
-          setIsLoading(false);
-        }
+        setAdminStats({
+          totalApartments: adminApartments.length,
+          totalStudios: adminStudios.length,
+          rentedStudios,
+          availableStudios
+        });
+      } catch (error) {
+        console.error('Failed to fetch admin stats:', error);
+        setAdminStats({
+          totalApartments: 0,
+          totalStudios: 0,
+          rentedStudios: 0,
+          availableStudios: 0
+        });
+      } finally {
+        setIsLoading(false);
       }
-    };
-
-    fetchAdminStats();
+    }
   }, [currentAdmin]);
+
+  useEffect(() => {
+    fetchAdminStats();
+  }, [fetchAdminStats]);
+
+  const handleContractDeleted = () => {
+    // Refresh stats after contract deletion
+    fetchAdminStats();
+  };
 
   if (!currentAdmin) {
     return (
@@ -101,7 +109,7 @@ const RentalAlertsPage = () => {
                 />
               </div>
               <div className="alerts-brand">
-                <h1>Ahmed Othman Group</h1>
+                <h1><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></h1>
                 <span className="alerts-portal-text">Rental Alerts Portal</span>
               </div>
             </nav>
@@ -149,7 +157,10 @@ const RentalAlertsPage = () => {
           
           {/* Rental Alerts Component */}
           <div className="alerts-content">
-            <RentalAlerts adminEmail={currentAdmin?.email || currentAdmin?.accountOrMobile} />
+            <RentalAlerts 
+              adminId={currentAdmin?.id}
+              onContractDeleted={handleContractDeleted}
+            />
           </div>
         </div>
       </div>

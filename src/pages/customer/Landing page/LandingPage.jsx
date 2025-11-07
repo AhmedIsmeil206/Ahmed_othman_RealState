@@ -1,26 +1,57 @@
 import './Landingpage.css';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFacebook, faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 function LandingPage() {
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY < 50) {
+        setIsNavVisible(true);
+      } else if (currentScrollY > lastScrollY) {
+        // Scrolling down
+        setIsNavVisible(false);
+      } else {
+        // Scrolling up
+        setIsNavVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   return (
     <main className="landing">
+      {/* Sticky Navbar */}
+      <nav className={`landing__nav ${isNavVisible ? 'nav-visible' : 'nav-hidden'}`}>
+        <div className="brand">
+          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
+        </div>
+        <div className="nav-actions">
+          <a className="nav-link" href="#options">Services</a>
+          <a className="nav-link" href="#contact">Contact</a>
+        </div>
+      </nav>
+
       {/* Hero with background image and dark overlay */}
       <section
         className="hero"
         style={{ backgroundImage: `url(${heroImg})` }}
-        aria-label="Ahmed Othman Group — Real Estate"
+        aria-label="AYG — Real Estate"
       >
         <div className="hero__overlay" />
-
-        <nav className="landing__nav">
-          <Link to="/admin" className="brand">Ahmed Othman Group</Link>
-          <div className="nav-actions">
-            <a className="nav-link" href="#options">Services</a>
-            <a className="nav-link" href="#contact">Contact</a>
-          </div>
-        </nav>
 
         <div className="hero__inner">
           <p className="subtitle" style={{display:"flex" ,flexDirection:"column", justifyContent:"center", alignItems:"center", fontSize:"18px", fontWeight:"700"}}>
@@ -65,11 +96,49 @@ function LandingPage() {
       </section>
 
       <footer className="landing__footer" id="contact">
-        <span>© {new Date().getFullYear()} Ahmed Othman Group</span>
-        <span className="sep">•</span>
-        <a className="footer-link" href="mailto:info@example.com">info@example.com</a>
-        <span className="sep">•</span>
-        <a className="footer-link" href="https://wa.me/201029336060" target="_blank" rel="noopener noreferrer">+20 102 933 6060</a>
+        <div className="footer-content">
+          <div className="footer-owner">
+            <h3 className="footer-heading">Owner and founder of AYG</h3>
+            <div className="owner-photo">
+              <img src="/founder.png" alt="Owner and Founder" className="founder-img" />
+            </div>
+              <h3>Dr. Ahmed Yasser</h3>
+          </div>
+          
+          <div className="footer-contact">
+            <h3 className="footer-heading">Contact Us</h3>
+            <div className="contact-links">
+              <a href="https://www.facebook.com/share/17UqaGsPuW/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="contact-item">
+                <FontAwesomeIcon icon={faFacebook} className="contact-icon" />
+                <span className="contact-text">Facebook</span>
+              </a>
+              <a href="https://wa.me/201044465888" target="_blank" rel="noopener noreferrer" className="contact-item">
+                <FontAwesomeIcon icon={faWhatsapp} className="contact-icon" />
+                <span className="contact-text">01044465888</span>
+              </a>
+              <a href="https://maps.app.goo.gl/9LYfAyt5MxHnmEyv5?g_st=ipc" target="_blank" rel="noopener noreferrer" className="contact-item">
+                <FontAwesomeIcon icon={faMapMarkerAlt} className="contact-icon" />
+                <span className="contact-text">Location on Google Maps</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="footer-info">
+            <h3 className="footer-heading">How to find us</h3>
+            <div className="info-item">
+              <p className="info-text">مواعيد العمل من ١١ صباح ل ٩ مساءا</p>
+            </div>
+            <div className="info-item">
+              <p className="info-text">العنوان : الهضبة الوسطي - المقطم - شارع الجامعة الحديثة</p>
+              <p className="info-text">مبني رقم 6458 امام شركة الحمد</p>
+              <p className="info-text">الدور الاول</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="footer-bottom">
+          <p>© {new Date().getFullYear()} <img src={aygLogo} alt="AYG" className="footer-logo-inline" /> All rights reserved.</p>
+        </div>
       </footer>
     </main>
   );

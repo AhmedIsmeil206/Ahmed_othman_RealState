@@ -188,7 +188,7 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
     <div className="studios-list-page">
       <nav className="studios-nav">
         <BackButton text="? Back" />
-        <Link to="/admin" className="brand">Ahmed Othman Group</Link>
+        <div className="brand">AYG</div>
       </nav>
 
       <div className="studios-container">

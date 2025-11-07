@@ -105,7 +105,7 @@ export const getStudiosNeedingRenewal = (apartments) => {
 /**
  * Format alert message with proper styling classes
  * @param {Object} alert - Alert object from checkRenewalAlert
- * @returns {Object} Formatted alert with CSS classes
+ * @returns {Object} Formatted alert with CSS classes and Font Awesome icon names
  */
 export const formatAlertMessage = (alert) => {
   const baseClasses = 'alert-message';
@@ -115,21 +115,24 @@ export const formatAlertMessage = (alert) => {
       return {
         ...alert,
         className: `${baseClasses} alert-overdue`,
-        icon: '🚨',
+        iconName: 'faExclamationTriangle',
+        iconType: 'solid',
         title: 'Overdue Rental'
       };
     case 'expiring-soon':
       return {
         ...alert,
         className: `${baseClasses} alert-expiring`,
-        icon: alert.daysRemaining <= 2 ? '⚠️' : '📅',
+        iconName: alert.daysRemaining <= 2 ? 'faExclamationCircle' : 'faCalendarAlt',
+        iconType: 'solid',
         title: 'Renewal Reminder'
       };
     default:
       return {
         ...alert,
         className: baseClasses,
-        icon: 'ℹ️',
+        iconName: 'faInfoCircle',
+        iconType: 'solid',
         title: 'Rental Info'
       };
   }

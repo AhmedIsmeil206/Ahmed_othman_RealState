@@ -15,7 +15,7 @@
 }
 
 .back-btn {
-  background: #007bff;
+  background: var(--primary-teal);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -26,7 +26,7 @@
 }
 
 .back-btn:hover {
-  background: #0056b3;
+  background: var(--primary-dark-teal);
 }
 
 .studio-details-header h1 {
@@ -122,7 +122,7 @@
 
 .thumbnail.active {
   opacity: 1;
-  border: 2px solid #007bff;
+  border: 2px solid var(--primary-teal);
 }
 
 .studio-info {
@@ -278,7 +278,7 @@
 }
 
 .contact-number {
-  color: #007bff;
+  color: var(--primary-teal);
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 20px;
@@ -307,12 +307,12 @@
 }
 
 .btn-primary {
-  background: #007bff;
+  background: var(--primary-teal);
   color: white;
 }
 
 .btn-primary:hover {
-  background: #0056b3;
+  background: var(--primary-dark-teal);
   transform: translateY(-1px);
 }
 

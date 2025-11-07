@@ -46,7 +46,7 @@
 
 .back-link:hover {
   background: rgba(255,255,255,0.1);
-  color: #f59e0b;
+  color: var(--primary-teal);
   transform: scale(1.05);
 }
 
@@ -54,14 +54,14 @@
   font-weight: 800;
   font-size: 20px;
   letter-spacing: 1px;
-  color: #f59e0b !important;
+  color: var(--primary-teal) !important;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .brand:hover {
-  color: #d97706 !important;
+  color: var(--primary-dark-teal) !important;
   transform: scale(1.05);
 }
 
@@ -90,7 +90,7 @@
 }
 
 .admin-accent {
-  color: #f59e0b;
+  color: var(--primary-teal);
   font-weight: 900;
 }
 
@@ -129,7 +129,7 @@
 .admin-option-card:hover {
   transform: scale(1.05);
   transition: all .7s ease;
-  box-shadow: 0 12px 28px rgba(115, 83, 3, 0.8);
+  box-shadow: 0 12px 28px rgba(0, 188, 212, 0.8);
   text-decoration: none;
   color: inherit;
 }
@@ -171,13 +171,13 @@
 
 .admin-features li:before {
   content: "✓";
-  color: #f59e0b;
+  color: var(--primary-teal);
   font-weight: bold;
   margin-right: 8px;
 }
 
 .admin-option-btn {
-  background: #f59e0b;
+  background: var(--primary-teal);
   color: #111827;
   font-weight: 700;
   border: 0;
@@ -194,21 +194,21 @@
 .admin-btn:hover,
 .master-admin-btn:hover,
 .admin-option-btn:hover {
-  background: #d97706;
+  background: var(--primary-dark-teal);
   transform: scale(0.95);
   transition: all .3s ease;
-  box-shadow: 0 8px 20px rgba(115, 83, 3, 0.6);
+  box-shadow: 0 8px 20px rgba(0, 188, 212, 0.6);
   text-decoration: none;
   color: #111827;
 }
 
 .admin-btn {
-  background: #f59e0b;
+  background: var(--primary-teal);
   color: #111827;
 }
 
 .master-admin-btn {
-  background: #f59e0b;
+  background: var(--primary-teal);
   color: #111827;
 }
 

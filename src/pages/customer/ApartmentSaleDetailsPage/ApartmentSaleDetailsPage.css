@@ -13,14 +13,14 @@
 }
 
 .back-link {
-  color: #007bff;
+  color: var(--primary-teal);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease;
 }
 
 .back-link:hover {
-  color: #0056b3;
+  color: var(--primary-dark-teal);
 }
 
 .brand {
@@ -33,7 +33,7 @@
 }
 
 .brand:hover {
-  color: #007bff;
+  color: var(--primary-teal);
   transform: scale(1.05);
 }
 
@@ -100,11 +100,11 @@
 }
 
 .apartment-location:hover {
-  color: #007bff;
+  color: var(--primary-teal);
 }
 
 .location-link {
-  color: #007bff;
+  color: var(--primary-teal);
   font-size: 14px;
   text-decoration: underline;
 }

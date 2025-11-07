@@ -74,7 +74,7 @@
 
 /* Color variants */
 .spinner-primary .spinner {
-  border-top: 3px solid #f59e0b;
+  border-top: 3px solid var(--primary-teal);
 }
 
 .spinner-white .spinner {

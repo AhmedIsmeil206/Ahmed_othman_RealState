@@ -15,7 +15,7 @@
 .apartment-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-  border-color: #f59e0b;
+  border-color: var(--primary-teal);
 }
 
 .apartment-card.delete-mode {
@@ -310,7 +310,7 @@
 }
 
 .facility-tag.more {
-  background: #f59e0b;
+  background: var(--primary-teal);
   color: white;
 }
 
@@ -373,7 +373,7 @@
 }
 
 .add-studio-btn {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, var(--primary-teal), var(--primary-dark-teal));
   color: white;
   border: none;
   padding: 12px 20px;
@@ -386,9 +386,9 @@
 }
 
 .add-studio-btn:hover {
-  background: linear-gradient(135deg, #d97706, #b45309);
+  background: linear-gradient(135deg, var(--primary-dark-teal), var(--primary-dark-teal));
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
 }
 
 .studios-section {
@@ -426,12 +426,12 @@
 }
 
 .studios-section::-webkit-scrollbar-thumb {
-  background: #f59e0b;
+  background: var(--primary-teal);
   border-radius: 10px;
 }
 
 .studios-section::-webkit-scrollbar-thumb:hover {
-  background: #d97706;
+  background: var(--primary-dark-teal);
 }
 
 .studios-grid {
@@ -452,7 +452,7 @@
 }
 
 .add-first-studio-btn {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, var(--primary-teal), var(--primary-dark-teal));
   color: white;
   border: none;
   padding: 10px 20px;
@@ -464,7 +464,7 @@
 }
 
 .add-first-studio-btn:hover {
-  background: linear-gradient(135deg, #d97706, #b45309);
+  background: linear-gradient(135deg, var(--primary-dark-teal), var(--primary-dark-teal));
   transform: translateY(-1px);
 }
 

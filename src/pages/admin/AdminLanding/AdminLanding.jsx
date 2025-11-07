@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './AdminLanding.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 
 const AdminLanding = () => {
   return (
@@ -10,12 +11,12 @@ const AdminLanding = () => {
     <section
         className="admin-hero"
         style={{ backgroundImage: `url(${heroImg})` }}
-        aria-label="Ahmed Othman Group — Admin Portal"
+        aria-label="AYG — Admin Portal"
     >
         <div className="admin-hero__overlay" />
 
         <nav className="admin-landing__nav">
-          <Link to="/" className="brand">Ahmed Othman Group</Link>
+          <div className="brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></div>
         </nav>
 
         <div className="admin-landing__container">
@@ -59,8 +60,7 @@ const AdminLanding = () => {
 
       <footer className="admin-landing__footer">
         <p>
-          Secure admin portal for Ahmed Othman Group |{' '}
-          <a href="mailto:admin@example.com">admin@example.com</a>
+          Secure admin portal for AYG
         </p>
       </footer>
     </main>

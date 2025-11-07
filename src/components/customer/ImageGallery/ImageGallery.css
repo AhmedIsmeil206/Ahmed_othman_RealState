@@ -93,12 +93,12 @@
 }
 
 .dot.active {
-  background: #007bff;
+  background: var(--primary-teal);
   transform: scale(1.2);
 }
 
 .dot:hover {
-  background: #007bff;
+  background: var(--primary-teal);
   opacity: 0.7;
 }
 

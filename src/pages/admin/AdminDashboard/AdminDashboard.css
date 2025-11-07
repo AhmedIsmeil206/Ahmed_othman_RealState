@@ -1,9 +1,9 @@
 /* Admin Dashboard Styles - Landing Page Design */
 .admin-dashboard {
   min-height: 100vh;
-  background: radial-gradient(1200px 600px at 20% 20%, #f0f7ff 0%, transparent 60%), 
-              radial-gradient(800px 400px at 85% 25%, #fff7ed 0%, transparent 60%), 
-              #ffffff;
+  background: radial-gradient(1200px 600px at 20% 20%, #e0f7fa 0%, transparent 60%), 
+              radial-gradient(800px 400px at 85% 25%, #f0f0f0 0%, transparent 60%), 
+              var(--bg-primary);
 }
 
 /* Loading State */
@@ -14,11 +14,11 @@
   align-items: center;
   justify-content: center;
   gap: 20px;
-  background: #f8f9fa;
+  background: var(--bg-secondary);
 }
 
 .admin-dashboard-loading p {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 16px;
   margin: 0;
 }
@@ -33,7 +33,7 @@
 }
 
 .loading-state p {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 16px;
   margin: 0;
 }
@@ -46,43 +46,44 @@
 }
 
 .error-content {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   padding: 40px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #dc3545;
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid var(--status-error);
   max-width: 400px;
   width: 100%;
 }
 
 .error-content h3 {
-  color: #dc3545;
+  color: var(--status-error);
   margin: 0 0 16px 0;
   font-size: 24px;
 }
 
 .error-content p {
-  color: #666;
+  color: var(--text-secondary);
   margin: 0 0 24px 0;
   line-height: 1.5;
 }
 
 .retry-btn {
-  background: #007bff;
+  background: var(--primary-teal);
   color: white;
   border: none;
   padding: 12px 24px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-normal);
 }
 
 .retry-btn:hover {
-  background: #0056b3;
+  background: var(--primary-dark-teal);
   transform: translateY(-2px);
+  box-shadow: var(--shadow-teal);
 }
 
 /* Hero Section */
@@ -137,9 +138,15 @@
 }
 
 .admin-portal-text {
-  font-size: 14px;
-  color: #f59e0b;
-  font-weight: 600;
+  font-size: 16px;
+  color: #ffffff;
+  font-weight: 700;
+  background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+  padding: 6px 16px;
+  border-radius: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.4);
+  letter-spacing: 0.5px;
 }
 
 .admin-nav-actions {
@@ -156,24 +163,28 @@
 }
 
 .rental-alerts-btn {
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #f59e0b;
-  padding: 8px 16px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+  border: 2px solid #14b8a6;
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-size: 15px;
+  font-weight: 600;
+  transition: var(--transition-fast);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .rental-alerts-btn:hover {
-  background: rgba(245, 158, 11, 0.3);
-  border-color: rgba(245, 158, 11, 0.6);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+  border-color: #06b6d4;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(20, 184, 166, 0.5);
 }
 
 .logout-btn {
@@ -189,7 +200,8 @@
 
 .logout-btn:hover {
   background: rgba(255,255,255,.12);
-  border-color: #f59e0b;
+  border-color: var(--primary-teal);
+  color: var(--primary-teal);
 }
 
 .logout-btn:disabled {
@@ -220,7 +232,7 @@
 .welcome-message {
   font-size: clamp(24px, 4vw, 36px);
   font-weight: 600;
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #92400e 100%);
+  background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-dark-teal) 50%, var(--teal-darker) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -229,7 +241,7 @@
 }
 
 .accent {
-  color: #f59e0b;
+  color: var(--accent-teal);
   font-weight: 900;
 }
 
@@ -270,14 +282,14 @@
 }
 
 .btn--primary {
-  background: #f59e0b;
-  color: #111827;
+  background: var(--primary-teal);
+  color: white;
 }
 
 .btn--primary:hover {
-  background: #d97706;
+  background: var(--primary-dark-teal);
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(245, 158, 11, 0.3);
+  box-shadow: var(--shadow-teal);
 }
 
 .btn--secondary {
@@ -288,8 +300,8 @@
 
 .btn--secondary:hover {
   background: rgba(255,255,255,.12);
-  border-color: #f59e0b;
-  color: #f59e0b;
+  border-color: var(--primary-teal);
+  color: var(--primary-teal);
   transform: translateY(-2px);
 }
 
@@ -338,21 +350,21 @@
   text-align: center;
   max-width: 400px;
   padding: 40px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
 }
 
 .no-properties-content h3 {
-  color: #111827;
+  color: var(--primary-black);
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 12px;
 }
 
 .no-properties-content p {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 16px;
   margin-bottom: 24px;
   line-height: 1.5;
@@ -513,22 +525,22 @@
 }
 
 .load-more-properties {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  background: linear-gradient(135deg, var(--primary-teal) 0%, var(--primary-dark-teal) 100%);
   color: white;
   border: none;
   padding: 14px 28px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.25);
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-teal);
 }
 
 .load-more-properties:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.35);
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  box-shadow: 0 8px 25px rgba(0, 188, 212, 0.35);
+  background: linear-gradient(135deg, var(--primary-dark-teal) 0%, var(--teal-darker) 100%);
 }
 
 .load-more-properties:active {
@@ -595,8 +607,8 @@
 }
 
 .admin-management-table .action-btn.deactivate {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--teal-transparent);
+  color: var(--primary-black);
 }
 
 .admin-management-table .action-btn.delete {

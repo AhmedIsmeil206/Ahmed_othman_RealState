@@ -144,16 +144,8 @@ export const initializeMasterAuth = createAsyncThunk(
         };
       }
       
-      // Check if master admin exists
-      try {
-        await authApi.checkMasterAdminExists();
-        return { currentUser: null, isFirstTimeSetup: false };
-      } catch (error) {
-        if (error.status === 404) {
-          return { currentUser: null, isFirstTimeSetup: true };
-        }
-        throw error;
-      }
+      // Default to first-time setup if no stored user
+      return { currentUser: null, isFirstTimeSetup: true };
     } catch (error) {
       return rejectWithValue({
         message: error.message || 'Initialization failed',

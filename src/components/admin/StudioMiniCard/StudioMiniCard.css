@@ -14,7 +14,7 @@
 .studio-mini-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  border-color: #f59e0b;
+  border-color: var(--primary-teal);
 }
 
 .studio-mini-card.occupied {
@@ -91,7 +91,7 @@
 .studio-price {
   font-size: 16px;
   font-weight: 700;
-  color: #f59e0b;
+  color: var(--primary-teal);
   margin-top: 8px;
 }
 

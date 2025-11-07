@@ -1,77 +1,71 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMasterAuth, useProperty } from '../../../hooks/useRedux';
+import { useMasterAuth } from '../../../hooks/useRedux';
+import { apartmentPartsApi, rentalContractsApi, rentApartmentsApi } from '../../../services/api';
 import BackButton from '../../../components/common/BackButton';
+import RentalAlerts from '../../../components/admin/RentalAlerts/RentalAlerts';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
-import { 
-  getStudiosNeedingRenewal, 
-  formatAlertMessage, 
-  calculateDaysRemaining 
-} from '../../../utils/helpers/rentalAlerts';
+import aygLogo from '../../../assets/images/logo/AYG.png';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './MasterAdminRentalAlertsPage.css';
 
 const MasterAdminRentalAlertsPage = () => {
   const navigate = useNavigate();
   const { currentUser } = useMasterAuth();
-  const { apartments } = useProperty();
   const [isLoading, setIsLoading] = useState(true);
-  const [alertStudios, setAlertStudios] = useState([]);
-  const [showAllAlerts, setShowAllAlerts] = useState(false);
-  const [filterDays, setFilterDays] = useState(5); // Default to 5 days
   const [stats, setStats] = useState({
-    totalAlerts: 0,
-    urgentAlerts: 0,
-    overdue: 0
+    totalApartments: 0,
+    totalStudios: 0,
+    rentedStudios: 0,
+    availableStudios: 0
   });
 
-  useEffect(() => {
-    if (apartments.length >= 0) {
-      // Get all studios with rental alerts (from all admins)
-      const studiosWithAlerts = getStudiosNeedingRenewal(apartments);
-      
-      // Filter by days remaining (5 days or less by default)
-      const filteredStudios = studiosWithAlerts.filter(studio => {
-        const daysRemaining = calculateDaysRemaining(studio.rental?.endDate);
-        return daysRemaining <= filterDays;
-      });
-      
-      setAlertStudios(filteredStudios);
-      
-      // Calculate statistics
-      const urgentAlerts = filteredStudios.filter(studio => {
-        const daysRemaining = calculateDaysRemaining(studio.rental?.endDate);
-        return daysRemaining <= 2 && daysRemaining >= 0;
-      }).length;
-      
-      const overdue = filteredStudios.filter(studio => {
-        const daysRemaining = calculateDaysRemaining(studio.rental?.endDate);
-        return daysRemaining < 0;
-      }).length;
-      
+  const fetchAllStats = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Fetch all apartments
+      const apartmentsResponse = await rentApartmentsApi.getAll();
+      const allApartments = Array.isArray(apartmentsResponse) ? apartmentsResponse : [];
+
+      // Fetch all studios
+      const studiosResponse = await apartmentPartsApi.getAll();
+      const allStudios = Array.isArray(studiosResponse) ? studiosResponse : [];
+
+      // Fetch active rental contracts
+      const contractsResponse = await rentalContractsApi.getAll({ is_active: true });
+      const activeContracts = Array.isArray(contractsResponse) ? contractsResponse : [];
+
+      // Calculate rented studios
+      const rentedStudioIds = new Set(activeContracts.map(contract => contract.apartment_part_id));
+      const rentedStudios = allStudios.filter(studio => rentedStudioIds.has(studio.id)).length;
+      const availableStudios = allStudios.length - rentedStudios;
+
       setStats({
-        totalAlerts: filteredStudios.length,
-        urgentAlerts,
-        overdue
+        totalApartments: allApartments.length,
+        totalStudios: allStudios.length,
+        rentedStudios,
+        availableStudios
       });
-      
+    } catch (error) {
+      console.error('Failed to fetch statistics:', error);
+      setStats({
+        totalApartments: 0,
+        totalStudios: 0,
+        rentedStudios: 0,
+        availableStudios: 0
+      });
+    } finally {
       setIsLoading(false);
     }
-  }, [apartments, filterDays]);
+  }, []);
 
-  const handleStudioClick = (studio) => {
-    // Navigate to studio details page with master admin rental alerts source
-    navigate(`/studio/${studio.id}?source=master-admin-rental-alerts`);
-  };
+  useEffect(() => {
+    fetchAllStats();
+  }, [fetchAllStats]);
 
-  const handleContactTenant = (studio) => {
-    if (studio.rental?.tenantContact) {
-      if (studio.rental.tenantContact.includes('@')) {
-        window.location.href = `mailto:${studio.rental.tenantContact}?subject=Rental Renewal - ${studio.title}&body=Hi ${studio.rental.tenantName},%0A%0AYour rental for ${studio.title} is expiring soon. Please contact us to discuss renewal options.%0A%0AThank you!`;
-      } else {
-        window.location.href = `tel:${studio.rental.tenantContact}`;
-      }
-    }
+  const handleContractDeleted = () => {
+    // Refresh stats after contract deletion
+    fetchAllStats();
   };
 
   if (!currentUser) {
@@ -90,8 +84,6 @@ const MasterAdminRentalAlertsPage = () => {
     );
   }
 
-  const displayedAlerts = showAllAlerts ? alertStudios : alertStudios.slice(0, 6);
-
   return (
     <div className="master-admin-rental-alerts-page">
       {/* Hero Section with Background */}
@@ -108,7 +100,7 @@ const MasterAdminRentalAlertsPage = () => {
                 />
               </div>
               <div className="master-alerts-brand">
-                <h1>Ahmed Othman Group</h1>
+                <h1><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></h1>
                 <span className="master-alerts-portal-text">Master Admin Rental Alerts</span>
               </div>
             </nav>
@@ -124,17 +116,21 @@ const MasterAdminRentalAlertsPage = () => {
               
               {/* Quick Stats */}
               <div className="master-alerts-stats">
-                <div className="stat-card urgent">
-                  <div className="stat-number">{stats.overdue}</div>
-                  <div className="stat-label">Overdue</div>
+                <div className="stat-card">
+                  <div className="stat-number">{stats.totalApartments}</div>
+                  <div className="stat-label">Apartments</div>
                 </div>
-                <div className="stat-card warning">
-                  <div className="stat-number">{stats.urgentAlerts}</div>
-                  <div className="stat-label">Urgent (≤2 days)</div>
+                <div className="stat-card">
+                  <div className="stat-number">{stats.totalStudios}</div>
+                  <div className="stat-label">Total Studios</div>
                 </div>
-                <div className="stat-card info">
-                  <div className="stat-number">{stats.totalAlerts}</div>
-                  <div className="stat-label">Total Alerts</div>
+                <div className="stat-card">
+                  <div className="stat-number">{stats.rentedStudios}</div>
+                  <div className="stat-label">Rented</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">{stats.availableStudios}</div>
+                  <div className="stat-label">Available</div>
                 </div>
               </div>
             </div>
@@ -145,137 +141,18 @@ const MasterAdminRentalAlertsPage = () => {
       {/* Main Alerts Section */}
       <div className="master-alerts-main-section">
         <div className="master-alerts-container">
-          <div className="master-alerts-controls">
-            <div className="alerts-filter">
-              <label htmlFor="days-filter">Show rentals expiring within:</label>
-              <select 
-                id="days-filter" 
-                value={filterDays} 
-                onChange={(e) => setFilterDays(Number(e.target.value))}
-                className="days-filter-select"
-              >
-                <option value={3}>3 days</option>
-                <option value={5}>5 days</option>
-                <option value={7}>7 days</option>
-                <option value={14}>14 days</option>
-                <option value={30}>30 days</option>
-              </select>
-            </div>
-            
-            {alertStudios.length > 6 && (
-              <button 
-                className="toggle-alerts-btn"
-                onClick={() => setShowAllAlerts(!showAllAlerts)}
-              >
-                {showAllAlerts ? 'Show Less' : `Show All (${alertStudios.length})`}
-              </button>
-            )}
+          <div className="master-alerts-section-header">
+            <h3>🔔 Active Rental Alerts</h3>
+            <p>All rental contracts requiring attention across the system</p>
           </div>
-
-          {alertStudios.length === 0 ? (
-            <div className="no-alerts">
-              <div className="no-alerts-icon">🎉</div>
-              <h3>No Rental Alerts</h3>
-              <p>All rentals are up to date within the selected timeframe!</p>
-            </div>
-          ) : (
-            <div className="master-alerts-content">
-              <div className="alerts-list">
-                {displayedAlerts.map((studio, index) => {
-                  const formattedAlert = formatAlertMessage(studio.alert);
-                  const daysRemaining = calculateDaysRemaining(studio.rental?.endDate);
-                  
-                  return (
-                    <div key={`${studio.apartmentId}-${studio.id}`} className={`master-alert-card ${formattedAlert.className}`}>
-                      <div className="alert-header">
-                        <div className="alert-icon">{formattedAlert.icon}</div>
-                        <div className="alert-priority">
-                          {daysRemaining < 0 ? 'OVERDUE' : 
-                           daysRemaining <= 2 ? 'URGENT' : 
-                           daysRemaining <= 5 ? 'WARNING' : 'INFO'}
-                        </div>
-                      </div>
-                      
-                      <div className="master-alert-content" onClick={() => handleStudioClick(studio)}>
-                        <div className="alert-title">
-                          <h4>{studio.title}</h4>
-                          <span className="studio-info">
-                            {studio.apartmentName} • Created by: {studio.createdBy || 'Unknown Admin'}
-                          </span>
-                        </div>
-                        
-                        <div className="alert-message">
-                          {formattedAlert.message}
-                        </div>
-                        
-                        <div className="rental-details">
-                          <div className="detail-item">
-                            <strong>Days Remaining:</strong> 
-                            <span className={daysRemaining < 0 ? 'overdue' : daysRemaining <= 2 ? 'urgent' : 'normal'}>
-                              {daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days`}
-                            </span>
-                          </div>
-                          <div className="detail-item">
-                            <strong>End Date:</strong> {studio.rental?.endDate || 'Not set'}
-                          </div>
-                          {studio.rental?.tenantName && (
-                            <div className="detail-item">
-                              <strong>Tenant:</strong> {studio.rental.tenantName}
-                              {studio.rental.tenantContact && (
-                                <span className="tenant-contact"> • {studio.rental.tenantContact}</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="master-alert-actions">
-                        <button 
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleStudioClick(studio)}
-                          title="View studio details"
-                        >
-                          👁️ View Details
-                        </button>
-                        
-                        {studio.rental?.tenantContact && (
-                          <button 
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => handleContactTenant(studio)}
-                            title="Contact tenant"
-                          >
-                            📞 Contact
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {alertStudios.length > 0 && (
-            <div className="master-alerts-summary">
-              <div className="summary-card">
-                <h4>📊 Summary Report</h4>
-                <div className="summary-grid">
-                  <div className="summary-item">
-                    <span className="summary-label">Total Properties at Risk:</span>
-                    <span className="summary-value">{stats.totalAlerts}</span>
-                  </div>
-                  <div className="summary-item">
-                    <span className="summary-label">Require Immediate Action:</span>
-                    <span className="summary-value urgent">{stats.overdue + stats.urgentAlerts}</span>
-                  </div>
-                  <div className="summary-item">
-                    <span className="summary-label">Filter Period:</span>
-                    <span className="summary-value">{filterDays} days</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          
+          {/* Rental Alerts Component */}
+          <div className="master-alerts-content">
+            <RentalAlerts 
+              showAllAdmins={true} 
+              onContractDeleted={handleContractDeleted} 
+            />
+          </div>
         </div>
       </div>
     </div>

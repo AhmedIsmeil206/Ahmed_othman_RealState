@@ -1,20 +1,20 @@
 /* Modern Apartment Sale Card - Inspired by the photo design */
 .apartment-sale-card {
-  background: white;
-  border-radius: 16px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-normal);
   cursor: pointer;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-light);
   position: relative;
   height: fit-content;
 }
 
 .apartment-sale-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  border-color: #e0e0e0;
+  box-shadow: var(--shadow-teal);
+  border-color: var(--primary-teal);
 }
 
 /* Image Container */
@@ -41,7 +41,7 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(34, 197, 94, 0.95);
+  background: var(--primary-teal);
   color: white;
   padding: 6px 12px;
   border-radius: 20px;
@@ -50,7 +50,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  box-shadow: var(--shadow-teal);
 }
 
 /* Sale Badge - Top Left */
@@ -114,7 +114,7 @@
 .apartment-sale-card__title {
   font-size: 18px;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--primary-black);
   margin: 0;
   line-height: 1.3;
   overflow: hidden;
@@ -129,14 +129,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 14px;
   font-weight: 500;
 }
 
 .location-icon {
   font-size: 16px;
-  color: #ef4444;
+  color: var(--primary-teal);
 }
 
 /* Details Row */
@@ -149,7 +149,7 @@
 
 .detail-item {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -161,10 +161,10 @@
 .apartment-sale-card__price {
   font-size: 20px;
   font-weight: 800;
-  color: #dc2626;
+  color: var(--accent-teal);
   margin-top: 8px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-light);
 }
 
 /* Responsive Design */
@@ -259,7 +259,7 @@
 
 /* Focus styles for accessibility */
 .apartment-sale-card:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--primary-teal);
   outline-offset: 2px;
 }
 
