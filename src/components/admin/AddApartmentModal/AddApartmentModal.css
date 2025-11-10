@@ -13,6 +13,8 @@
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .add-apartment-modal {
@@ -385,26 +387,97 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-start;
+  }
+  
+  .add-apartment-modal {
+    margin: 10px 0;
+    max-height: none;
+  }
+  
+  .add-apartment-modal .modal-header {
+    padding: 16px 20px;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .close-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
+  }
+  
+  .apartment-form {
+    padding: 20px;
+  }
+  
   .modal-actions {
     flex-direction: column-reverse;
+    gap: 10px;
   }
   
   .cancel-btn,
   .submit-btn {
     width: 100%;
     justify-content: center;
+    padding: 14px 20px;
+    font-size: 15px;
   }
 
   .facility-input-section {
     flex-direction: column;
   }
+  
+  .add-facility-btn {
+    width: 100%;
+    padding: 12px 16px;
+  }
 
   .facility-suggestions {
-    gap: 4px;
+    gap: 6px;
   }
 
   .facility-suggestion {
-    font-size: 11px;
-    padding: 3px 6px;
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  .photo-preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0;
+  }
+  
+  .add-apartment-modal {
+    border-radius: 0;
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  .add-apartment-modal .modal-header {
+    border-radius: 0;
+    padding: 14px 16px;
+  }
+  
+  .apartment-form {
+    padding: 16px;
+  }
+  
+  .photo-upload-label {
+    min-height: 100px;
+    padding: 16px;
+  }
+  
+  .upload-icon {
+    font-size: 28px;
   }
 }

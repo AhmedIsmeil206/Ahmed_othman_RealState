@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import './StudioMiniCard.css';
 
@@ -106,7 +108,7 @@ alert(`Failed to delete studio: ${errorMsg}`);
           onClick={handleDeleteClick}
           title="Delete Studio"
         >
-          🗑️
+          <FontAwesomeIcon icon={faTrash} />
         </button>
       </div>
 

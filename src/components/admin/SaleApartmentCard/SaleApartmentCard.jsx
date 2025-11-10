@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBed, faShower, faRuler, faMapMarkerAlt, faTrash, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import './SaleApartmentCard.css';
 
@@ -309,22 +311,22 @@ const genericErrorEl = document.createElement('div');
               title="Delete Apartment"
               disabled={isDeleting}
             >
-              🗑️
+              <FontAwesomeIcon icon={faTrash} />
             </button>
           </div>
           
           <div className="sale-apartment-card__content">
             <h3 className="sale-apartment-card__title">{apartment.name}</h3>
             
-            <div className="sale-apartment-card__location">
-              <span className="location-icon">📍</span>
+            <div className="apartment-sale-card__location">
+              <span className="location-icon"><FontAwesomeIcon icon={faMapMarkerAlt} /></span>
               <span>{apartment.location}</span>
             </div>
             
-            <div className="sale-apartment-card__details">
-              <span className="detail-item">🛏️ {apartment.bedrooms || 'N/A'}</span>
-              <span className="detail-item">🚿 {apartment.bathrooms || 'N/A'}</span>
-              <span className="detail-item">📏 {apartment.area ? `${apartment.area} sq ft` : 'N/A'}</span>
+            <div className="apartment-sale-card__details">
+              <span className="detail-item"><FontAwesomeIcon icon={faBed} /> {apartment.bedrooms || 'N/A'}</span>
+              <span className="detail-item"><FontAwesomeIcon icon={faShower} /> {apartment.bathrooms || 'N/A'}</span>
+              <span className="detail-item"><FontAwesomeIcon icon={faRuler} /> {apartment.area ? `${apartment.area} sq ft` : 'N/A'}</span>
             </div>
             
             <div className="sale-apartment-card__price">
@@ -345,7 +347,7 @@ const genericErrorEl = document.createElement('div');
       ) : (
         <div className="delete-confirmation-inline-sale">
           <div className="delete-confirm-header">
-            <h4>🗑️ Delete Sale Apartment?</h4>
+            <h4><FontAwesomeIcon icon={faTrash} /> Delete Sale Apartment?</h4>
             <p>Are you sure you want to delete "{apartment.name}"?</p>
           </div>
           

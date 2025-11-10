@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import StudioMiniCard from '../StudioMiniCard';
 import './ApartmentCard.css';
@@ -92,7 +94,7 @@ alert('Error deleting apartment');
                   title="Delete Apartment"
                   disabled={isDeleting}
                 >
-                  🗑️
+                  <FontAwesomeIcon icon={faTrash} />
                 </button>
               </div>
               <p className="apartment-description">{apartment.description}</p>
@@ -136,7 +138,7 @@ alert('Error deleting apartment');
       ) : (
         <div className="delete-confirmation-inline">
           <div className="delete-confirm-header">
-            <h4>🗑️ Delete Apartment?</h4>
+            <h4><FontAwesomeIcon icon={faTrash} /> Delete Apartment?</h4>
             <p>Are you sure you want to delete "{apartment.name}"?</p>
           </div>
           

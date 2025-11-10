@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faHome, 
+  faBed, 
+  faShower, 
+  faRuler, 
+  faMapMarkerAlt, 
+  faKey, 
+  faMoneyBillWave, 
+  faMap, 
+  faCheck 
+} from '@fortawesome/free-solid-svg-icons';
 import BackButton from '../../../components/common/BackButton';
 import ImageGallery from '../../../components/customer/ImageGallery/ImageGallery';
 import WhatsAppButton from '../../../components/customer/WhatsAppButton/WhatsAppButton';
@@ -108,8 +120,16 @@ setError('Failed to load apartment details');
   return (
     <div className="apartment-details-page">
       <nav className="apartment-nav">
-        <BackButton onClick={() => navigate('/')} />
-        <div className="brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></div>
+        <button 
+          className="back-to-apartments-btn" 
+          onClick={() => navigate('/buy-apartments')}
+        >
+          ← Back to Apartments
+        </button>
+        <div className="brand">
+          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
+          <span className="brand-text">AYG</span>
+        </div>
       </nav>
 
       <div className="apartment-container">
@@ -117,12 +137,13 @@ setError('Failed to load apartment details');
           <ImageGallery 
             images={apartment.images || []} 
             title={apartment.name || apartment.title}
-            fallbackImage="/api/placeholder/800/600"
+            fallbackImage="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23f0f0f0' width='800' height='600'/%3E%3Ctext fill='%23999' font-family='sans-serif' font-size='32' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image Available%3C/text%3E%3C/svg%3E"
           />
         </div>
 
         <div className="apartment-content">
-          <div className="apartment-main-info">
+          {/* Card 1: Main Information */}
+          <div className="apartment-card apartment-main-info">
             <div className="apartment-header">
               <div className="apartment-title-section">
                 <h1 className="apartment-title">{apartment.name || apartment.title}</h1>
@@ -134,11 +155,6 @@ setError('Failed to load apartment details');
               </div>
               <div className="apartment-price-section">
                 <div className="apartment-price">{formatPrice(apartment.price || apartment.sale_price)}</div>
-                <div className="apartment-availability">
-                  <span className={`status ${apartment.is_available ? 'available' : 'sold'}`}>
-                    {apartment.is_available ? '✅ Available' : '❌ Sold'}
-                  </span>
-                </div>
               </div>
             </div>
 
@@ -152,13 +168,13 @@ setError('Failed to load apartment details');
             {/* Google Maps Link */}
             {(apartment.location_coordinates || apartment.location) && (
               <div className="apartment-location-section">
-                <h3>📍 Location</h3>
+                <h3><FontAwesomeIcon icon={faMapMarkerAlt} /> Location</h3>
                 <button 
                   onClick={openGoogleMaps}
                   className="maps-button"
                   type="button"
                 >
-                  🗺️ View on Google Maps
+                  <FontAwesomeIcon icon={faMap} /> View on Google Maps
                 </button>
               </div>
             )}
@@ -167,42 +183,42 @@ setError('Failed to load apartment details');
               <h2>Property Highlights</h2>
               <div className="highlights-grid">
                 <div className="highlight-item">
-                  <div className="highlight-icon">🏠</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faHome} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Type</div>
                     <div className="highlight-value">Apartment</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🔑</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faKey} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Ownership</div>
                     <div className="highlight-value">For Sale</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">📏</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faRuler} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Area</div>
                     <div className="highlight-value">{apartment.area ? `${apartment.area} m²` : 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🛏️</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faBed} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bedrooms</div>
                     <div className="highlight-value">{apartment.bedrooms || apartment.number_of_bedrooms || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🚿</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faShower} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bathrooms</div>
                     <div className="highlight-value">{apartment.bathrooms || apartment.number_of_bathrooms || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">💰</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faMoneyBillWave} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Price</div>
                     <div className="highlight-value">{formatPrice(apartment.price || apartment.sale_price)}</div>
@@ -218,6 +234,25 @@ setError('Failed to load apartment details');
               </div>
             )}
 
+
+
+            {((apartment.amenities && apartment.amenities.length > 0) || (apartment.facilities && apartment.facilities.length > 0)) && (
+              <div className="amenities-section">
+                <h2>Facilities & Amenities</h2>
+                <div className="amenities-grid">
+                  {(apartment.facilities || apartment.amenities || []).map((amenity, index) => (
+                    <div key={index} className="amenity-item">
+                      <span className="amenity-icon"><FontAwesomeIcon icon={faCheck} /></span>
+                      <span className="amenity-name">{amenity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Card 2: Property Details and Contact */}
+          <div className="apartment-card apartment-details-card">
             <div className="details-section">
               <h2>Property Details</h2>
               <div className="details-table">
@@ -250,20 +285,6 @@ setError('Failed to load apartment details');
               </div>
             </div>
 
-            {((apartment.amenities && apartment.amenities.length > 0) || (apartment.facilities && apartment.facilities.length > 0)) && (
-              <div className="amenities-section">
-                <h2>Facilities & Amenities</h2>
-                <div className="amenities-grid">
-                  {(apartment.facilities || apartment.amenities || []).map((amenity, index) => (
-                    <div key={index} className="amenity-item">
-                      <span className="amenity-icon">✓</span>
-                      <span className="amenity-name">{amenity}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="apartment-actions">
               <WhatsAppButton 
                 phoneNumber={adminPhone || apartment.contact_number || "+201000000000"}
@@ -271,8 +292,6 @@ setError('Failed to load apartment details');
               />
             </div>
           </div>
-
-
         </div>
       </div>
       

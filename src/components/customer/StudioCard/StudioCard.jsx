@@ -1,4 +1,6 @@
 import React, { useCallback } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBed, faShower, faRuler, faMapMarkerAlt, faCamera } from '@fortawesome/free-solid-svg-icons';
 import './StudioCard.css';
 
 const StudioCard = ({ studio }) => {
@@ -42,7 +44,7 @@ const StudioCard = ({ studio }) => {
           onError={handleImageError}
         />
         <div className="studio-card__image-count">
-          📷 See {studio.images.length} photos
+          <FontAwesomeIcon icon={faCamera} /> See {studio.images.length} photos
         </div>
       </div>
       
@@ -51,13 +53,13 @@ const StudioCard = ({ studio }) => {
         <h3 className="studio-card__title">{studio.title}</h3>
         
         <div className="studio-card__details">
-          <span className="detail-item">🛏️ {studio.bedrooms}</span>
-          <span className="detail-item">🚿 {studio.bathrooms}</span>
-          <span className="detail-item">📏 {studio.area}</span>
+          <span className="detail-item"><FontAwesomeIcon icon={faBed} /> {studio.bedrooms}</span>
+          <span className="detail-item"><FontAwesomeIcon icon={faShower} /> {studio.bathrooms}</span>
+          <span className="detail-item"><FontAwesomeIcon icon={faRuler} /> {studio.area}</span>
         </div>
         
         <div className="studio-card__location">
-          📍 {studio.location}
+          <FontAwesomeIcon icon={faMapMarkerAlt} /> {studio.location}
         </div>
         
         <div className="studio-card__posted">

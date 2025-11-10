@@ -38,6 +38,7 @@ function LandingPage() {
       <nav className={`landing__nav ${isNavVisible ? 'nav-visible' : 'nav-hidden'}`}>
         <div className="brand">
           <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
+          <span className="brand-text">AYG</span>
         </div>
         <div className="nav-actions">
           <a className="nav-link" href="#options">Services</a>

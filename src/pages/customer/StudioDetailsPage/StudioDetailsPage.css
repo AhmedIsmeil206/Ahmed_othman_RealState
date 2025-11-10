@@ -30,11 +30,27 @@
   text-decoration: none;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .brand:hover {
   color: var(--primary-teal);
   transform: scale(1.05);
+}
+
+.brand-logo {
+  height: 50px;
+  width: auto;
+}
+
+.brand-text {
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: var(--primary-teal);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .studio-container {
@@ -286,6 +302,8 @@
 @media (max-width: 768px) {
   .studio-nav {
     padding: 12px 16px;
+    flex-direction: row;
+    justify-content: space-between;
   }
   
   .brand {
@@ -317,6 +335,10 @@
     grid-template-columns: 1fr;
   }
   
+  .highlight-item {
+    padding: 12px;
+  }
+  
   .location-info {
     flex-direction: column;
     align-items: flex-start;
@@ -324,6 +346,60 @@
   
   .contact-card {
     padding: 16px;
+  }
+  
+  .contact-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .studio-nav {
+    padding: 10px 12px;
+  }
+  
+  .studio-container {
+    padding: 12px;
+  }
+  
+  .studio-main-info,
+  .contact-card {
+    padding: 14px;
+  }
+  
+  .studio-title {
+    font-size: 18px;
+  }
+  
+  .studio-price {
+    font-size: 22px;
+  }
+  
+  .highlights-section h2,
+  .details-section h2,
+  .description-section h2,
+  .location-section h2 {
+    font-size: 18px;
+  }
+  
+  .highlight-icon {
+    font-size: 20px;
+  }
+  
+  .highlight-value {
+    font-size: 14px;
+  }
+  
+  .detail-row {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  .location-button,
+  .maps-button {
+    width: 100%;
+    justify-content: center;
   }
 }
 

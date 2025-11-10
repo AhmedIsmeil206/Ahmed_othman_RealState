@@ -109,8 +109,8 @@ const RentalAlertsPage = () => {
                 />
               </div>
               <div className="alerts-brand">
-                <h1><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></h1>
-                <span className="alerts-portal-text">Rental Alerts Portal</span>
+                <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
+                <span className="brand-text">AYG</span>
               </div>
             </nav>
 

@@ -1,5 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faHome, 
+  faBed, 
+  faShower, 
+  faRuler, 
+  faMapMarkerAlt, 
+  faKey, 
+  faMap, 
+  faCheck,
+  faCouch,
+  faClipboardList,
+  faTrash
+} from '@fortawesome/free-solid-svg-icons';
 import BackButton from '../../../components/common/BackButton';
 import ImageGallery from '../../../components/customer/ImageGallery/ImageGallery';
 import WhatsAppButton from '../../../components/customer/WhatsAppButton/WhatsAppButton';
@@ -337,9 +351,9 @@ alert('❌ Failed to delete booking. Please try again.');
     } else if (navigationSource === 'master-admin-rental-alerts') {
       return '/master-admin/rental-alerts';
     } else if (navigationSource === 'customer-studios') {
-      return '/'; // Changed to landing page
+      return '/studios';
     }
-    return '/'; // Changed default to landing page
+    return '/studios'; // Default to studios page
   };
 
   const getBackText = () => {
@@ -429,6 +443,7 @@ alert('❌ Failed to delete booking. Please try again.');
           className="brand"
         >
           <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
+          <span className="brand-text">AYG</span>
         </Link>
       </nav>
 
@@ -449,13 +464,13 @@ alert('❌ Failed to delete booking. Please try again.');
             {/* Google Maps Link */}
             {(parentApartment?.location || studio?.location || parentApartment?.location_coordinates || studio?.location_coordinates) && (
               <div className="studio-location-section">
-                <h3>📍 Location</h3>
+                <h3><FontAwesomeIcon icon={faMapMarkerAlt} /> Location</h3>
                 <button 
                   onClick={openGoogleMaps}
                   className="maps-button"
                   type="button"
                 >
-                  🗺️ View on Google Maps
+                  <FontAwesomeIcon icon={faMap} /> View on Google Maps
                 </button>
                 {parentApartment && (
                   <small className="location-note">
@@ -531,42 +546,42 @@ alert('❌ Failed to delete booking. Please try again.');
               <h2>Highlights</h2>
               <div className="highlights-grid">
                 <div className="highlight-item">
-                  <div className="highlight-icon">🏠</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faHome} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Type</div>
                     <div className="highlight-value">{studio.type || 'Studio'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🔑</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faKey} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Ownership</div>
                     <div className="highlight-value">{studio.ownership_type || 'Rental'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">📏</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faRuler} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Area (m²)</div>
                     <div className="highlight-value">{studio.area || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🛏️</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faBed} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bedrooms</div>
                     <div className="highlight-value">{studio.bedrooms || studio.number_of_bedrooms || '1'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🚿</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faShower} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bathrooms</div>
                     <div className="highlight-value">{studio.bathrooms || studio.number_of_bathrooms || '1'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🪑</div>
+                  <div className="highlight-icon"><FontAwesomeIcon icon={faCouch} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Furnished</div>
                     <div className="highlight-value">{studio.is_furnished ? 'Yes' : 'No'}</div>
@@ -605,12 +620,12 @@ alert('❌ Failed to delete booking. Please try again.');
             {/* Booking Display Section - Only visible if booking exists and from admin or master admin - HIDDEN for customers */}
             {studioBooking && (navigationSource === 'admin-dashboard' || navigationSource === 'master-admin-dashboard' || navigationSource === 'admin-tracking' || navigationSource === 'admin-rental-alerts' || navigationSource === 'master-admin-rental-alerts') && (
               <div className="booking-display-section">
-                <h2>📋 Booking Information</h2>
+                <h2><FontAwesomeIcon icon={faClipboardList} /> Booking Information</h2>
                 <div className="booking-card">
                   <div className="booking-header">
                     <h3>Customer Details</h3>
                     <div className="booking-actions">
-                      <div className="booking-status">✅ Booked</div>
+                      <div className="booking-status"><FontAwesomeIcon icon={faCheck} /> Booked</div>
                       <button 
                         className="delete-booking-btn"
                         onClick={handleDeleteBooking}
@@ -623,7 +638,7 @@ alert('❌ Failed to delete booking. Please try again.');
                             Deleting...
                           </>
                         ) : (
-                          '🗑️ Cancel Booking'
+                          <><FontAwesomeIcon icon={faTrash} /> Cancel Booking</>
                         )}
                       </button>
                     </div>

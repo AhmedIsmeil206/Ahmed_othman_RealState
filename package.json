@@ -46,6 +46,7 @@
     ]
   },
   "devDependencies": {
+    "core-js-pure": "^3.46.0",
     "http-proxy-middleware": "^3.0.5"
   }
 }

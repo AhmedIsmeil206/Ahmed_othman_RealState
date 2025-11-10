@@ -16,13 +16,16 @@ const AdminLanding = () => {
         <div className="admin-hero__overlay" />
 
         <nav className="admin-landing__nav">
-          <div className="brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></div>
+          <div className="brand">
+            <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
+            <span className="brand-text">AYG</span>
+          </div>
         </nav>
 
         <div className="admin-landing__container">
           <div className="admin-landing__header">
             <h1>
-              Welcome to the <span className="admin-accent">Admin Portal</span>
+              Welcome to the <span className="admin-accent">Admin Panel</span>
             </h1>
             <p>
               Choose your access level to manage properties, users, and system operations

@@ -236,8 +236,8 @@ alert('❌ Failed to add studio: ' + result.message);
             {/* Navigation */}
             <nav className="admin-nav">
               <div className="admin-brand">
-                <h1><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></h1>
-                <span className="admin-portal-text">Admin Portal</span>
+                <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
+                <span className="brand-text">AYG</span>
               </div>
               <div className="admin-nav-actions">
                 <button 

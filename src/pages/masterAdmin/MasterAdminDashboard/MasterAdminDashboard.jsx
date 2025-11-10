@@ -883,7 +883,8 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
         
         <nav className="dashboard-nav">
           <div className="nav-left">
-            <h1 className="dashboard-brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></h1>
+            <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
+            <span className="brand-text">AYG</span>
           </div>
           
           <div className="nav-right">

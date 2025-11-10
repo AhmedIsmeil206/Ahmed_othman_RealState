@@ -51,18 +51,28 @@
 }
 
 .brand {
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: 1px;
-  color: var(--primary-teal) !important;
-  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .brand:hover {
-  color: var(--primary-dark-teal) !important;
   transform: scale(1.05);
+}
+
+.brand-logo {
+  height: 50px;
+  width: auto;
+}
+
+.brand-text {
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: var(--primary-teal);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .admin-landing__container {
@@ -244,10 +254,20 @@
 @media (max-width: 768px) {
   .admin-landing__nav {
     padding: 12px 16px;
+    flex-direction: row;
+    justify-content: space-between;
   }
   
   .brand {
     font-size: 16px;
+  }
+  
+  .brand-logo {
+    height: 40px;
+  }
+  
+  .brand-text {
+    font-size: 24px;
   }
   
   .admin-landing__container {
@@ -266,10 +286,12 @@
     grid-template-columns: 1fr;
     gap: 24px;
     margin-bottom: 40px;
+    max-width: 100%;
   }
   
   .admin-option-card {
     padding: 25px 15px;
+    min-width: auto;
   }
   
   .admin-option-icon {
@@ -278,5 +300,61 @@
   
   .admin-option-card h2 {
     font-size: 24px;
+  }
+  
+  .admin-option-card p {
+    font-size: 15px;
+  }
+  
+  .admin-option-btn {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-landing__nav {
+    padding: 10px 12px;
+  }
+  
+  .brand-logo {
+    height: 36px;
+  }
+  
+  .brand-text {
+    font-size: 20px;
+  }
+  
+  .admin-landing__container {
+    padding: 30px 12px;
+  }
+  
+  .admin-landing__header h1 {
+    font-size: clamp(24px, 6vw, 36px);
+  }
+  
+  .admin-landing__header p {
+    font-size: 14px;
+  }
+  
+  .admin-option-card {
+    padding: 20px 12px;
+  }
+  
+  .admin-option-icon {
+    font-size: 40px;
+  }
+  
+  .admin-option-card h2 {
+    font-size: 20px;
+  }
+  
+  .admin-option-card p {
+    font-size: 14px;
+  }
+  
+  .admin-option-btn {
+    padding: 14px 20px;
+    font-size: 15px;
   }
 }

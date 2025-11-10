@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import './WhatsAppButton.css';
 
 const WhatsAppButton = ({ 
@@ -24,7 +26,7 @@ const WhatsAppButton = ({
         type="button"
         title={`Contact via WhatsApp: ${phoneNumber}`}
       >
-        <span className="whatsapp-icon">📱</span>
+        <span className="whatsapp-icon"><FontAwesomeIcon icon={faWhatsapp} /></span>
         <span className="whatsapp-text">
           {contactType === 'customer' ? 'Contact Customer' : 'WhatsApp'}
         </span>
