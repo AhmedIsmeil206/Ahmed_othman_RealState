@@ -205,7 +205,8 @@
 .studios-section {
   background: white;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 2.5rem;
+  min-height: 500px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -244,7 +245,8 @@
 .studios-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  gap: 2rem;
+  padding-top: 1rem;
 }
 
 /* No Studios Message */

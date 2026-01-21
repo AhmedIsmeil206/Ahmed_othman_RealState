@@ -150,7 +150,8 @@ const MasterAdminRentalAlertsPage = () => {
           <div className="master-alerts-content">
             <RentalAlerts 
               showAllAdmins={true} 
-              onContractDeleted={handleContractDeleted} 
+              onContractDeleted={handleContractDeleted}
+              navigationSource="master-admin-rental-alerts"
             />
           </div>
         </div>

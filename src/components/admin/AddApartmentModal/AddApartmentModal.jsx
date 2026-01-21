@@ -4,6 +4,7 @@ import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import useUniqueId from '../../../hooks/useUniqueId';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import { useAdminAuth } from '../../../hooks/useRedux';
+import { uploadRentalApartmentPhotos, validateFiles } from '../../../services/uploadService';
 
 const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const { generateApartmentId } = useUniqueId();
@@ -17,7 +18,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     mapUrl: '',
     facilities: [],
     floor: '1', // Set default floor as string
-    photos: [],
+    photoFiles: [], // Store actual File objects instead of base64
     area: '50', // Set default area
     number: '',
     price: '0', // Set default price
@@ -68,27 +69,21 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
     
-    // Convert files to base64 URLs for preview
-    const fileReaders = files.map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve({
-            file: file,
-            preview: e.target.result,
-            name: file.name
-          });
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(fileReaders).then(results => {
-      setFormData(prev => ({
+    // Validate files before adding
+    const validation = validateFiles(files, 10); // 10MB max per file
+    if (!validation.valid) {
+      setErrors(prev => ({
         ...prev,
-        photos: [...prev.photos, ...results]
+        photos: validation.errors.join('; ')
       }));
-    });
+      return;
+    }
+    
+    // Store actual File objects for upload later
+    setFormData(prev => ({
+      ...prev,
+      photoFiles: [...prev.photoFiles, ...files]
+    }));
 
     // Clear error when user uploads photos
     if (errors.photos) {
@@ -102,7 +97,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const removePhoto = (index) => {
     setFormData(prev => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
+      photoFiles: prev.photoFiles.filter((_, i) => i !== index)
     }));
   };
 
@@ -246,7 +241,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     const emptyEssentialFields = Object.keys(essentialFields).filter(key => !essentialFields[key]);
     
     if (emptyEssentialFields.length > 0) {
-const fieldNames = {
+      const fieldNames = {
         name: 'Apartment Name',
         address: 'Address', 
         number: 'Apartment Number'
@@ -263,6 +258,7 @@ const fieldNames = {
     try {
       // Transform form data to match API requirements according to documentation
       // ALL REQUIRED FIELDS: name, location, address, area, number, price, bedrooms, bathrooms, floor, total_parts
+      // NOTE: Photos are uploaded AFTER apartment creation using /api/v1/uploads/photos
       const apiData = {
         name: (formData.name && formData.name.trim()) || 'Unnamed Apartment', // REQUIRED: Never empty
         location: (formData.location && formData.location.toLowerCase()) || 'maadi', // REQUIRED: Never empty
@@ -273,9 +269,7 @@ const fieldNames = {
         bedrooms: parseInt(formData.bedrooms) || 1, // REQUIRED: Always valid integer
         bathrooms: (formData.bathrooms === 'shared') ? 'shared' : 'private', // REQUIRED: Always valid enum
         description: (formData.description && formData.description.trim()) || 'No description provided', // Optional but never empty
-        photos_url: formData.photos && formData.photos.length > 0 
-          ? formData.photos.map(photo => photo.preview) 
-          : [], // Optional: API expects 'photos_url', not 'images'
+        photos_url: [], // Empty array - photos uploaded separately via /api/v1/uploads/photos
         location_on_map: formData.mapUrl ? formData.mapUrl.trim() : '', // Optional: API field name
         facilities_amenities: formData.facilities && formData.facilities.length > 0 ? formData.facilities.join(', ') : '', // Optional: API expects string, not array
         floor: parseInt(formData.floor) || 1, // REQUIRED: Always valid integer ≥ 1
@@ -294,31 +288,43 @@ const fieldNames = {
         description: apiData.description || 'No description provided'
       };
 
-
-
-
-
-
-
-
-
-
-
-
       console.log('📨 Full JSON being sent to API:', JSON.stringify(apiData, null, 2));
 
-
-
-      console.log('JSON.stringify(apiData):', JSON.stringify(apiData, null, 2));
-
-      // Use real API call to create apartment
-
+      // STEP 1: Create the apartment first
       const result = await createRentApartment(validatedApiData);
       
       if (result.success) {
+        const createdApartment = result.apartment;
+        console.log('✅ Apartment created successfully:', createdApartment);
+        
+        // STEP 2: Upload photos if any were selected
+        if (formData.photoFiles && formData.photoFiles.length > 0) {
+          try {
+            console.log(`📤 Uploading ${formData.photoFiles.length} photos for apartment ID: ${createdApartment.id}`);
+            
+            const uploadResult = await uploadRentalApartmentPhotos(
+              createdApartment.id,
+              formData.photoFiles
+            );
+            
+            console.log('✅ Photos uploaded successfully:', uploadResult);
+            
+            // Update the apartment object with uploaded photo URLs
+            if (uploadResult.files && uploadResult.files.length > 0) {
+              createdApartment.photos_url = uploadResult.files.map(f => f.url);
+            }
+          } catch (uploadError) {
+            console.error('⚠️ Photo upload failed:', uploadError);
+            // Don't fail the entire operation if photo upload fails
+            // Show a warning but continue
+            setErrors({ 
+              general: `Apartment created successfully, but photo upload failed: ${uploadError.message}` 
+            });
+          }
+        }
 
         // Notify parent component and close modal
-        onApartmentAdded?.(result.apartment);
+        onApartmentAdded?.(createdApartment);
         onClose();
         
         // Reset form with proper defaults
@@ -330,7 +336,7 @@ const fieldNames = {
           mapUrl: '',
           facilities: [],
           floor: '1', // Keep default floor
-          photos: [],
+          photoFiles: [], // Reset to empty array
           area: '50', // Keep default area
           number: '',
           price: '0', // Keep default price
@@ -341,11 +347,11 @@ const fieldNames = {
         
         setErrors({});
       } else {
-setErrors({ general: result.message || 'Failed to create apartment' });
+        setErrors({ general: result.message || 'Failed to create apartment' });
       }
       
     } catch (error) {
-setErrors({ general: 'An error occurred while adding the apartment. Please try again.' });
+      setErrors({ general: 'An error occurred while adding the apartment. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -564,12 +570,12 @@ setErrors({ general: 'An error occurred while adding the apartment. Please try a
             </div>
             {errors.photos && <span className="error-text">{errors.photos}</span>}
             
-            {formData.photos.length > 0 && (
+            {formData.photoFiles.length > 0 && (
               <div className="photo-preview-grid">
-                {formData.photos.map((photo, index) => (
+                {formData.photoFiles.map((file, index) => (
                   <div key={index} className="photo-preview-item">
                     <img 
-                      src={photo.preview} 
+                      src={URL.createObjectURL(file)} 
                       alt={`Apartment ${index + 1}`}
                       className="photo-preview-image"
                     />
@@ -581,7 +587,7 @@ setErrors({ general: 'An error occurred while adding the apartment. Please try a
                     >
                       ×
                     </button>
-                    <div className="photo-name">{photo.name}</div>
+                    <div className="photo-name">{file.name}</div>
                   </div>
                 ))}
               </div>

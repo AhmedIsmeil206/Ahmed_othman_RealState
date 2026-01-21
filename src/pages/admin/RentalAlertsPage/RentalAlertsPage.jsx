@@ -160,6 +160,7 @@ const RentalAlertsPage = () => {
             <RentalAlerts 
               adminId={currentAdmin?.id}
               onContractDeleted={handleContractDeleted}
+              navigationSource="admin-rental-alerts"
             />
           </div>
         </div>

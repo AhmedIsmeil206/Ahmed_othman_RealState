@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
 import './StudioMiniCard.css';
 
@@ -100,7 +100,7 @@ alert(`Failed to delete studio: ${errorMsg}`);
           onClick={handleToggleClick}
           title={studio.isAvailable ? 'Mark as Occupied' : 'Mark as Available'}
         >
-          {studio.isAvailable ? '🔒' : '🔓'}
+          <FontAwesomeIcon icon={studio.isAvailable ? faLockOpen : faLock} />
         </button>
         
         <button 

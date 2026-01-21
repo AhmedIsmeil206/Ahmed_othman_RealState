@@ -27,7 +27,7 @@
 }
 
 .studio-mini-image {
-  height: 120px;
+  height: 180px;
   background-size: cover;
   background-position: center;
   position: relative;
@@ -59,7 +59,7 @@
 }
 
 .studio-mini-content {
-  padding: 16px;
+  padding: 20px;
 }
 
 .studio-mini-title {
@@ -97,8 +97,8 @@
 
 .studio-mini-actions {
   display: flex;
-  padding: 12px 16px;
-  gap: 12px;
+  padding: 16px 20px;
+  gap: 16px;
   border-top: 1px solid #e5e7eb;
   background: #f9fafb;
   justify-content: center;
@@ -142,8 +142,8 @@
 }
 
 .delete-btn:hover {
-  background: #ef4444;
-  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Delete Confirmation Overlay */

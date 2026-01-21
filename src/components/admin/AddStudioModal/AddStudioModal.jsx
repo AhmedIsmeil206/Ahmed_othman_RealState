@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { apartmentPartsApi, handleApiError, dataTransformers } from '../../../services/api';
 import { convertToApiEnum, getValidOptions } from '../../../utils/apiEnums';
 import LoadingSpinner from '../../common/LoadingSpinner/LoadingSpinner';
+import { uploadStudioPhotos, validateFiles } from '../../../services/uploadService';
 import './AddStudioModal.css';
 
 const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
@@ -14,7 +15,7 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
     furnished: 'yes',
     balcony: 'no',
     description: '',
-    photos_url: []
+    photoFiles: [] // Store actual File objects
   });
 
   const [errors, setErrors] = useState({});
@@ -49,13 +50,21 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
     setIsUploadingPhotos(true);
     
     try {
-      // In a real implementation, you would upload to your file storage service
-      // For now, we'll create object URLs for preview
-      const photoUrls = files.map(file => URL.createObjectURL(file));
+      // Validate files before adding
+      const validation = validateFiles(files, 10); // 10MB max per file
+      if (!validation.valid) {
+        setErrors(prev => ({
+          ...prev,
+          photos_url: validation.errors.join('; ')
+        }));
+        setIsUploadingPhotos(false);
+        return;
+      }
       
+      // Store actual File objects for upload later
       setFormData(prev => ({
         ...prev,
-        photos_url: [...prev.photos_url, ...photoUrls]
+        photoFiles: [...prev.photoFiles, ...files]
       }));
 
       // Clear error when user uploads photos
@@ -66,7 +75,7 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
         }));
       }
     } catch (error) {
-setErrors(prev => ({
+      setErrors(prev => ({
         ...prev,
         photos_url: 'Error uploading photos. Please try again.'
       }));
@@ -78,7 +87,7 @@ setErrors(prev => ({
   const removePhoto = (index) => {
     setFormData(prev => ({
       ...prev,
-      photos_url: prev.photos_url.filter((_, i) => i !== index)
+      photoFiles: prev.photoFiles.filter((_, i) => i !== index)
     }));
   };
 
@@ -146,6 +155,7 @@ setErrors(prev => ({
       
       // Transform the data according to API requirements
       // REQUIRED FIELDS: title, area, monthly_price, bedrooms, bathrooms, furnished, balcony
+      // NOTE: Photos are uploaded AFTER studio creation using /api/v1/uploads/photos
       const apiData = {
         title: formData.title?.trim() || 'Unnamed Studio', // REQUIRED - never empty
         area: (formData.area && formData.area.toString().trim()) || '25', // REQUIRED - never empty, default 25 sqm
@@ -155,21 +165,39 @@ setErrors(prev => ({
         furnished: (['yes', 'no'].includes(formData.furnished)) ? formData.furnished : 'yes', // REQUIRED - validated enum
         balcony: (['yes', 'shared', 'no'].includes(formData.balcony)) ? formData.balcony : 'no', // REQUIRED - validated enum
         description: formData.description?.trim() || 'No description provided', // Optional
-        photos_url: (formData.photos_url && formData.photos_url.length > 0) ? formData.photos_url : [] // Optional
+        photos_url: [] // Empty array - photos uploaded separately via /api/v1/uploads/photos
       };
-
-
-
-
-
-
-
-
 
       console.log('📨 Full JSON being sent to API:', JSON.stringify(apiData, null, 2));
 
-      // Use the correct API endpoint: POST /apartments/rent/{apartment_id}/parts
+      // STEP 1: Create the studio/part first
       const createdStudio = await apartmentPartsApi.create(apartmentId, apiData);
+      console.log('✅ Studio created successfully:', createdStudio);
+      
+      // STEP 2: Upload photos if any were selected
+      if (formData.photoFiles && formData.photoFiles.length > 0) {
+        try {
+          console.log(`📤 Uploading ${formData.photoFiles.length} photos for studio ID: ${createdStudio.id}`);
+          
+          const uploadResult = await uploadStudioPhotos(
+            createdStudio.id,
+            formData.photoFiles
+          );
+          
+          console.log('✅ Photos uploaded successfully:', uploadResult);
+          
+          // Update the studio object with uploaded photo URLs
+          if (uploadResult.files && uploadResult.files.length > 0) {
+            createdStudio.photos_url = uploadResult.files.map(f => f.url);
+          }
+        } catch (uploadError) {
+          console.error('⚠️ Photo upload failed:', uploadError);
+          // Don't fail the entire operation if photo upload fails
+          setErrors({ 
+            general: `Studio created successfully, but photo upload failed: ${uploadError.message}` 
+          });
+        }
+      }
 
       // Notify parent component
       if (onStudioAdded) {
@@ -187,12 +215,12 @@ setErrors(prev => ({
         furnished: 'yes',
         balcony: 'no',
         description: '',
-        photos_url: []
+        photoFiles: []
       });
       setErrors({});
       
     } catch (error) {
-// Specific error messages based on error type
+      // Specific error messages based on error type
       let errorMessage = 'Failed to create studio';
       
       if (error.message === 'Network error' || error.message?.includes('CORS')) {
@@ -385,12 +413,12 @@ setErrors(prev => ({
             </div>
             {errors.photos_url && <span className="error-text">{errors.photos_url}</span>}
             
-            {formData.photos_url.length > 0 && (
+            {formData.photoFiles.length > 0 && (
               <div className="photo-preview-grid">
-                {formData.photos_url.map((photoUrl, index) => (
+                {formData.photoFiles.map((file, index) => (
                   <div key={index} className="photo-preview-item">
                     <img 
-                      src={photoUrl} 
+                      src={URL.createObjectURL(file)} 
                       alt={`Studio ${index + 1}`}
                       className="photo-preview-image"
                     />

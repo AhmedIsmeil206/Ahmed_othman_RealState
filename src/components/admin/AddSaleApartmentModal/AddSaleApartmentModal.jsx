@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMasterAuth } from '../../../hooks/useRedux';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
+import { uploadSaleApartmentPhotos, validateFiles } from '../../../services/uploadService';
 import './AddSaleApartmentModal.css';
 import useUniqueId from '../../../hooks/useUniqueId';
 
@@ -22,7 +23,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     mapUrl: '',
     facilities: [],
     contactNumber: '',
-    photos: []
+    photoFiles: [] // Store actual File objects
   });
 
   const [facilityInput, setFacilityInput] = useState('');
@@ -69,27 +70,21 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
     
-    // Convert files to base64 URLs for preview
-    const fileReaders = files.map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve({
-            file: file,
-            preview: e.target.result,
-            name: file.name
-          });
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(fileReaders).then(results => {
-      setFormData(prev => ({
+    // Validate files before adding
+    const validation = validateFiles(files, 10); // 10MB max per file
+    if (!validation.valid) {
+      setErrors(prev => ({
         ...prev,
-        photos: [...prev.photos, ...results]
+        photos: validation.errors.join('; ')
       }));
-    });
+      return;
+    }
+    
+    // Store actual File objects for upload later
+    setFormData(prev => ({
+      ...prev,
+      photoFiles: [...prev.photoFiles, ...files]
+    }));
 
     // Clear error when user uploads photos
     if (errors.photos) {
@@ -103,7 +98,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const removePhoto = (index) => {
     setFormData(prev => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
+      photoFiles: prev.photoFiles.filter((_, i) => i !== index)
     }));
   };
 
@@ -226,7 +221,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       // Transform frontend data to match EXACT API requirements according to documentation
       // CRITICAL: Sale apartments have DIFFERENT schema than rent apartments
       // REQUIRED FIELDS for sale: name, location, address, area, number, price, bedrooms, bathrooms
-      // ❌ DO NOT SEND: floor, total_parts, contact_number (these are for rent apartments only!)
+      // NOTE: Photos are uploaded AFTER apartment creation using /api/v1/uploads/photos
       const apiData = {
         // === REQUIRED FIELDS ===
         name: formData.name.trim(), // API expects 'name', not 'title'
@@ -240,28 +235,47 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         
         // === OPTIONAL FIELDS ===
         description: formData.description.trim() || '', // Optional description text
-        photos_url: formData.photos && formData.photos.length > 0 
-          ? formData.photos.map(photo => photo.preview) 
-          : [], // API expects 'photos_url', not 'images'
+        photos_url: [], // Empty array - photos uploaded separately via /api/v1/uploads/photos
         location_on_map: formData.mapUrl ? formData.mapUrl.trim() : '', // Google Maps URL
         facilities_amenities: formData.facilities && formData.facilities.length > 0 
           ? formData.facilities.join(', ') 
           : '' // API expects comma-separated string, not array
-        
-        // ❌ EXCLUDED FIELDS (not in sale apartment schema):
-        // - contact_number: Auto-filled by backend from admin's phone
-        // - floor: Only for rent apartments, not sale
-        // - total_parts: Only for rent apartments, not sale
       };
 
-      // Call the API using the property management hook
-
+      // STEP 1: Create the apartment first
       const result = await createSaleApartment(apiData);
       
       if (result.success) {
+        const createdApartment = result.apartment;
+        console.log('✅ Sale apartment created successfully:', createdApartment);
+        
+        // STEP 2: Upload photos if any were selected
+        if (formData.photoFiles && formData.photoFiles.length > 0) {
+          try {
+            console.log(`📤 Uploading ${formData.photoFiles.length} photos for sale apartment ID: ${createdApartment.id}`);
+            
+            const uploadResult = await uploadSaleApartmentPhotos(
+              createdApartment.id,
+              formData.photoFiles
+            );
+            
+            console.log('✅ Photos uploaded successfully:', uploadResult);
+            
+            // Update the apartment object with uploaded photo URLs
+            if (uploadResult.files && uploadResult.files.length > 0) {
+              createdApartment.photos_url = uploadResult.files.map(f => f.url);
+            }
+          } catch (uploadError) {
+            console.error('⚠️ Photo upload failed:', uploadError);
+            // Don't fail the entire operation if photo upload fails
+            setErrors({ 
+              general: `Apartment created successfully, but photo upload failed: ${uploadError.message}` 
+            });
+          }
+        }
 
         // Notify parent component with the created apartment
-        onApartmentAdded?.(result.apartment);
+        onApartmentAdded?.(createdApartment);
         onClose();
         
         // Reset form
@@ -279,17 +293,17 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           mapUrl: '',
           facilities: [],
           contactNumber: '',
-          photos: []
+          photoFiles: []
         });
         
         setErrors({});
 
       } else {
-setErrors({ general: result.message || 'Failed to create apartment. Please try again.' });
+        setErrors({ general: result.message || 'Failed to create apartment. Please try again.' });
       }
       
     } catch (error) {
-const errorMessage = error.message || 'An error occurred while adding the apartment. Please try again.';
+      const errorMessage = error.message || 'An error occurred while adding the apartment. Please try again.';
       setErrors({ general: errorMessage });
     } finally {
       setIsSubmitting(false);
@@ -524,12 +538,12 @@ const errorMessage = error.message || 'An error occurred while adding the apartm
             </div>
             {errors.photos && <span className="error-text">{errors.photos}</span>}
             
-            {formData.photos.length > 0 && (
+            {formData.photoFiles.length > 0 && (
               <div className="photo-preview-grid">
-                {formData.photos.map((photo, index) => (
+                {formData.photoFiles.map((file, index) => (
                   <div key={index} className="photo-preview-item">
                     <img 
-                      src={photo.preview} 
+                      src={URL.createObjectURL(file)} 
                       alt={`Apartment ${index + 1}`}
                       className="photo-preview-image"
                     />
@@ -541,7 +555,7 @@ const errorMessage = error.message || 'An error occurred while adding the apartm
                     >
                       ×
                     </button>
-                    <div className="photo-name">{photo.name}</div>
+                    <div className="photo-name">{file.name}</div>
                   </div>
                 ))}
               </div>

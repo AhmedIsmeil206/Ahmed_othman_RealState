@@ -7,7 +7,7 @@
   overflow: hidden;
   transition: all 0.3s ease;
   border: 2px solid transparent;
-  max-height: 800px;
+  max-height: 1000px;
   display: flex;
   flex-direction: column;
 }
@@ -96,7 +96,7 @@
 }
 
 .apartment-info {
-  padding: 20px;
+  padding: 16px 20px;
 }
 
 .apartment-header-row {
@@ -291,7 +291,7 @@
   color: #374151;
   font-size: 14px;
   line-height: 1.5;
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
 }
 
 .apartment-facilities {
@@ -403,10 +403,11 @@
 }
 
 .studios-section.expanded {
-  max-height: 500px;
+  max-height: 800px;
   opacity: 1;
-  padding: 20px;
+  padding: 28px 24px;
   overflow-y: auto;
+  min-height: 400px;
 }
 
 .studios-section.collapsed {
@@ -437,7 +438,7 @@
 .studios-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 20px;
 }
 
 .no-studios {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { rentalContractsApi, apartmentPartsApi, adminApi } from '../../../services/api';
 import './RentalAlerts.css';
 
-const RentalAlerts = ({ adminId, onContractDeleted, showAllAdmins = false }) => {
+const RentalAlerts = ({ adminId, onContractDeleted, showAllAdmins = false, navigationSource = 'admin-rental-alerts' }) => {
   const navigate = useNavigate();
   const [alertContracts, setAlertContracts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +161,7 @@ const RentalAlerts = ({ adminId, onContractDeleted, showAllAdmins = false }) => 
 
   const handleStudioClick = (contract) => {
     if (contract.apartment_part_id) {
-      navigate(`/studio/${contract.apartment_part_id}?source=admin-rental-alerts`);
+      navigate(`/studio/${contract.apartment_part_id}?source=${navigationSource}`);
     }
   };
 
