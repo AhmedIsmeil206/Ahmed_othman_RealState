@@ -4,8 +4,27 @@
  * Based on PHOTO_UPLOAD_API.md specification
  */
 
-// Get API base URL from environment or use default
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
+const resolveUploadApiBaseUrl = () => {
+  const configuredBaseUrl = (process.env.REACT_APP_API_BASE_URL || '').trim();
+
+  if (!configuredBaseUrl) {
+    return '/api/v1';
+  }
+
+  // In CRA dev, keep requests same-origin and let setupProxy handle backend target.
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    if (
+      configuredBaseUrl.startsWith('http://localhost:8000') ||
+      configuredBaseUrl.startsWith('http://127.0.0.1:8000')
+    ) {
+      return 'http://127.0.0.1:8000/api/v1';
+    }
+  }
+
+  return configuredBaseUrl.replace(/\/$/, '');
+};
+
+const API_BASE_URL = resolveUploadApiBaseUrl();
 
 /**
  * Get authentication token from localStorage
@@ -85,7 +104,7 @@ export const uploadPhotos = async (entityId, entityType, files, documentType = n
 
   try {
     // Make upload request
-    const response = await fetch(`${API_BASE_URL}/api/v1/uploads/photos`, {
+    const response = await fetch(`${API_BASE_URL}/uploads/photos`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

@@ -73,7 +73,7 @@ const errorEl = document.createElement('div');
     // Check 2: Backend connectivity test
 
     try {
-      const healthCheck = await fetch('http://localhost:8000/api/v1/admins/me', {
+      const healthCheck = await fetch('http://127.0.0.1:8000/api/v1/admins/me', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`,

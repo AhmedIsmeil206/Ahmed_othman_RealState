@@ -7,9 +7,29 @@
 // Import enum constants for proper API value mapping
 import { convertToApiEnum, convertFromApiEnum, validateEnum, LOCATIONS, BATHROOM_TYPES, FURNISHED_STATUS, BALCONY_TYPES, CUSTOMER_SOURCES, ADMIN_ROLES, PART_STATUS } from '../utils/apiEnums.js';
 
+const resolveApiBaseUrl = () => {
+  const configuredBaseUrl = (process.env.REACT_APP_API_BASE_URL || '').trim();
+
+  if (!configuredBaseUrl) {
+    return '/api/v1';
+  }
+
+  // In CRA dev, force same-origin API requests so setupProxy handles backend routing.
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    if (
+      configuredBaseUrl.startsWith('http://localhost:8000') ||
+      configuredBaseUrl.startsWith('http://127.0.0.1:8000')
+    ) {
+      return 'http://127.0.0.1:8000/api/v1';
+    }
+  }
+
+  return configuredBaseUrl.replace(/\/$/, '');
+};
+
 // API Configuration from environment variables only
 const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_BASE_URL,
+  BASE_URL: resolveApiBaseUrl(),
   TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT) || 10000,
   HEADERS: {
     'Content-Type': 'application/json'
