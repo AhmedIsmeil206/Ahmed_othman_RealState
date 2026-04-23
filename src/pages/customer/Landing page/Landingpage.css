@@ -76,8 +76,8 @@ button { font: inherit; cursor: pointer; } */
 }
 .theme-toggle { display: flex; gap: 8px; }
 .toggle { width: 14px; height: 14px; border-radius: 999px; border: 2px solid #111827; background: #fff; opacity: .8; }
-.toggle--dark { background: #111827; border-color: #111827; }
-.nav-link{ color: white; text-decoration: none; padding: 8px 12px; border-radius: 8px; transition: all 0.3s ease; }
+.toggle--dark { background: #111827; border-color: black; }
+.nav-link{ color: #111827; text-decoration: none; padding: 8px 12px; border-radius: 8px; transition: all 0.3s ease;font-weight: bold; font-size: large; }
 .nav-link:hover{ background: rgba(255, 255, 255, 0.15); color: white; }
 
 /* Hero */

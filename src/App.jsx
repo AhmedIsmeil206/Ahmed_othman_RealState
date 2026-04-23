@@ -113,7 +113,7 @@ function Seo({
 const websiteStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'AYG Real Estate',
+  name: 'AYG',
   url: SEO_BASE_URL,
   potentialAction: {
     '@type': 'SearchAction',
@@ -159,7 +159,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 element={
                   <>
                     <Seo
-                      title="AYG Real Estate | Studios For Rent And Apartments For Sale"
+                      title="AYG"
                       description="Find furnished studios for rent and apartments for sale in Maadi and Mokattam with AYG Real Estate."
                       canonicalPath="/"
                       structuredData={websiteStructuredData}
