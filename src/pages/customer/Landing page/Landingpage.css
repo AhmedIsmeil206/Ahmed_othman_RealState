@@ -78,7 +78,7 @@ button { font: inherit; cursor: pointer; } */
 .toggle { width: 14px; height: 14px; border-radius: 999px; border: 2px solid #111827; background: #fff; opacity: .8; }
 .toggle--dark { background: #111827; border-color: black; }
 .nav-link{ color: #111827; text-decoration: none; padding: 8px 12px; border-radius: 8px; transition: all 0.3s ease;font-weight: bold; font-size: large; }
-.nav-link:hover{ background: rgba(255, 255, 255, 0.15); color: white; }
+.nav-link:hover{ background: rgba(255, 255, 255, 0.15); color: #006d75; }
 
 /* Hero */
 .hero { position: relative; min-height: 78vh; display: grid; grid-template-rows: auto 1fr; background-size: cover; background-position: center; border-bottom-left-radius: 28px; border-bottom-right-radius: 28px; overflow: hidden; }
