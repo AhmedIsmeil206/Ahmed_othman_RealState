@@ -131,7 +131,6 @@ setLoading(false);
       clearTimeout(timeoutId);
       
       // Fetch studios data from apartmentPartsApi
-      console.log('🏠 Fetching all apartment parts (studios)...');
       try {
         const studiosResponse = await Promise.race([
           apartmentPartsApi.getAll(),
@@ -426,8 +425,6 @@ setProfileMessage({ type: 'error', text: 'Failed to update profile. Please try a
 
       if (adminsResponse && Array.isArray(adminsResponse)) {
 
-        console.log('📧 All emails:', adminsResponse.map(a => a.email).join(', '));
-        console.log('📱 All phones:', adminsResponse.map(a => a.phone || a.mobile).join(', '));
         
         setAllAdmins(adminsResponse);
         setExistingAdmins(adminsResponse);
@@ -544,8 +541,6 @@ showToast('Failed to load admin list. Please try again.', 'error');
     try {
       freshAdmins = await getAllAdminAccounts() || [];
 
-      console.log('📧 Existing emails:', freshAdmins.map(a => a.email));
-      console.log('📱 Existing phones:', freshAdmins.map(a => a.phone || a.mobile));
     } catch (error) {
 freshAdmins = existingAdmins; // Fallback to cached list
     }
@@ -553,7 +548,6 @@ freshAdmins = existingAdmins; // Fallback to cached list
     // Check for duplicate email
     const emailToCheck = adminForm.email.toLowerCase().trim();
 
-    console.log('📧 All admin emails in system:', freshAdmins.map(a => a.email));
     
     const existingAdminWithEmail = freshAdmins.find(admin => 
       admin.email?.toLowerCase() === emailToCheck
@@ -570,7 +564,6 @@ setAdminMessage({ type: 'error', text: errorMsg });
     // Check for duplicate phone
     const phoneToCheck = formatPhoneForAPI(adminForm.mobile.trim());
 
-    console.log('📱 All admin phones in system:', freshAdmins.map(a => a.phone || a.mobile || a.mobileNumber));
     
     const existingAdminWithPhone = freshAdmins.find(admin => {
       const adminPhone = admin.phone || admin.mobile || admin.mobileNumber || '';
@@ -601,17 +594,10 @@ setAdminMessage({ type: 'error', text: errorMsg });
         password: adminForm.password.trim(),
         role: adminForm.role
       };
-      
-      console.log('� Phone formatting:', {
-        input: adminForm.mobile.trim(),
-        formatted: apiData.phone,
-        length: apiData.phone.length
-      });
 
       // Create admin account via API
 
       const response = await createAdminAccount(apiData);
-      console.log('📨 Full API Response:', JSON.stringify(response, null, 2));
 
       if (response.success) {
         // Show success toast
@@ -653,65 +639,33 @@ let errorMsg = response.error || response.message || 'Failed to create admin acc
             const freshAdmins = await getAllAdminAccounts();
 
             if (freshAdmins && Array.isArray(freshAdmins)) {
-              console.log('📋 RAW backend response:', JSON.stringify(freshAdmins, null, 2));
-              console.log('📋 All admins from backend:', freshAdmins.map(a => ({
-                id: a.id,
-                name: a.full_name || a.name,
-                email: a.email,
-                account: a.account,
-                phone: a.phone,
-                mobile: a.mobile,
-                mobileNumber: a.mobileNumber
-              })));
-              
-              console.log('🎯 Searching for duplicates:', {
-                searchEmail: apiData.email.toLowerCase(),
-                searchPhone: apiData.phone
-              });
-              
               // Check email match - check BOTH 'email' and 'account' fields
               const matchingEmail = freshAdmins.find(a => {
                 const adminEmail = (a.email || a.account || '').toLowerCase();
                 const searchEmail = apiData.email.toLowerCase();
-                const match = adminEmail === searchEmail;
-
-                return match;
+                return adminEmail === searchEmail;
               });
               
               // Check phone match - check ALL possible phone field variations
               const matchingPhone = freshAdmins.find(a => {
                 const adminPhone = a.phone || a.mobile || a.mobileNumber || '';
-                const match = adminPhone === apiData.phone;
-                console.log(`  Phone check - Admin ${a.id} (${a.full_name || a.name}): "${adminPhone}" === "${apiData.phone}"? ${match}`);
-                return match;
-              });
-              
-              console.log('🔍 Duplicate analysis results:', {
-                emailMatch: matchingEmail ? `${matchingEmail.email} (${matchingEmail.name || matchingEmail.full_name})` : 'No match',
-                phoneMatch: matchingPhone ? `${matchingPhone.phone || matchingPhone.mobile} (${matchingPhone.name || matchingPhone.full_name})` : 'No match',
-                searchedEmail: apiData.email,
-                searchedPhone: apiData.phone
+                return adminPhone === apiData.phone;
               });
               
               if (matchingEmail && matchingPhone && matchingEmail.id === matchingPhone.id) {
-                // Same admin has both email and phone
                 errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
-} else if (matchingEmail) {
-                // Email is duplicate
+              } else if (matchingEmail) {
                 errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
-} else if (matchingPhone) {
-                // Phone is duplicate
+              } else if (matchingPhone) {
                 errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
-} else {
-                // Backend says duplicate but we can't find it - THIS IS THE ACTUAL PROBLEM
-console.error('📊 Full admin list:', JSON.stringify(freshAdmins, null, 2));
-errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
+              } else {
+                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
               }
             } else {
               errorMsg = `❌ Backend says duplicate exists but could not fetch admin list to identify the issue.\n\nPlease try different email and phone number.`;
             }
           } catch (fetchError) {
-errorMsg = `❌ Backend detected duplicate values but could not verify details.\n\nPlease try different email and phone number.`;
+            errorMsg = `❌ Backend detected duplicate values but could not verify details.\n\nPlease try different email and phone number.`;
           }
         }
         
@@ -1338,12 +1292,6 @@ showToast('Failed to refresh admin list', 'error');
                         const emailValue = e.target.value.toLowerCase().trim();
                         if (!emailValue) return;
 
-
-                        console.log('📧 Existing emails:', existingAdmins.map(a => ({
-                          email: a.email,
-                          account: a.account
-                        })));
-                        
                         // Check BOTH email and account fields
                         const matchingAdmin = existingAdmins.find(a => {
                           const adminEmail = (a.email || a.account || '').toLowerCase();
@@ -1351,13 +1299,11 @@ showToast('Failed to refresh admin list', 'error');
                         });
                         
                         if (matchingAdmin) {
-
                           setAdminErrors(prev => ({
                             ...prev,
                             email: `⚠️ Email already used by: ${matchingAdmin.full_name || matchingAdmin.name || 'existing admin'}`
                           }));
                         } else {
-
                           // Clear email error if it was previously set
                           setAdminErrors(prev => {
                             const newErrors = {...prev};
@@ -1422,7 +1368,6 @@ showToast('Failed to refresh admin list', 'error');
                           const formattedPhone = formatPhoneForAPI(phoneValue);
 
 
-                          console.log('📱 Existing phones:', existingAdmins.map(a => a.phone || a.mobile || a.mobileNumber));
                           
                           const matchingAdmin = existingAdmins.find(a => 
                             (a.phone || a.mobile || a.mobileNumber) === formattedPhone

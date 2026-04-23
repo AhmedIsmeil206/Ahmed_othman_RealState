@@ -25,6 +25,7 @@ const AdminManagementPage = () => {
   
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   // Load admin accounts on component mount
   const loadAdminAccounts = useCallback(async () => {
@@ -131,14 +132,17 @@ setAdminAccounts([]);
   };
 
   const handleDeleteAdmin = async (adminId) => {
-    if (window.confirm('Are you sure you want to delete this admin account?')) {
-      const success = deleteAdminAccount(adminId);
-      if (success) {
-        loadAdminAccounts();
-        setMessage({ type: 'success', text: 'Admin account deleted successfully' });
-      } else {
-        setMessage({ type: 'error', text: 'Failed to delete admin account' });
-      }
+    if (confirmDeleteId !== adminId) {
+      setConfirmDeleteId(adminId);
+      return;
+    }
+    setConfirmDeleteId(null);
+    const success = deleteAdminAccount(adminId);
+    if (success) {
+      loadAdminAccounts();
+      setMessage({ type: 'success', text: 'Admin account deleted successfully' });
+    } else {
+      setMessage({ type: 'error', text: 'Failed to delete admin account' });
     }
   };
 
@@ -294,13 +298,21 @@ setAdminAccounts([]);
                     >
                       {admin.isActive ? '🔒' : '🔓'}
                     </button>
-                    <button
-                      className="action-btn delete"
-                      onClick={() => handleDeleteAdmin(admin.id)}
-                      title="Delete Admin"
-                    >
-                      🗑️
-                    </button>
+                    {confirmDeleteId === admin.id ? (
+                      <div className="delete-confirm-inline">
+                        <span>Confirm?</span>
+                        <button className="action-btn delete confirm-yes-btn" onClick={() => handleDeleteAdmin(admin.id)}>Yes</button>
+                        <button className="action-btn confirm-no-btn" onClick={() => setConfirmDeleteId(null)}>No</button>
+                      </div>
+                    ) : (
+                      <button
+                        className="action-btn delete"
+                        onClick={() => handleDeleteAdmin(admin.id)}
+                        title="Delete Admin"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </td>
               </>

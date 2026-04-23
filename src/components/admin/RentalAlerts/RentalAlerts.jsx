@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rentalContractsApi, apartmentPartsApi, adminApi } from '../../../services/api';
+import { useToast } from '../../../contexts/ToastContext';
 import './RentalAlerts.css';
 
 const RentalAlerts = ({ adminId, onContractDeleted, showAllAdmins = false, navigationSource = 'admin-rental-alerts' }) => {
@@ -12,6 +13,7 @@ const RentalAlerts = ({ adminId, onContractDeleted, showAllAdmins = false, navig
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [contractToDelete, setContractToDelete] = useState(null);
   const [adminNames, setAdminNames] = useState({});
+  const { showError } = useToast();
 
   // Calculate days until expiration
   const calculateDaysUntilExpiry = (endDate) => {
@@ -190,7 +192,7 @@ const RentalAlerts = ({ adminId, onContractDeleted, showAllAdmins = false, navig
       setContractToDelete(null);
     } catch (error) {
       console.error('Failed to delete contract:', error);
-      alert('Failed to delete contract: ' + (error.message || 'Unknown error'));
+      showError('Failed to delete contract: ' + (error.message || 'Unknown error'));
     } finally {
       setDeletingContractId(null);
     }

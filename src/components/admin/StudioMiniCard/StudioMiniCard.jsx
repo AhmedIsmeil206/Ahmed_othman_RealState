@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
+import { useToast } from '../../../contexts/ToastContext';
 import './StudioMiniCard.css';
 
 const StudioMiniCard = ({ 
@@ -13,20 +14,20 @@ const StudioMiniCard = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { updateStudio, deleteStudio } = usePropertyManagement();
+  const { showSuccess, showError } = useToast();
 
   const handleDelete = async () => {
 
     const result = await deleteStudio(studio.id);
 
     if (result && result.success) {
-
-      alert('Studio deleted successfully!');
+      showSuccess('Studio deleted successfully!');
       
       // Auto-refresh page to show updated data
       window.location.reload();
     } else {
       const errorMsg = result?.message || result?.error || 'Unknown error occurred';
-alert(`Failed to delete studio: ${errorMsg}`);
+      showError(`Failed to delete studio: ${errorMsg}`);
     }
     setShowDeleteConfirm(false);
   };

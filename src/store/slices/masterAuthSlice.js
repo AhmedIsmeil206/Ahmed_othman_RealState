@@ -237,7 +237,6 @@ export const updateMasterProfile = createAsyncThunk(
 
 
 
-      console.log('📝 Update data keys:', Object.keys(updateData));
       
       // Use the correct API endpoint: PUT /admins/me
       // Note: Backend doesn't validate currentPassword for this endpoint

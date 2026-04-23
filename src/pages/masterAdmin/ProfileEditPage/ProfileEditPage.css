@@ -206,3 +206,42 @@
     font-size: 1.5rem;
   }
 }
+
+@media (max-width: 480px) {
+  .profile-edit-page {
+    padding: 0.5rem;
+  }
+
+  .profile-edit-container {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .profile-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .form-group input {
+    padding: 0.65rem;
+    font-size: 0.95rem;
+  }
+
+  .password-section {
+    padding: 1rem;
+  }
+
+  .update-btn {
+    width: 100%;
+    padding: 0.85rem;
+  }
+
+  .form-actions {
+    margin-top: 1.5rem;
+  }
+
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

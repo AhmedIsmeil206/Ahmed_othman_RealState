@@ -67,6 +67,12 @@
   width: auto;
 }
 
+/* Hero overlay: white logo matting blends with background */
+.admin-landing__nav .brand-logo {
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
 .brand-text {
   font-weight: 800;
   font-size: 28px;

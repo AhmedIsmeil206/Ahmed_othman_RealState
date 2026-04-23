@@ -288,26 +288,22 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         description: apiData.description || 'No description provided'
       };
 
-      console.log('📨 Full JSON being sent to API:', JSON.stringify(apiData, null, 2));
 
       // STEP 1: Create the apartment first
       const result = await createRentApartment(validatedApiData);
       
       if (result.success) {
         const createdApartment = result.apartment;
-        console.log('✅ Apartment created successfully:', createdApartment);
         
         // STEP 2: Upload photos if any were selected
         if (formData.photoFiles && formData.photoFiles.length > 0) {
           try {
-            console.log(`📤 Uploading ${formData.photoFiles.length} photos for apartment ID: ${createdApartment.id}`);
             
             const uploadResult = await uploadRentalApartmentPhotos(
               createdApartment.id,
               formData.photoFiles
             );
             
-            console.log('✅ Photos uploaded successfully:', uploadResult);
             
             // Update the apartment object with uploaded photo URLs
             if (uploadResult.files && uploadResult.files.length > 0) {

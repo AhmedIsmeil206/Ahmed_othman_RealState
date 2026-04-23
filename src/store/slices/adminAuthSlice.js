@@ -1,10 +1,26 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createSelector } from '@reduxjs/toolkit';
 import CryptoJS from 'crypto-js';
 
 // Constants
 const ENCRYPTION_KEY = 'admin-renty-2025-secret-key';
 const ADMIN_STORAGE_KEY = 'admin_users';
 const CURRENT_ADMIN_KEY = 'current_admin_user';
+const isBrowser = typeof window !== 'undefined';
+
+const storageGet = (key) => {
+  if (!isBrowser) return null;
+  return localStorage.getItem(key);
+};
+
+const storageSet = (key, value) => {
+  if (!isBrowser) return;
+  localStorage.setItem(key, value);
+};
+
+const storageRemove = (key) => {
+  if (!isBrowser) return;
+  localStorage.removeItem(key);
+};
 
 // Utility functions
 const encrypt = (text) => {
@@ -30,9 +46,10 @@ const hashPassword = (password) => {
 
 // Get stored admins from localStorage
 const getStoredAdmins = () => {
+  if (!isBrowser) return [];
   try {
     // First try the encrypted storage
-    const encryptedAdmins = localStorage.getItem(ADMIN_STORAGE_KEY);
+    const encryptedAdmins = storageGet(ADMIN_STORAGE_KEY);
     if (encryptedAdmins) {
       const decryptedAdmins = decrypt(encryptedAdmins);
       if (decryptedAdmins) {
@@ -41,7 +58,7 @@ const getStoredAdmins = () => {
     }
     
     // Fallback: check for old 'adminAccounts' format
-    const oldAdminAccounts = localStorage.getItem('adminAccounts');
+    const oldAdminAccounts = storageGet('adminAccounts');
     if (oldAdminAccounts) {
       const admins = JSON.parse(oldAdminAccounts);
       // Migrate old format to new format and save encrypted
@@ -63,9 +80,9 @@ const getStoredAdmins = () => {
         // Save in new encrypted format
         const encryptedAdmins = encrypt(JSON.stringify(migratedAdmins));
         if (encryptedAdmins) {
-          localStorage.setItem(ADMIN_STORAGE_KEY, encryptedAdmins);
+          storageSet(ADMIN_STORAGE_KEY, encryptedAdmins);
         }
-        localStorage.removeItem('adminAccounts');
+        storageRemove('adminAccounts');
         
         return migratedAdmins;
       }
@@ -80,10 +97,11 @@ return [];
 
 // Save admins to localStorage
 const saveAdmins = (admins) => {
+  if (!isBrowser) return false;
   try {
     const encryptedAdmins = encrypt(JSON.stringify(admins));
     if (encryptedAdmins) {
-      localStorage.setItem(ADMIN_STORAGE_KEY, encryptedAdmins);
+      storageSet(ADMIN_STORAGE_KEY, encryptedAdmins);
       return true;
     }
     return false;
@@ -94,8 +112,9 @@ return false;
 
 // Get current admin session from localStorage
 const getCurrentAdminSession = () => {
+  if (!isBrowser) return null;
   try {
-    const encryptedSession = localStorage.getItem(CURRENT_ADMIN_KEY);
+    const encryptedSession = storageGet(CURRENT_ADMIN_KEY);
     if (encryptedSession) {
       const decryptedSession = decrypt(encryptedSession);
       if (decryptedSession) {
@@ -110,13 +129,13 @@ const getCurrentAdminSession = () => {
           return adminSession;
         } else {
           // Session expired, clear it
-          localStorage.removeItem(CURRENT_ADMIN_KEY);
+          storageRemove(CURRENT_ADMIN_KEY);
         }
       }
     }
     return null;
   } catch (error) {
-localStorage.removeItem(CURRENT_ADMIN_KEY);
+storageRemove(CURRENT_ADMIN_KEY);
     return null;
   }
 };
@@ -148,10 +167,10 @@ const adminAuthSlice = createSlice({
       if (action.payload) {
         const encryptedSession = encrypt(JSON.stringify(action.payload));
         if (encryptedSession) {
-          localStorage.setItem(CURRENT_ADMIN_KEY, encryptedSession);
+          storageSet(CURRENT_ADMIN_KEY, encryptedSession);
         }
       } else {
-        localStorage.removeItem(CURRENT_ADMIN_KEY);
+        storageRemove(CURRENT_ADMIN_KEY);
       }
     },
     loginSuccess: (state, action) => {
@@ -172,19 +191,19 @@ const adminAuthSlice = createSlice({
       
       const encryptedSession = encrypt(JSON.stringify(adminSession));
       if (encryptedSession) {
-        localStorage.setItem(CURRENT_ADMIN_KEY, encryptedSession);
+        storageSet(CURRENT_ADMIN_KEY, encryptedSession);
       }
     },
     loginFailure: (state, action) => {
       state.currentAdmin = null;
       state.isLoading = false;
       state.error = action.payload;
-      localStorage.removeItem(CURRENT_ADMIN_KEY);
+      storageRemove(CURRENT_ADMIN_KEY);
     },
     logout: (state) => {
       state.currentAdmin = null;
       state.error = null;
-      localStorage.removeItem(CURRENT_ADMIN_KEY);
+      storageRemove(CURRENT_ADMIN_KEY);
     },
     setAdmins: (state, action) => {
       state.admins = action.payload;
@@ -364,8 +383,9 @@ export const selectAdminError = (state) => state.adminAuth.error;
 export const selectAllAdmins = (state) => state.adminAuth.admins;
 export const selectIsAdminAuthenticated = (state) => !!state.adminAuth.currentAdmin;
 
-export const selectAllAdminAccounts = (state) => 
-  state.adminAuth.admins.map(admin => ({
+export const selectAllAdminAccounts = createSelector(
+  [selectAllAdmins],
+  (admins) => admins.map((admin) => ({
     id: admin.id,
     username: admin.username,
     account: admin.account,
@@ -373,6 +393,7 @@ export const selectAllAdminAccounts = (state) =>
     createdAt: admin.createdAt,
     role: admin.role,
     isActive: admin.isActive
-  }));
+  }))
+);
 
 export default adminAuthSlice.reducer;

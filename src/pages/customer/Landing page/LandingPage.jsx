@@ -86,9 +86,17 @@ function LandingPage() {
         </article>
 
         <article className="option-card">
-          <div className="option-card__media" style={{ backgroundImage: `url(${heroImg})` }} aria-hidden />
-          {/* Replaced icon with photo thumbnail */}
-          <img className="option-card__thumb" src={heroImg} alt="Apartment preview" aria-hidden="true" />
+          <div
+            className="option-card__media option-card__media--brand"
+            style={{ backgroundImage: `url(${aygLogo})` }}
+            aria-hidden
+          />
+          <img
+            className="option-card__thumb option-card__thumb--brand"
+            src={aygLogo}
+            alt="AYG"
+            aria-hidden="true"
+          />
           <p className="option-card__text">
             Browse our curated apartments for sale with verified listings and expert guidance.
           </p>

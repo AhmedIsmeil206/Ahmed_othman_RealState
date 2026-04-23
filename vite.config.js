@@ -1,3 +1,23 @@
-// This project uses Create React App (react-scripts), not Vite
-// Proxy configuration is in src/setupProxy.js instead
-// This file can be ignored or deleted
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig(({ mode }) => {
+	const env = loadEnv(mode, process.cwd(), '');
+	const proxyTarget = env.VITE_PROXY_TARGET || 'http://127.0.0.1:8000';
+
+	return {
+		plugins: [react()],
+		define: {
+			'process.env': JSON.stringify(env),
+		},
+		server: {
+			port: Number(env.VITE_PORT || 3000),
+			proxy: {
+				'/api': {
+					target: proxyTarget,
+					changeOrigin: true,
+				},
+			},
+		},
+	};
+});

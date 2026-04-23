@@ -363,3 +363,56 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .apartment-detail-page {
+    padding: 0.75rem;
+  }
+
+  .apartment-detail-header {
+    padding: 1rem;
+  }
+
+  .apartment-name {
+    font-size: 1.4rem;
+  }
+
+  .apartment-stats-summary {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .stat-box {
+    min-width: unset;
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .apartment-images-gallery {
+    gap: 0.5rem;
+  }
+
+  .apartment-image-item {
+    height: 150px;
+  }
+
+  .apartment-details-section {
+    padding: 1rem;
+  }
+
+  .studios-section {
+    padding: 1rem;
+  }
+
+  .studios-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .add-studio-btn-primary {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+}

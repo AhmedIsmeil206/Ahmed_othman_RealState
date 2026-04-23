@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
+import { useToast } from '../../../contexts/ToastContext';
 import StudioMiniCard from '../StudioMiniCard';
 import './ApartmentCard.css';
 
@@ -16,6 +17,7 @@ const ApartmentCard = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { deleteRentApartment } = usePropertyManagement();
+  const { showSuccess, showError } = useToast();
 
   const availableStudios = apartment.studios ? apartment.studios.filter(studio => studio.isAvailable).length : 0;
   const occupiedStudios = apartment.studios ? apartment.studios.length - availableStudios : 0;
@@ -30,17 +32,16 @@ const ApartmentCard = ({
       const result = await deleteRentApartment(apartment.id);
       
       if (result.success) {
-
-        alert('Rental apartment deleted successfully!');
+        showSuccess('Rental apartment deleted successfully!');
         
         // Auto-refresh page to show updated data
         window.location.reload();
       } else {
-alert('Failed to delete apartment: ' + result.message);
+        showError('Failed to delete apartment: ' + result.message);
         setShowDeleteConfirm(false);
       }
     } catch (error) {
-alert('Error deleting apartment');
+      showError('Error deleting apartment');
       setShowDeleteConfirm(false);
     } finally {
       setIsDeleting(false);

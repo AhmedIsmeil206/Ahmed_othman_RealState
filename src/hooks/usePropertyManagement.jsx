@@ -187,7 +187,6 @@ export const usePropertyManagement = () => {
 
   const transformSaleApartmentToApi = (frontendApartment) => {
 
-    console.log('📋 Frontend data received:', JSON.stringify(frontendApartment, null, 2));
     
     // CRITICAL: Sale apartments have DIFFERENT schema than rent apartments
     // Sale schema does NOT include: floor, total_parts, contact_number
@@ -243,10 +242,7 @@ export const usePropertyManagement = () => {
 
 
 
-    console.log('  - facilities_amenities:', transformed.facilities_amenities || '(not included)');
-    console.log('  - description:', transformed.description || '(not included)');
     
-    console.log('📤 Final API payload:', JSON.stringify(transformed, null, 2));
     return transformed;
   };
 

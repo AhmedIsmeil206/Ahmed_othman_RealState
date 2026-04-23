@@ -30,12 +30,6 @@ class MasterAuthService {
     this.lastAuthAttempt = new Date();
 
     try {
-      console.log('🔐 Master Admin Authentication Started', {
-        identifier: identifier,
-        timestamp: this.lastAuthAttempt.toISOString(),
-        type: this.determineIdentifierType(identifier)
-      });
-
       // Step 1: Validate input format
       const validationResult = this.validateCredentials(identifier, password);
       if (!validationResult.isValid) {

@@ -2,18 +2,24 @@ import React, { useState, useEffect } from 'react';
 import './ImageGallery.css';
 
 const ImageGallery = ({ images, title }) => {
+  const validImages = Array.isArray(images)
+    ? images.filter((image) => typeof image === 'string' && image.trim().length > 0)
+    : [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [failedImages, setFailedImages] = useState(() => new Set());
+
+  const availableImages = validImages.filter((image) => !failedImages.has(image));
 
   const nextImage = (e) => {
     if (e) e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % images.length);
+    setCurrentIndex((prev) => (prev + 1) % availableImages.length);
   };
 
   const prevImage = (e) => {
     if (e) e.stopPropagation();
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    setCurrentIndex((prev) => (prev - 1 + availableImages.length) % availableImages.length);
   };
 
   const openModal = (index) => {
@@ -31,14 +37,14 @@ const ImageGallery = ({ images, title }) => {
 
   // Auto-play slider
   useEffect(() => {
-    if (images.length <= 1 || isHovered || isModalOpen) return;
+    if (availableImages.length <= 1 || isHovered || isModalOpen) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
+      setCurrentIndex((prev) => (prev + 1) % availableImages.length);
     }, 4000); // Change slide every 4 seconds
 
     return () => clearInterval(interval);
-  }, [images.length, isHovered, isModalOpen]);
+  }, [availableImages.length, isHovered, isModalOpen]);
 
   // Add keyboard navigation
   useEffect(() => {
@@ -46,9 +52,9 @@ const ImageGallery = ({ images, title }) => {
       if (!isModalOpen) return;
       
       if (e.key === 'ArrowRight') {
-        setCurrentIndex((prev) => (prev + 1) % images.length);
+        setCurrentIndex((prev) => (prev + 1) % availableImages.length);
       } else if (e.key === 'ArrowLeft') {
-        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+        setCurrentIndex((prev) => (prev - 1 + availableImages.length) % availableImages.length);
       } else if (e.key === 'Escape') {
         closeModal();
       }
@@ -56,7 +62,35 @@ const ImageGallery = ({ images, title }) => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isModalOpen, images.length]);
+  }, [isModalOpen, availableImages.length]);
+
+  useEffect(() => {
+    if (currentIndex >= availableImages.length) {
+      setCurrentIndex(0);
+    }
+  }, [availableImages.length, currentIndex]);
+
+  const handleImageError = (failedSrc) => {
+    setFailedImages((prev) => {
+      const next = new Set(prev);
+      next.add(failedSrc);
+      return next;
+    });
+  };
+
+  if (availableImages.length === 0) {
+    return (
+      <div className="image-gallery">
+        <div className="gallery-slider">
+          <div className="slider-container">
+            <div className="slider-image" style={{ display: 'grid', placeItems: 'center', color: '#666' }}>
+              No Image Available
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="image-gallery">
@@ -67,13 +101,14 @@ const ImageGallery = ({ images, title }) => {
       >
         <div className="slider-container">
           <img 
-            src={images[currentIndex]} 
+            src={availableImages[currentIndex]} 
             alt={`${title} ${currentIndex + 1}`}
             className="slider-image"
+            onError={() => handleImageError(availableImages[currentIndex])}
             onClick={() => openModal(currentIndex)}
           />
           
-          {images.length > 1 && (
+          {availableImages.length > 1 && (
             <>
               <button className="slider-nav prev" onClick={prevImage}>‹</button>
               <button className="slider-nav next" onClick={nextImage}>›</button>
@@ -81,9 +116,9 @@ const ImageGallery = ({ images, title }) => {
           )}
         </div>
         
-        {images.length > 1 && (
+        {availableImages.length > 1 && (
           <div className="slider-dots">
-            {images.map((_, index) => (
+            {availableImages.map((_, index) => (
               <button
                 key={index}
                 className={`dot ${index === currentIndex ? 'active' : ''}`}
@@ -100,13 +135,14 @@ const ImageGallery = ({ images, title }) => {
             <button className="close-button" onClick={closeModal}>×</button>
             <button className="nav-button prev" onClick={prevImage}>‹</button>
             <img 
-              src={images[currentIndex]} 
+              src={availableImages[currentIndex]} 
               alt={`${title} ${currentIndex + 1}`}
               className="modal-image"
+              onError={() => handleImageError(availableImages[currentIndex])}
             />
             <button className="nav-button next" onClick={nextImage}>›</button>
             <div className="modal-image-counter">
-              {currentIndex + 1} / {images.length}
+              {currentIndex + 1} / {availableImages.length}
             </div>
           </div>
         </div>

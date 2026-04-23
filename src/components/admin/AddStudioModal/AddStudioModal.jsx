@@ -168,23 +168,19 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
         photos_url: [] // Empty array - photos uploaded separately via /api/v1/uploads/photos
       };
 
-      console.log('📨 Full JSON being sent to API:', JSON.stringify(apiData, null, 2));
 
       // STEP 1: Create the studio/part first
       const createdStudio = await apartmentPartsApi.create(apartmentId, apiData);
-      console.log('✅ Studio created successfully:', createdStudio);
       
       // STEP 2: Upload photos if any were selected
       if (formData.photoFiles && formData.photoFiles.length > 0) {
         try {
-          console.log(`📤 Uploading ${formData.photoFiles.length} photos for studio ID: ${createdStudio.id}`);
           
           const uploadResult = await uploadStudioPhotos(
             createdStudio.id,
             formData.photoFiles
           );
           
-          console.log('✅ Photos uploaded successfully:', uploadResult);
           
           // Update the studio object with uploaded photo URLs
           if (uploadResult.files && uploadResult.files.length > 0) {

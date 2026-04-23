@@ -26,15 +26,9 @@ const localStorageMiddleware = (store) => (next) => (action) => {
   if (propertyActions.includes(action.type)) {
     try {
       // The propertySlice reducers already handle localStorage saves
-      // This middleware is for additional logging/debugging
-      console.log('🔄 Property data synced to localStorage:', {
-        action: action.type,
-        apartments: state.property.apartments.length,
-        saleApartments: state.property.saleApartments.length,
-        timestamp: new Date().toISOString()
-      });
     } catch (error) {
-}
+      // ignore
+    }
   }
   
   return result;

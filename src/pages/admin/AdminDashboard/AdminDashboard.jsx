@@ -9,6 +9,7 @@ import AddStudioModal from '../../../components/admin/AddStudioModal';
 import AddApartmentModal from '../../../components/admin/AddApartmentModal';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import { myContentApi, handleApiError } from '../../../services/api';
+import { useToast } from '../../../contexts/ToastContext';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './AdminDashboard.css';
 import aygLogo from '../../../assets/images/logo/AYG.png';
@@ -27,6 +28,7 @@ const AdminDashboard = () => {
   const [selectedApartmentId, setSelectedApartmentId] = useState(null);
   const [isProcessingStudio, setIsProcessingStudio] = useState(false);
   const [isProcessingApartment, setIsProcessingApartment] = useState(false);
+  const { showSuccess, showError } = useToast();
   
   // Get admin role from current admin data
   const adminRole = currentAdmin?.role || 'studio_rental';
@@ -173,11 +175,12 @@ const errorMessage = handleApiError(error, 'Failed to load your properties');
         setSelectedApartmentId(null);
         
         // Show success message
-        alert('✅ Studio added successfully!');
+        showSuccess('Studio added successfully!');
       } else {
-alert('❌ Failed to add studio: ' + result.message);
+        showError('Failed to add studio: ' + result.message);
       }
     } catch (error) {
+      showError(error.message || 'Failed to add studio');
 } finally {
       setIsProcessingStudio(false);
     }

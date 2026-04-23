@@ -8,7 +8,16 @@ import { convertFromApiEnum, getValidOptions } from '../../../utils/apiEnums';
 import './StudiosListPage.css';
 import aygLogo from '../../../assets/images/logo/AYG.png';
 
+const FALLBACK_STUDIO_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="200"%3E%3Crect width="300" height="200" fill="%23e2e8f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="%23718096"%3ENo Image Available%3C/text%3E%3C/svg%3E';
+
 const StudiosListPage = () => {
+  const isRenderableImageUrl = (url) => {
+    if (typeof url !== 'string' || !url.trim()) return false;
+    if (url.startsWith('blob:')) return false;
+    if (url.includes('example.com')) return false;
+    return true;
+  };
+
   // State management
   const [allStudios, setAllStudios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,9 +53,13 @@ const StudiosListPage = () => {
     
     // Ensure images array exists and has fallback
     const imageUrls = part.photos_url || part.images || [];
-    const images = Array.isArray(imageUrls) && imageUrls.length > 0 
-      ? imageUrls 
-      : ['https://via.placeholder.com/300x200?text=No+Image'];
+    const images = Array.isArray(imageUrls) && imageUrls.length > 0
+      ? imageUrls.filter(isRenderableImageUrl)
+      : [FALLBACK_STUDIO_IMAGE];
+
+    const safeImages = images.length > 0
+      ? images
+      : [FALLBACK_STUDIO_IMAGE];
     
     // Handle location using enum conversion - might come from parent apartment data
     let location = 'Location not specified';
@@ -88,7 +101,7 @@ const StudiosListPage = () => {
       balcony: balconyDisplay,
       balconyEnum: part.balcony, // Keep for API calls
       amenities: part.facilities_amenities?.split(', ') || [],
-      images: images,
+      images: safeImages,
       description: part.description || 'No description available',
       createdBy: part.created_by_admin_id || part.createdBy || null,
       createdAt: createdDate,

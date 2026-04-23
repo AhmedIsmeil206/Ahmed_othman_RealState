@@ -52,12 +52,10 @@ import {
 
 import {
   // Master auth actions
-  signupMasterAdmin,
   loginMasterAdmin,
   updateMasterProfile,
   logout as masterLogout,
   clearError as clearMasterError,
-  initializeMasterAuth,
   // Master auth selectors
   selectCurrentUser,
   selectMasterLoading,
@@ -190,10 +188,8 @@ export const useProperty = () => {
 
 
 
-      console.log(`- Available Studios (Customer View): ${availableStudios}`);
 
       apartments.forEach(apartment => {
-        console.log(`  • ${apartment.name}: ${apartment.studios.length} studios (${apartment.studios.filter(s => s.isAvailable).length} available)`);
       });
       
       return { totalApartments, totalStudios, availableStudios, apartments };

@@ -2,9 +2,11 @@ import { createSlice } from '@reduxjs/toolkit';
 
 // Theme constants
 const THEME_STORAGE_KEY = 'app_theme';
+const isBrowser = typeof window !== 'undefined';
 
 // Get stored theme from localStorage
 const getStoredTheme = () => {
+  if (!isBrowser) return 'light';
   try {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     return storedTheme || 'light'; // Default to light theme
@@ -15,6 +17,7 @@ return 'light';
 
 // Save theme to localStorage
 const saveTheme = (theme) => {
+  if (!isBrowser) return;
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch (error) {

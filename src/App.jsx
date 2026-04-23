@@ -1,14 +1,13 @@
-import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from './store';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { detectSystemTheme } from './store/slices/themeSlice';
 import { initializeMasterAuth } from './store/slices/masterAuthSlice';
-import { setCurrentAdmin } from './store/slices/adminAuthSlice';
 import { ToastProvider } from './contexts/ToastContext';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
+import { QueryClient, QueryClientProvider, HydrationBoundary } from '@tanstack/react-query';
 import LandingPage from './pages/customer/Landing page/LandingPage';
 import StudiosListPage from './pages/customer/StudiosListPage/StudiosListPage';
 import StudioDetailsPage from './pages/customer/StudioDetailsPage/StudioDetailsPage';
@@ -28,9 +27,103 @@ import AdminManagementPage from './pages/masterAdmin/AdminManagementPage/AdminMa
 import MasterAdminRentalAlertsPage from './pages/masterAdmin/MasterAdminRentalAlertsPage/MasterAdminRentalAlertsPage';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import AdminProtectedRoute from './components/common/ProtectedRoute/AdminProtectedRoute';
+import { useMemo } from 'react';
+
+const SEO_BASE_URL =
+  (typeof window !== 'undefined' && window.location.origin) ||
+  process.env.VITE_SITE_URL ||
+  'http://localhost:3000';
+
+function Seo({
+  title,
+  description,
+  canonicalPath = '/',
+  image = '/AYG.png',
+  noIndex = false,
+  structuredData,
+}) {
+  const canonical = `${SEO_BASE_URL}${canonicalPath}`;
+  const imageUrl = image.startsWith('http') ? image : `${SEO_BASE_URL}${image}`;
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    document.title = title;
+
+    const setMeta = (name, content, property = false) => {
+      const selector = property
+        ? `meta[property="${name}"]`
+        : `meta[name="${name}"]`;
+      let tag = document.head.querySelector(selector);
+      if (!tag) {
+        tag = document.createElement('meta');
+        if (property) {
+          tag.setAttribute('property', name);
+        } else {
+          tag.setAttribute('name', name);
+        }
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    const setCanonical = (href) => {
+      let link = document.head.querySelector('link[rel="canonical"]');
+      if (!link) {
+        link = document.createElement('link');
+        link.setAttribute('rel', 'canonical');
+        document.head.appendChild(link);
+      }
+      link.setAttribute('href', href);
+    };
+
+    setMeta('description', description);
+    setMeta('og:title', title, true);
+    setMeta('og:description', description, true);
+    setMeta('og:type', 'website', true);
+    setMeta('og:url', canonical, true);
+    setMeta('og:image', imageUrl, true);
+    setMeta('twitter:card', 'summary_large_image');
+    setMeta('twitter:title', title);
+    setMeta('twitter:description', description);
+    setMeta('twitter:image', imageUrl);
+    setMeta('robots', noIndex ? 'noindex,nofollow' : 'index,follow');
+    setCanonical(canonical);
+
+    const scriptId = 'route-structured-data';
+    const previousScript = document.getElementById(scriptId);
+    if (previousScript) {
+      previousScript.remove();
+    }
+
+    if (structuredData) {
+      const scriptTag = document.createElement('script');
+      scriptTag.id = scriptId;
+      scriptTag.type = 'application/ld+json';
+      scriptTag.text = JSON.stringify(structuredData);
+      document.head.appendChild(scriptTag);
+    }
+  }, [title, description, canonical, imageUrl, noIndex, structuredData]);
+
+  return null;
+}
+
+const websiteStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'AYG Real Estate',
+  url: SEO_BASE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SEO_BASE_URL}/studios`,
+    'query-input': 'required name=search_term_string',
+  },
+};
 
 // App content component to access Redux hooks
-function AppContent() {
+function AppContent({ RouterComponent, routerProps }) {
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -58,88 +151,232 @@ function AppContent() {
   return (
     <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
       <ToastProvider>
-        <Router>
+        <RouterComponent {...routerProps}>
           <div>
             <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/studios" element={<StudiosListPage />} />
-              <Route path="/studio/:id" element={<StudioDetailsPage />} />
-              <Route path="/buy-apartments" element={<BuyApartmentPage />} />
-              <Route path="/apartment-sale/:id" element={<ApartmentSaleDetailsPage />} />
-              <Route path="/admin" element={<AdminLanding />} />
-              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route
+                path="/"
+                element={
+                  <>
+                    <Seo
+                      title="AYG Real Estate | Studios For Rent And Apartments For Sale"
+                      description="Find furnished studios for rent and apartments for sale in Maadi and Mokattam with AYG Real Estate."
+                      canonicalPath="/"
+                      structuredData={websiteStructuredData}
+                    />
+                    <LandingPage />
+                  </>
+                }
+              />
+              <Route
+                path="/studios"
+                element={
+                  <>
+                    <Seo
+                      title="Studios For Rent In Cairo"
+                      description="Browse available studios for rent with verified amenities, photos, and pricing details."
+                      canonicalPath="/studios"
+                    />
+                    <StudiosListPage />
+                  </>
+                }
+              />
+              <Route
+                path="/studio/:id"
+                element={
+                  <>
+                    <Seo
+                      title="Studio Details | AYG"
+                      description="View full studio details including location, furnishing, and rent terms."
+                      canonicalPath="/studios"
+                    />
+                    <StudioDetailsPage />
+                  </>
+                }
+              />
+              <Route
+                path="/buy-apartments"
+                element={
+                  <>
+                    <Seo
+                      title="Apartments For Sale In Cairo"
+                      description="Explore apartments for sale with up-to-date prices and neighborhood highlights."
+                      canonicalPath="/buy-apartments"
+                    />
+                    <BuyApartmentPage />
+                  </>
+                }
+              />
+              <Route
+                path="/apartment-sale/:id"
+                element={
+                  <>
+                    <Seo
+                      title="Apartment Sale Details | AYG"
+                      description="Check apartment sale details, photos, and location information before booking a visit."
+                      canonicalPath="/buy-apartments"
+                    />
+                    <ApartmentSaleDetailsPage />
+                  </>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <>
+                    <Seo title="Admin | AYG" description="Admin dashboard" noIndex />
+                    <AdminLanding />
+                  </>
+                }
+              />
+              <Route
+                path="/admin/login"
+                element={
+                  <>
+                    <Seo title="Admin Login | AYG" description="Admin sign in" noIndex />
+                    <AdminLoginPage />
+                  </>
+                }
+              />
               <Route 
                 path="/admin/dashboard" 
                 element={
-                  <AdminProtectedRoute>
-                    <AdminDashboard />
-                  </AdminProtectedRoute>
+                  <>
+                    <Seo title="Admin Dashboard | AYG" description="Admin dashboard" noIndex />
+                    <AdminProtectedRoute>
+                      <AdminDashboard />
+                    </AdminProtectedRoute>
+                  </>
                 } 
               />
               <Route 
                 path="/admin/rental-alerts" 
                 element={
-                  <AdminProtectedRoute>
-                    <RentalAlertsPage />
-                  </AdminProtectedRoute>
+                  <>
+                    <Seo title="Admin Alerts | AYG" description="Admin rental alerts" noIndex />
+                    <AdminProtectedRoute>
+                      <RentalAlertsPage />
+                    </AdminProtectedRoute>
+                  </>
                 } 
               />
-              <Route path="/admin/apartment-sale/:id" element={<AdminApartmentSaleDetailsPage />} />
-              <Route path="/apartment/:id" element={<ApartmentDetailPage />} />
-              <Route path="/master-admin/login" element={<MasterAdminLoginForm />} />
+              <Route
+                path="/admin/apartment-sale/:id"
+                element={
+                  <>
+                    <Seo title="Admin Sale Details | AYG" description="Admin sale details" noIndex />
+                    <AdminApartmentSaleDetailsPage />
+                  </>
+                }
+              />
+              <Route
+                path="/apartment/:id"
+                element={
+                  <>
+                    <Seo title="Apartment Details | AYG" description="Apartment detail page" noIndex />
+                    <ApartmentDetailPage />
+                  </>
+                }
+              />
+              <Route
+                path="/master-admin/login"
+                element={
+                  <>
+                    <Seo title="Master Admin Login | AYG" description="Master admin sign in" noIndex />
+                    <MasterAdminLoginForm />
+                  </>
+                }
+              />
               <Route path="/master-admin" element={<Navigate to="/master-admin/login" replace />} />
               <Route 
                 path="/master-admin/dashboard" 
                 element={
-                  <ProtectedRoute>
-                    <MasterAdminDashboard />
-                  </ProtectedRoute>
+                  <>
+                    <Seo title="Master Dashboard | AYG" description="Master admin dashboard" noIndex />
+                    <ProtectedRoute>
+                      <MasterAdminDashboard />
+                    </ProtectedRoute>
+                  </>
                 } 
               />
               <Route 
                 path="/master-admin/reports" 
                 element={
-                  <ProtectedRoute>
-                    <ReportsPage />
-                  </ProtectedRoute>
+                  <>
+                    <Seo title="Master Reports | AYG" description="Master admin reports" noIndex />
+                    <ProtectedRoute>
+                      <ReportsPage />
+                    </ProtectedRoute>
+                  </>
                 } 
               />
               <Route 
                 path="/master-admin/profile" 
                 element={
-                  <ProtectedRoute>
-                    <ProfileEditPage />
-                  </ProtectedRoute>
+                  <>
+                    <Seo title="Master Profile | AYG" description="Master admin profile" noIndex />
+                    <ProtectedRoute>
+                      <ProfileEditPage />
+                    </ProtectedRoute>
+                  </>
                 } 
               />
               <Route 
                 path="/master-admin/manage-admins" 
                 element={
-                  <ProtectedRoute>
-                    <AdminManagementPage />
-                  </ProtectedRoute>
+                  <>
+                    <Seo title="Manage Admins | AYG" description="Master admin management" noIndex />
+                    <ProtectedRoute>
+                      <AdminManagementPage />
+                    </ProtectedRoute>
+                  </>
                 } 
               />
               <Route 
                 path="/master-admin/rental-alerts" 
                 element={
-                  <ProtectedRoute>
-                    <MasterAdminRentalAlertsPage />
-                  </ProtectedRoute>
+                  <>
+                    <Seo title="Master Alerts | AYG" description="Master admin alerts" noIndex />
+                    <ProtectedRoute>
+                      <MasterAdminRentalAlertsPage />
+                    </ProtectedRoute>
+                  </>
                 } 
               />
             </Routes>
           </div>
-        </Router>
+        </RouterComponent>
       </ToastProvider>
     </ErrorBoundary>
   );
 }
 
-function App() {
+function App({
+  RouterComponent = BrowserRouter,
+  routerProps = {},
+  dehydratedState,
+}) {
+  const queryClient = useMemo(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60000,
+            gcTime: 5 * 60000,
+            retry: 1,
+          },
+        },
+      }),
+    []
+  );
+
   return (
     <Provider store={store}>
-      <AppContent />
+      <QueryClientProvider client={queryClient}>
+        <HydrationBoundary state={dehydratedState}>
+          <AppContent RouterComponent={RouterComponent} routerProps={routerProps} />
+        </HydrationBoundary>
+      </QueryClientProvider>
     </Provider>
   );
 }

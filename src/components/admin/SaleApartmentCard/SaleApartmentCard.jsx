@@ -40,9 +40,7 @@ const SaleApartmentCard = ({
 
 
 
-    console.log('Auth Token (first 20 chars):', authToken ? authToken.substring(0, 20) + '...' : 'NONE');
 
-    console.log('Timestamp:', new Date().toISOString());
     console.groupEnd();
     
     // Check 1: Authentication

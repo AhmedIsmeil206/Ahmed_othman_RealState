@@ -107,6 +107,7 @@ body {
 .brand-logo {
   height: 50px;
   width: auto;
+  object-fit: contain;
 }
 
 .brand-text {
@@ -391,4 +392,51 @@ body {
 /* Better tap highlighting */
 a, button, input, select, textarea {
   -webkit-tap-highlight-color: rgba(0, 109, 117, 0.2);
+}
+
+/* ── Inline Delete Confirmation ───────────────────────────────────────────── */
+.delete-confirm-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.delete-confirm-inline span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--status-error);
+  white-space: nowrap;
+}
+
+.confirm-yes-btn {
+  background: var(--status-error) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 6px 14px !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 13px !important;
+  min-height: 32px !important;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.confirm-yes-btn:hover {
+  background: #c62828 !important;
+}
+
+.confirm-no-btn {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-medium) !important;
+  padding: 6px 14px !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 13px !important;
+  min-height: 32px !important;
+  cursor: pointer;
+}
+
+.confirm-no-btn:hover {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
 }

@@ -22,6 +22,7 @@ import EditStudioModal from '../../../components/admin/EditStudioModal';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import Footer from '../../../components/common/Footer';
 import { apartmentPartsApi, rentApartmentsApi, rentalContractsApi } from '../../../services/api';
+import { useToast } from '../../../contexts/ToastContext';
 import './StudioDetailsPage.css';
 import aygLogo from '../../../assets/images/logo/AYG.png';
 
@@ -36,10 +37,19 @@ const StudioDetailsPage = () => {
   const [isBookingLoading, setIsBookingLoading] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
   const [isDeletingBooking, setIsDeletingBooking] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [studio, setStudio] = useState(null);
   const [parentApartment, setParentApartment] = useState(null);
+  const { showSuccess, showError, showWarning, showInfo } = useToast();
+
+  const isRenderableImageUrl = (url) => {
+    if (typeof url !== 'string' || !url.trim()) return false;
+    if (url.startsWith('blob:')) return false;
+    if (url.includes('example.com')) return false;
+    return true;
+  };
 
   // Fetch studio details from API
   useEffect(() => {
@@ -52,7 +62,12 @@ const StudioDetailsPage = () => {
         const studioResponse = await apartmentPartsApi.getById(id);
         
         if (studioResponse) {
-          const studioData = studioResponse;
+          const studioData = { ...studioResponse };
+          const rawImages = studioData.images || studioData.photos_url || [];
+          const safeImages = Array.isArray(rawImages)
+            ? rawImages.filter(isRenderableImageUrl)
+            : [];
+          studioData.images = safeImages;
           
           // Also try to get parent apartment info if apartmentId exists
           if (studioData.apartment_id) {
@@ -157,7 +172,7 @@ setError('Failed to load studio details');
 
       // PRE-FLIGHT CHECK 1: Check if studio already has a booking in state
       if (studioBooking) {
-        alert('❌ This studio already has an active booking!\n\nPlease delete the existing booking before creating a new one.');
+        showWarning('This studio already has an active booking. Delete it before creating a new one.');
         setIsBookingLoading(false);
         setIsBookingModalOpen(false);
         return;
@@ -173,7 +188,9 @@ setError('Failed to load studio details');
         );
         
         if (existingContract) {
-alert(`❌ Booking Already Exists!\n\nThis studio already has a rental contract:\n• Customer: ${existingContract.customer_name || existingContract.customerName}\n• Contract ID: ${existingContract.id}\n\nPlease delete the existing booking before creating a new one.`);
+          showWarning(
+            `Booking already exists for ${existingContract.customer_name || existingContract.customerName} (Contract #${existingContract.id}).`
+          );
           setStudioBooking(existingContract);
           setIsBookingLoading(false);
           setIsBookingModalOpen(false);
@@ -186,7 +203,7 @@ alert(`❌ Booking Already Exists!\n\nThis studio already has a rental contract:
       
       // PRE-FLIGHT CHECK 3: Verify studio is available
       if (studio.status !== 'available' && studio.statusEnum !== 'available') {
-        alert('❌ This studio is not available for booking.\n\nStatus: ' + (studio.status || studio.statusEnum || 'Unknown'));
+        showWarning('This studio is not available for booking. Status: ' + (studio.status || studio.statusEnum || 'Unknown'));
         setIsBookingLoading(false);
         setIsBookingModalOpen(false);
         return;
@@ -219,7 +236,7 @@ alert(`❌ Booking Already Exists!\n\nThis studio already has a rental contract:
       const response = await rentalContractsApi.create(contractData);
 
       if (response) {
-        alert('✅ Booking created successfully!');
+        showSuccess('Booking created successfully!');
         setStudioBooking(response);
         setIsBookingModalOpen(false);
         
@@ -232,26 +249,26 @@ alert(`❌ Booking Already Exists!\n\nThis studio already has a rental contract:
         // Auto-refresh page to show updated data
         window.location.reload();
       } else {
-alert('Failed to create booking. Please try again.');
+        showError('Failed to create booking. Please try again.');
       }
     } catch (error) {
 // Show user-friendly error messages
       if (error.message?.includes('unique constraint') || error.message?.includes('UNIQUE constraint failed') || error.message?.includes('duplicate key')) {
-        alert('❌ Booking Already Exists!\n\nThis studio already has an active booking. Please delete the existing booking first before creating a new one.');
+        showWarning('Booking already exists. Delete the existing booking first.');
       } else if (error.message?.includes('422') || error.message?.includes('Validation')) {
-        alert('❌ Validation Error\n\nPlease check all fields are filled correctly:\n- Phone must be 11 digits starting with 0\n- All amounts must be valid numbers\n- Dates must be valid (end date after start date)\n- Platform source must be selected\n- Rent period must be a number');
+        showError('Validation error. Check phone format, numeric amounts, valid dates, platform source, and rent period.');
       } else if (error.message?.includes('401')) {
-        alert('❌ Session Expired\n\nPlease log in again.');
+        showError('Session expired. Please log in again.');
         localStorage.removeItem('api_access_token');
         navigate('/admin/login');
       } else if (error.message?.includes('403')) {
-        alert('❌ Permission Denied\n\nYou do not have permission to create bookings for this studio.\n\nOnly the admin who created this apartment can create bookings for it.');
+        showError('Permission denied. Only the admin who created this apartment can create bookings for it.');
       } else if (error.message?.includes('500') || error.message?.includes('Internal Server Error')) {
-        alert('❌ Server Error\n\nThe backend encountered an error. Possible causes:\n\n1. This studio might already have a booking (database constraint)\n2. Backend server connection issue\n3. Database error\n\nPlease:\n• Refresh the page to see current booking status\n• Contact administrator if problem persists');
+        showError('Server error. Refresh the page and try again. Contact admin if the issue persists.');
       } else if (error.message?.includes('Network error') || error.message?.includes('ERR_FAILED')) {
-        alert('❌ Cannot Connect to Backend\n\nPlease ensure:\n1. Backend server is running on http://localhost:8000\n2. CORS is properly configured on backend\n3. No firewall blocking the connection\n\nTechnical details:\n' + (error.message || 'Network request failed'));
+        showError('Cannot connect to backend. Ensure the server is running and accessible.');
       } else {
-        alert(`❌ Failed to create booking\n\n${error.message || 'Unknown error'}\n\nPlease check the console for more details.`);
+        showError(`Failed to create booking: ${error.message || 'Unknown error'}`);
       }
     } finally {
       setIsBookingLoading(false);
@@ -274,16 +291,20 @@ alert('Failed to create booking. Please try again.');
     }
   };
 
-  const handleDeleteBooking = async () => {
-    if (window.confirm('⚠️ Are you sure you want to delete this booking?\n\nThis action cannot be undone and requires Super Admin (Master Admin) privileges.')) {
-      setIsDeletingBooking(true);
-      try {
+  const handleDeleteBooking = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteConfirm(false);
+    setIsDeletingBooking(true);
+    try {
         if (studioBooking && studioBooking.id) {
 
           const response = await rentalContractsApi.delete(studioBooking.id);
           
           if (response !== false) {
-            alert('✅ Booking deleted successfully!');
+            showSuccess('Booking deleted successfully!');
             setStudioBooking(null);
             
             // Refresh studio data to reflect booking status change
@@ -295,46 +316,26 @@ alert('Failed to create booking. Please try again.');
             // Auto-refresh page to show updated data
             window.location.reload();
           } else {
-alert('❌ Failed to delete booking. Please try again.');
+            showError('Failed to delete booking. Please try again.');
           }
         }
       } catch (error) {
 // Handle specific error types
         if (error.status === 403 || error.message?.includes('403') || error.message?.includes('forbidden') || error.message?.includes('Access forbidden')) {
           // 403 Forbidden - Not a super admin
-          alert(
-            '🔒 PERMISSION DENIED - SUPER ADMIN REQUIRED\n\n' +
-            '❌ Only Super Admins (Master Admins) can delete rental bookings.\n\n' +
-            '� Your Current Role: Regular Admin\n' +
-            '🔑 Required Role: Super Admin (Master Admin)\n\n' +
-            '💡 Why this restriction exists:\n' +
-            '• Rental contracts involve legal and financial commitments\n' +
-            '• Only Master Admins have authority to cancel contracts\n' +
-            '• This protects the business from unauthorized cancellations\n\n' +
-            '🎯 Solutions:\n' +
-            '1. Contact your Super Admin to delete this booking\n' +
-            '2. Request Super Admin access from the system administrator\n' +
-            '3. If you are the system owner, log in with your Master Admin account\n\n' +
-            '📞 For urgent booking cancellations, contact your Super Admin immediately.'
-          );
+          showError('Permission denied. Only Master Admins can delete rental bookings.');
         } else if (error.status === 404 || error.message?.includes('404')) {
-          alert('❌ Booking Not Found\n\nThis booking may have already been deleted or does not exist.\n\nThe page will refresh to show the current status.');
+          showWarning('Booking not found. The page will refresh to show the latest status.');
           window.location.reload();
         } else if (error.status === 401 || error.message?.includes('401')) {
-          alert('❌ Session Expired\n\nYour login session has expired. Please log in again.');
+          showError('Session expired. Please log in again.');
           localStorage.removeItem('api_access_token');
           navigate('/admin/login');
         } else {
-          alert(
-            `❌ Failed to Delete Booking\n\n` +
-            `Error: ${error.message || 'Unknown error'}\n\n` +
-            `Status Code: ${error.status || 'N/A'}\n\n` +
-            `Please try again or contact support if the problem persists.`
-          );
+          showError(`Failed to delete booking: ${error.message || 'Unknown error'}`);
         }
-      } finally {
-        setIsDeletingBooking(false);
-      }
+    } finally {
+      setIsDeletingBooking(false);
     }
   };
 
@@ -426,6 +427,13 @@ alert('❌ Failed to delete booking. Please try again.');
     );
   }
 
+  const studioNumericPrice = Number(
+    studio.monthly_price ?? studio.monthly_rent ?? studio.rent_value ?? studio.price ?? 0
+  );
+  const studioDisplayPrice = studioNumericPrice > 0
+    ? `EGP ${studioNumericPrice.toLocaleString()}/month`
+    : 'Price on request';
+
   // If studio is not available, redirect based on source
   if (!studio.is_available && navigationSource === 'customer') {
     return <Navigate to="/studios" replace />;
@@ -456,7 +464,7 @@ alert('❌ Failed to delete booking. Please try again.');
           <div className="studio-main-info">
             <div className="studio-header">
               <h1 className="studio-title">{studio.title || studio.name}</h1>
-              <div className="studio-price">{studio.price || `EGP ${studio.monthly_rent?.toLocaleString()}/month`}</div>
+              <div className="studio-price">{studioDisplayPrice}</div>
             </div>
 
             <div className="studio-posted">Posted {studio.created_at ? new Date(studio.created_at).toLocaleDateString() : 'Recently'}</div>
@@ -626,21 +634,29 @@ alert('❌ Failed to delete booking. Please try again.');
                     <h3>Customer Details</h3>
                     <div className="booking-actions">
                       <div className="booking-status"><FontAwesomeIcon icon={faCheck} /> Booked</div>
-                      <button 
-                        className="delete-booking-btn"
-                        onClick={handleDeleteBooking}
-                        disabled={isDeletingBooking}
-                        title="Delete booking"
-                      >
-                        {isDeletingBooking ? (
-                          <>
-                            <LoadingSpinner size="small" color="white" inline />
-                            Deleting...
-                          </>
-                        ) : (
-                          <><FontAwesomeIcon icon={faTrash} /> Cancel Booking</>
-                        )}
-                      </button>
+                      {showDeleteConfirm ? (
+                        <div className="delete-confirm-inline">
+                          <span>Are you sure?</span>
+                          <button className="confirm-yes-btn" onClick={handleConfirmDelete} disabled={isDeletingBooking}>Yes, Delete</button>
+                          <button className="confirm-no-btn" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                        </div>
+                      ) : (
+                        <button 
+                          className="delete-booking-btn"
+                          onClick={handleDeleteBooking}
+                          disabled={isDeletingBooking}
+                          title="Delete booking"
+                        >
+                          {isDeletingBooking ? (
+                            <>
+                              <LoadingSpinner size="small" color="white" inline />
+                              Deleting...
+                            </>
+                          ) : (
+                            <><FontAwesomeIcon icon={faTrash} /> Cancel Booking</>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                   
@@ -755,7 +771,7 @@ alert('❌ Failed to delete booking. Please try again.');
                   // Customer viewing or no booking - Show agency contact
                   <WhatsAppButton 
                     phoneNumber={studio.adminPhone || studio.contact_number || '+201000000000'}
-                    message={`Hello, I'm interested in ${studio.title || studio.name} for ${studio.price || `EGP ${studio.monthly_rent?.toLocaleString()}/month`}`}
+                    message={`Hello, I'm interested in ${studio.title || studio.name} for ${studioDisplayPrice}`}
                     contactType="agency"
                   />
                 )}

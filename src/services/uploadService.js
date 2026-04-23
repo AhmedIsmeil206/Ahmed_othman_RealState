@@ -121,7 +121,6 @@ export const uploadPhotos = async (entityId, entityType, files, documentType = n
 
     const result = await response.json();
     
-    console.log('✅ Photos uploaded successfully:', result);
     
     return {
       success: true,

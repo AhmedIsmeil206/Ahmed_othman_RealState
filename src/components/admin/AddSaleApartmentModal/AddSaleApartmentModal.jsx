@@ -247,19 +247,16 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       
       if (result.success) {
         const createdApartment = result.apartment;
-        console.log('✅ Sale apartment created successfully:', createdApartment);
         
         // STEP 2: Upload photos if any were selected
         if (formData.photoFiles && formData.photoFiles.length > 0) {
           try {
-            console.log(`📤 Uploading ${formData.photoFiles.length} photos for sale apartment ID: ${createdApartment.id}`);
             
             const uploadResult = await uploadSaleApartmentPhotos(
               createdApartment.id,
               formData.photoFiles
             );
             
-            console.log('✅ Photos uploaded successfully:', uploadResult);
             
             // Update the apartment object with uploaded photo URLs
             if (uploadResult.files && uploadResult.files.length > 0) {

@@ -66,10 +66,6 @@ const MasterAdminLoginForm = () => {
     }
 
     setIsLoading(true);
-    console.log('🔐 Starting Master Admin Authentication...', { 
-      emailOrPhone: formData.emailOrPhone,
-      timestamp: new Date().toISOString()
-    });
 
     try {
       // Clear any previous errors
@@ -81,25 +77,12 @@ const MasterAdminLoginForm = () => {
         [isEmail ? 'email' : 'username']: formData.emailOrPhone, // Backend expects 'username' for phone
         password: formData.password
       };
-      
-      console.log('📤 Sending authentication request:', { 
-        identifier: loginData[isEmail ? 'email' : 'username'],
-        type: isEmail ? 'email' : 'phone',
-        password: '[HIDDEN]',
-        timestamp: new Date().toISOString()
-      });
-      
+
       // Call the enhanced authentication thunk
       const resultAction = await login(loginData);
       
       if (loginMasterAdmin.fulfilled.match(resultAction)) {
-        console.log('✅ Master Admin Authentication Successful!', {
-          userId: resultAction.payload.user.id,
-          role: resultAction.payload.user.role,
-          email: resultAction.payload.user.email,
-          loginTime: new Date().toISOString()
-        });
-        
+
         // Success - redirect to dashboard with confirmation
         navigate('/master-admin/dashboard', { 
           replace: true,

@@ -43,8 +43,14 @@ const API_CONFIG = {
 // Token Management
 class TokenManager {
   static TOKEN_KEY = process.env.REACT_APP_TOKEN_STORAGE_KEY || 'api_access_token';
+  static isBrowser() {
+    return typeof window !== 'undefined';
+  }
   
   static getToken() {
+    if (!this.isBrowser()) {
+      return null;
+    }
     // Ensure TOKEN_KEY is not null/undefined
     if (!this.TOKEN_KEY) {
 this.TOKEN_KEY = 'api_access_token';
@@ -53,6 +59,9 @@ this.TOKEN_KEY = 'api_access_token';
   }
   
   static setToken(token) {
+    if (!this.isBrowser()) {
+      return;
+    }
     // Ensure TOKEN_KEY is not null/undefined
     if (!this.TOKEN_KEY) {
 this.TOKEN_KEY = 'api_access_token';
@@ -64,6 +73,9 @@ this.TOKEN_KEY = 'api_access_token';
   }
   
   static removeToken() {
+    if (!this.isBrowser()) {
+      return;
+    }
     // Ensure TOKEN_KEY is not null/undefined
     if (!this.TOKEN_KEY) {
 this.TOKEN_KEY = 'api_access_token';
@@ -227,7 +239,6 @@ class ApiClient {
       if (API_CONFIG.ENABLE_LOGGING) {
 
 
-        if (body) console.log('   Body:', contentType === 'application/json' ? JSON.stringify(body) : body);
       }
       // Create AbortController for timeout
       const controller = new AbortController();

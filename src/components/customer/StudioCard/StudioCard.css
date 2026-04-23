@@ -112,3 +112,25 @@
     font-size: 15px;
   }
 }
+
+@media (max-width: 480px) {
+  .studio-card__image {
+    height: 160px;
+  }
+
+  .studio-card__content {
+    padding: 10px;
+  }
+
+  .studio-card__price {
+    font-size: 16px;
+  }
+
+  .studio-card__title {
+    font-size: 14px;
+  }
+
+  .detail-item {
+    font-size: 11px;
+  }
+}

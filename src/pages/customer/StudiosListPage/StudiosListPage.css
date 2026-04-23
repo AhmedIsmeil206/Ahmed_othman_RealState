@@ -310,3 +310,47 @@
   font-size: 14px;
   font-style: italic;
 }
+
+@media (max-width: 480px) {
+  .studios-container {
+    padding: 12px;
+  }
+
+  .studios-header h1 {
+    font-size: 20px;
+  }
+
+  .studios-header p {
+    font-size: 14px;
+  }
+
+  .filters-section {
+    padding: 12px;
+  }
+
+  .filter-group label {
+    font-size: 13px;
+  }
+
+  .filter-group select {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .no-results {
+    padding: 40px 16px;
+  }
+
+  .no-results h3 {
+    font-size: 20px;
+  }
+
+  .no-results p {
+    font-size: 14px;
+  }
+
+  .load-more-btn {
+    width: 100%;
+    padding: 14px;
+  }
+}

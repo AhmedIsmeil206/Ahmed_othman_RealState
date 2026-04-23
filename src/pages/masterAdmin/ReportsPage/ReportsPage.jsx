@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faEye, faChartBar, faDollarSign } from '@fortawesome/free-solid-svg-icons';
 import { useMasterAuth, useProperty, useAdminAuth } from '../../../hooks/useRedux';
+import { useToast } from '../../../contexts/ToastContext';
 import BackButton from '../../../components/common/BackButton';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
@@ -21,6 +22,7 @@ const ReportsPage = () => {
   const [overallStats, setOverallStats] = useState({});
   const [selectedTimeRange, setSelectedTimeRange] = useState('all'); // all, month, week
   const [sortBy, setSortBy] = useState('totalProperties'); // totalProperties, revenue, performance
+  const { showInfo } = useToast();
 
   const loadReportsData = useCallback(async () => {
     setIsLoading(true);
@@ -397,7 +399,7 @@ const ReportsPage = () => {
                           className="view-details-btn"
                           onClick={() => {
                             // Could navigate to detailed admin view
-                            alert(`Detailed view for ${stat.admin.name || stat.admin.email} coming soon!`);
+                            showInfo(`Detailed view for ${stat.admin.name || stat.admin.email} coming soon!`);
                           }}
                         >
                           <FontAwesomeIcon icon={faEye} /> View Details
