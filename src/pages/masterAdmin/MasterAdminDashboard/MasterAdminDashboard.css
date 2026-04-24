@@ -1503,7 +1503,7 @@
 
 /* Edit Profile Modal - Apply Admin Management Modal Design */
 .admin-management-modal .modal-form {
-  padding: 20% 24px 24px; /* extra top padding for space under header */
+  padding: 24px;
   background: white;
 }
 

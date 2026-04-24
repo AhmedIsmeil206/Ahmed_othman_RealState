@@ -12,7 +12,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
   const { currentAdmin } = useAdminAuth();
   const [formData, setFormData] = useState({
     name: '',
-    location: 'maadi', // Set default location
+    location: '',
     address: '',
     description: '',
     mapUrl: '',
@@ -135,8 +135,8 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
 
     }
 
-    if (!formData.location || !formData.location.trim() || (formData.location !== 'maadi' && formData.location !== 'mokkattam')) {
-      newErrors.location = 'Location is required and must be either "maadi" or "mokkattam" (API enum requirement)';
+    if (!formData.location || !formData.location.trim()) {
+      newErrors.location = 'Location is required (API field: location)';
     } else {
 
     }
@@ -261,7 +261,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       // NOTE: Photos are uploaded AFTER apartment creation using /api/v1/uploads/photos
       const apiData = {
         name: (formData.name && formData.name.trim()) || 'Unnamed Apartment', // REQUIRED: Never empty
-        location: (formData.location && formData.location.toLowerCase()) || 'maadi', // REQUIRED: Never empty
+        location: (formData.location && formData.location.trim()) || 'Unknown Location', // REQUIRED: Never empty
         address: (formData.address && formData.address.trim()) || 'Address not provided', // REQUIRED: Never empty
         area: (formData.area && formData.area.toString().trim()) || '50', // REQUIRED: Never empty, default 50 sqm
         number: (formData.number && formData.number.trim()) || 'APT-001', // REQUIRED: Never empty
@@ -280,7 +280,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       const validatedApiData = {
         ...apiData,
         name: apiData.name || 'Unnamed Apartment',
-        location: apiData.location || 'maadi',
+        location: apiData.location || 'Unknown Location',
         address: apiData.address || 'Address not provided',
         area: apiData.area || '50',
         number: apiData.number || 'APT-001',
@@ -326,7 +326,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         // Reset form with proper defaults
         setFormData({
           name: '',
-          location: 'maadi', // Keep default location
+          location: '',
           address: '',
           description: '',
           mapUrl: '',
@@ -386,17 +386,15 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="location">Location *</label>
-              <select
+              <input
+                type="text"
                 id="location"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
                 className={errors.location ? 'error' : ''}
-              >
-                <option value="">Select Location</option>
-                <option value="maadi">Maadi</option>
-                <option value="mokkattam">Mokkattam</option>
-              </select>
+                placeholder="e.g., Fifth Settlement Block 9"
+              />
               {errors.location && <span className="error-text">{errors.location}</span>}
             </div>
 

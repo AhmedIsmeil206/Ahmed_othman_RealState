@@ -1267,7 +1267,7 @@ showToast('Failed to refresh admin list', 'error');
                   )}
 
                   <div className="form-group">
-                    <label htmlFor="name" style={{paddingTop:"250px"}}>Full Name</label>
+                    <label htmlFor="name">Full Name</label>
                     <input
                       type="text"
                       id="name"

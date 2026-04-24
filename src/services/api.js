@@ -633,15 +633,11 @@ throw error;
 export const dataTransformers = {
   // Transform frontend apartment data to backend format
   transformApartmentToApi(frontendData, type = 'rent') {
-    // Ensure proper enum conversion for location
-    const locationValue = convertToApiEnum.location(frontendData.location);
-    
     // Ensure proper enum conversion for bathrooms
     const bathroomsValue = convertToApiEnum.bathrooms(frontendData.bathrooms);
     
     // Validate critical enum values
     try {
-      validateEnum(locationValue, LOCATIONS, 'location');
       validateEnum(bathroomsValue, BATHROOM_TYPES, 'bathrooms');
     } catch (error) {
 throw new Error(`Data validation failed: ${error.message}`);
@@ -649,7 +645,7 @@ throw new Error(`Data validation failed: ${error.message}`);
 
     return {
       name: frontendData.name || frontendData.title,
-      location: locationValue,
+      location: String(frontendData.location || '').trim(),
       address: frontendData.address,
       area: String(frontendData.area).replace(' sqm', '').replace(/[^0-9.]/g, ''),
       number: frontendData.number || frontendData.unitNumber,
@@ -675,8 +671,8 @@ throw new Error(`Data validation failed: ${error.message}`);
       id: backendData.id,
       name: backendData.name,
       title: backendData.name,
-      location: convertFromApiEnum.location(backendData.location),
-      locationEnum: backendData.location, // Keep original enum value for API calls
+      location: backendData.location,
+      locationEnum: backendData.location,
       address: backendData.address,
       area: backendData.area,
       unitNumber: backendData.number,

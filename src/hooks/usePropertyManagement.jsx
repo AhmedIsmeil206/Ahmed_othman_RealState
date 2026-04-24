@@ -83,7 +83,7 @@ export const usePropertyManagement = () => {
     // Otherwise transform from legacy frontend format
     const transformed = {
       name: frontendApartment.title || frontendApartment.name || 'Unnamed Apartment',
-      location: (frontendApartment.location || 'maadi').toLowerCase(),
+      location: (frontendApartment.location || 'Unknown Location').toString().trim(),
       address: frontendApartment.address || 'Address not provided',
       price: frontendApartment.price?.toString() || '0',
       area: frontendApartment.area?.toString() || '50',
@@ -194,7 +194,7 @@ export const usePropertyManagement = () => {
     const transformed = {
       // === REQUIRED FIELDS ===
       name: (frontendApartment.name || frontendApartment.title || '').trim(),
-      location: (frontendApartment.location || '').toString().toLowerCase().trim(),
+      location: (frontendApartment.location || '').toString().trim(),
       address: (frontendApartment.address || '').trim(),
       price: (frontendApartment.price || frontendApartment.salePrice || '').toString().trim(),
       area: (frontendApartment.area || '').toString().trim(),

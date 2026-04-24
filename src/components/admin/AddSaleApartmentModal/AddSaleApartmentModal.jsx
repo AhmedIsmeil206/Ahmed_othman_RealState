@@ -135,9 +135,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
     }
 
     if (!formData.location?.trim()) {
-      newErrors.location = 'Location is required. Must be "maadi" or "mokkattam"';
-    } else if (!['maadi', 'mokkattam'].includes(formData.location.toLowerCase())) {
-      newErrors.location = 'Location must be either "maadi" or "mokkattam"';
+      newErrors.location = 'Location is required (API field: location)';
     }
 
     if (!formData.address?.trim()) {
@@ -225,7 +223,7 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       const apiData = {
         // === REQUIRED FIELDS ===
         name: formData.name.trim(), // API expects 'name', not 'title'
-        location: formData.location.toLowerCase(), // Must be lowercase: 'maadi' or 'mokkattam'
+        location: formData.location.trim(),
         address: formData.address.trim(), // Full address string
         area: formData.area.toString(), // API expects string (decimal)
         number: formData.apartmentNumber.trim(), // API field is 'number' (e.g., "A-301")
@@ -340,17 +338,15 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="location">Location *</label>
-              <select
+              <input
+                type="text"
                 id="location"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
                 className={errors.location ? 'error' : ''}
-              >
-                <option value="">Select Location</option>
-                <option value="maadi">Maadi</option>
-                <option value="mokkattam">Mokkattam</option>
-              </select>
+                placeholder="e.g., Nasr City - Zone 5"
+              />
               {errors.location && <span className="error-text">{errors.location}</span>}
             </div>
 
