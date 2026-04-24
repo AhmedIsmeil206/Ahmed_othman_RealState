@@ -261,7 +261,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       // NOTE: Photos are uploaded AFTER apartment creation using /api/v1/uploads/photos
       const apiData = {
         name: (formData.name && formData.name.trim()) || 'Unnamed Apartment', // REQUIRED: Never empty
-        location: (formData.location && formData.location.trim()) || 'Unknown Location', // REQUIRED: Never empty
+        location: (formData.location && formData.location.trim()) || 'maadi', // REQUIRED: enum 'maadi' or 'mokkattam'
         address: (formData.address && formData.address.trim()) || 'Address not provided', // REQUIRED: Never empty
         area: (formData.area && formData.area.toString().trim()) || '50', // REQUIRED: Never empty, default 50 sqm
         number: (formData.number && formData.number.trim()) || 'APT-001', // REQUIRED: Never empty
@@ -269,9 +269,8 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         bedrooms: parseInt(formData.bedrooms) || 1, // REQUIRED: Always valid integer
         bathrooms: (formData.bathrooms === 'shared') ? 'shared' : 'private', // REQUIRED: Always valid enum
         description: (formData.description && formData.description.trim()) || 'No description provided', // Optional but never empty
-        photos_url: [], // Empty array - photos uploaded separately via /api/v1/uploads/photos
-        location_on_map: formData.mapUrl ? formData.mapUrl.trim() : '', // Optional: API field name
-        facilities_amenities: formData.facilities && formData.facilities.length > 0 ? formData.facilities.join(', ') : '', // Optional: API expects string, not array
+        location_on_map: formData.mapUrl ? formData.mapUrl.trim() : null, // Optional: API field name
+        facilities_amenities: formData.facilities && formData.facilities.length > 0 ? formData.facilities.join(', ') : null, // Optional: API expects string, not array
         floor: parseInt(formData.floor) || 1, // REQUIRED: Always valid integer ≥ 1
         total_parts: parseInt(formData.totalParts) || 1 // REQUIRED: Always valid integer ≥ 1
       };
@@ -386,15 +385,17 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="location">Location *</label>
-              <input
-                type="text"
+              <select
                 id="location"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
                 className={errors.location ? 'error' : ''}
-                placeholder="e.g., Fifth Settlement Block 9"
-              />
+              >
+                <option value="">Select location</option>
+                <option value="maadi">Maadi</option>
+                <option value="mokkattam">Mokkattam</option>
+              </select>
               {errors.location && <span className="error-text">{errors.location}</span>}
             </div>
 

@@ -149,6 +149,11 @@ const StudiosListPage = () => {
                 const masterAdminPhone = '+201029936060';
                 transformedStudio.adminPhone = isMasterAdmin ? masterAdminPhone : (apartmentData.contact_number || '+201000000000');
                 transformedStudio.contact_number = isMasterAdmin ? masterAdminPhone : (apartmentData.contact_number || '+201000000000');
+                // Inherit location from parent apartment if not already set
+                if (!transformedStudio.locationEnum && apartmentData.location) {
+                  transformedStudio.locationEnum = apartmentData.location;
+                  transformedStudio.location = convertFromApiEnum.location(apartmentData.location);
+                }
               } catch (error) {
                 // Use fallback if apartment fetch fails
                 transformedStudio.contact_number = '+201000000000';
@@ -294,8 +299,8 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
       <nav className="studios-nav">
         <BackButton text="← Back" to="/" />
         <div className="brand">
-          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-          <span className="brand-text">AYG</span>
+          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+          <span className="brand-text">ayg</span>
         </div>
       </nav>
 

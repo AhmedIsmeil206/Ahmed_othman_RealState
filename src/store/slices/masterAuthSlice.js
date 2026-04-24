@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { authApi, adminApi, handleApiError } from '../../services/api';
 import masterAuthService from '../../services/masterAuthService';
 
@@ -268,19 +268,20 @@ export const selectMasterError = (state) => state.masterAuth.error;
 export const selectIsMasterAuthenticated = (state) => !!state.masterAuth.currentUser && authApi.isAuthenticated();
 export const selectIsFirstTimeSetup = (state) => state.masterAuth.isFirstTimeSetup;
 
-export const selectCurrentUserProfile = (state) => {
-  const { currentUser } = state.masterAuth;
-  if (!currentUser) return null;
-  
-  return {
-    id: currentUser.id,
-    email: currentUser.email,
-    full_name: currentUser.full_name,
-    phone: currentUser.phone,
-    role: currentUser.role,
-    loginTime: currentUser.loginTime,
-    lastUpdated: currentUser.lastUpdated
-  };
-};
+export const selectCurrentUserProfile = createSelector(
+  (state) => state.masterAuth.currentUser,
+  (currentUser) => {
+    if (!currentUser) return null;
+    return {
+      id: currentUser.id,
+      email: currentUser.email,
+      full_name: currentUser.full_name,
+      phone: currentUser.phone,
+      role: currentUser.role,
+      loginTime: currentUser.loginTime,
+      lastUpdated: currentUser.lastUpdated
+    };
+  }
+);
 
 export default masterAuthSlice.reducer;

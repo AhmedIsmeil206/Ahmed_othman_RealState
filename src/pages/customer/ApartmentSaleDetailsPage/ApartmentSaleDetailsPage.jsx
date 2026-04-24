@@ -127,8 +127,8 @@ setError('Failed to load apartment details');
           ← Back to Apartments
         </button>
         <div className="brand">
-          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-          <span className="brand-text">AYG</span>
+          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+          <span className="brand-text">ayg</span>
         </div>
       </nav>
 
@@ -268,7 +268,7 @@ setError('Failed to load apartment details');
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Listed By</span>
-                  <span className="detail-value">{apartment.created_by || 'AYG'}</span>
+                  <span className="detail-value">{apartment.created_by || 'ayg'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Property Type</span>

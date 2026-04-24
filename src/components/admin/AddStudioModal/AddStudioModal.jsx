@@ -165,7 +165,6 @@ const AddStudioModal = ({ isOpen, apartmentId, onStudioAdded, onClose }) => {
         furnished: (['yes', 'no'].includes(formData.furnished)) ? formData.furnished : 'yes', // REQUIRED - validated enum
         balcony: (['yes', 'shared', 'no'].includes(formData.balcony)) ? formData.balcony : 'no', // REQUIRED - validated enum
         description: formData.description?.trim() || 'No description provided', // Optional
-        photos_url: [] // Empty array - photos uploaded separately via /api/v1/uploads/photos
       };
 
 

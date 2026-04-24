@@ -450,8 +450,8 @@ setError('Failed to load studio details');
           to={navigationSource === 'master-admin' ? '/master-admin/dashboard' : '/'} 
           className="brand"
         >
-          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-          <span className="brand-text">AYG</span>
+          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+          <span className="brand-text">ayg</span>
         </Link>
       </nav>
 
@@ -738,7 +738,7 @@ setError('Failed to load studio details');
             <div className="contact-card">
               <h3>Listed by agency</h3>
               <div className="agency-info">
-                <div className="agency-name">AYG</div>
+                <div className="agency-name">ayg</div>
                 <div className="agency-rating">⭐ 4 C</div>
                 <div className="agency-member">Member since Sept 2024</div>
               </div>

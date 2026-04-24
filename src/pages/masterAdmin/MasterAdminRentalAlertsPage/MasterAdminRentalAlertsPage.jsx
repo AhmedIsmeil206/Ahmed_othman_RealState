@@ -100,8 +100,8 @@ const MasterAdminRentalAlertsPage = () => {
                 />
               </div>
               <div className="master-alerts-brand">
-                <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-                <span className="brand-text">AYG</span>
+                <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+                <span className="brand-text">ayg</span>
               </div>
             </nav>
 

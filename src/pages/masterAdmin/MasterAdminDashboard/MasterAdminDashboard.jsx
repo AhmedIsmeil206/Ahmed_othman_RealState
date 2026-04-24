@@ -764,33 +764,35 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
 
   const handleStudioAdded = async (newStudio) => {
     try {
-      await addStudio(newStudio);
-      // Data will be automatically updated through Redux
+      // Studio was already created by the modal - just close and refresh
       setIsAddStudioModalOpen(false);
       setSelectedApartmentId(null);
+      await fetchRentApartments();
     } catch (error) {
-}
+    }
   };
 
   const handleApartmentAdded = async (newApartment) => {
     try {
+      // Apartment was already created by the modal - just close and refresh
       if (propertyTypeFilter === 'rental') {
-        await addApartment(newApartment);
         setIsAddApartmentModalOpen(false);
+        await fetchRentApartments();
       } else {
-        await addSaleApartment(newApartment);
         setIsAddSaleApartmentModalOpen(false);
+        await fetchSaleApartments();
       }
     } catch (error) {
-}
+    }
   };
 
   const handleSaleApartmentAdded = async (newSaleApartment) => {
     try {
-      await addSaleApartment(newSaleApartment);
+      // Apartment was already created by the modal - just close and refresh
       setIsAddSaleApartmentModalOpen(false);
+      await fetchSaleApartments();
     } catch (error) {
-}
+    }
   };
 
   // Memoize statistics calculations to prevent recalculation on every render
@@ -837,8 +839,8 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
         
         <nav className="dashboard-nav">
           <div className="nav-left">
-            <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-            <span className="brand-text">AYG</span>
+            <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+            <span className="brand-text">ayg</span>
           </div>
           
           <div className="nav-right">

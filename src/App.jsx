@@ -160,7 +160,7 @@ function AppContent({ RouterComponent, routerProps }) {
                   <>
                     <Seo
                       title="AYG"
-                      description="Find furnished studios for rent and apartments for sale in Maadi and Mokattam with AYG Real Estate."
+                      description="Find furnished studios for rent and apartments for sale in Maadi and Mokattam with ayg real estate."
                       canonicalPath="/"
                       structuredData={websiteStructuredData}
                     />
@@ -173,7 +173,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 element={
                   <>
                     <Seo
-                      title="Studios For Rent In Cairo"
+                      title="AYG"
                       description="Browse available studios for rent with verified amenities, photos, and pricing details."
                       canonicalPath="/studios"
                     />
@@ -186,7 +186,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 element={
                   <>
                     <Seo
-                      title="Studio Details | AYG"
+                      title="AYG"
                       description="View full studio details including location, furnishing, and rent terms."
                       canonicalPath="/studios"
                     />
@@ -199,7 +199,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 element={
                   <>
                     <Seo
-                      title="Apartments For Sale In Cairo"
+                      title="AYG"
                       description="Explore apartments for sale with up-to-date prices and neighborhood highlights."
                       canonicalPath="/buy-apartments"
                     />
@@ -212,7 +212,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 element={
                   <>
                     <Seo
-                      title="Apartment Sale Details | AYG"
+                      title="AYG"
                       description="Check apartment sale details, photos, and location information before booking a visit."
                       canonicalPath="/buy-apartments"
                     />
@@ -224,7 +224,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/admin"
                 element={
                   <>
-                    <Seo title="Admin | AYG" description="Admin dashboard" noIndex />
+                    <Seo title="AYG" description="Admin dashboard" noIndex />
                     <AdminLanding />
                   </>
                 }
@@ -233,7 +233,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/admin/login"
                 element={
                   <>
-                    <Seo title="Admin Login | AYG" description="Admin sign in" noIndex />
+                    <Seo title="AYG" description="Admin sign in" noIndex />
                     <AdminLoginPage />
                   </>
                 }
@@ -242,7 +242,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/admin/dashboard" 
                 element={
                   <>
-                    <Seo title="Admin Dashboard | AYG" description="Admin dashboard" noIndex />
+                    <Seo title="AYG" description="Admin dashboard" noIndex />
                     <AdminProtectedRoute>
                       <AdminDashboard />
                     </AdminProtectedRoute>
@@ -253,7 +253,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/admin/rental-alerts" 
                 element={
                   <>
-                    <Seo title="Admin Alerts | AYG" description="Admin rental alerts" noIndex />
+                    <Seo title="AYG" description="Admin rental alerts" noIndex />
                     <AdminProtectedRoute>
                       <RentalAlertsPage />
                     </AdminProtectedRoute>
@@ -264,7 +264,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/admin/apartment-sale/:id"
                 element={
                   <>
-                    <Seo title="Admin Sale Details | AYG" description="Admin sale details" noIndex />
+                    <Seo title="AYG" description="Admin sale details" noIndex />
                     <AdminApartmentSaleDetailsPage />
                   </>
                 }
@@ -273,7 +273,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/apartment/:id"
                 element={
                   <>
-                    <Seo title="Apartment Details | AYG" description="Apartment detail page" noIndex />
+                    <Seo title="AYG" description="Apartment detail page" noIndex />
                     <ApartmentDetailPage />
                   </>
                 }
@@ -282,7 +282,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/master-admin/login"
                 element={
                   <>
-                    <Seo title="Master Admin Login | AYG" description="Master admin sign in" noIndex />
+                    <Seo title="AYG" description="Master admin sign in" noIndex />
                     <MasterAdminLoginForm />
                   </>
                 }
@@ -292,7 +292,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/master-admin/dashboard" 
                 element={
                   <>
-                    <Seo title="Master Dashboard | AYG" description="Master admin dashboard" noIndex />
+                    <Seo title="AYG" description="Master admin dashboard" noIndex />
                     <ProtectedRoute>
                       <MasterAdminDashboard />
                     </ProtectedRoute>
@@ -303,7 +303,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/master-admin/reports" 
                 element={
                   <>
-                    <Seo title="Master Reports | AYG" description="Master admin reports" noIndex />
+                    <Seo title="AYG" description="Master admin reports" noIndex />
                     <ProtectedRoute>
                       <ReportsPage />
                     </ProtectedRoute>
@@ -314,7 +314,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/master-admin/profile" 
                 element={
                   <>
-                    <Seo title="Master Profile | AYG" description="Master admin profile" noIndex />
+                    <Seo title="AYG" description="Master admin profile" noIndex />
                     <ProtectedRoute>
                       <ProfileEditPage />
                     </ProtectedRoute>
@@ -325,7 +325,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/master-admin/manage-admins" 
                 element={
                   <>
-                    <Seo title="Manage Admins | AYG" description="Master admin management" noIndex />
+                    <Seo title="AYG" description="Master admin management" noIndex />
                     <ProtectedRoute>
                       <AdminManagementPage />
                     </ProtectedRoute>
@@ -336,7 +336,7 @@ function AppContent({ RouterComponent, routerProps }) {
                 path="/master-admin/rental-alerts" 
                 element={
                   <>
-                    <Seo title="Master Alerts | AYG" description="Master admin alerts" noIndex />
+                    <Seo title="AYG" description="Master admin alerts" noIndex />
                     <ProtectedRoute>
                       <MasterAdminRentalAlertsPage />
                     </ProtectedRoute>

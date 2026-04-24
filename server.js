@@ -8,15 +8,15 @@ function getSeoForPath(url) {
 
   if (pathname === '/') {
     return {
-      title: 'AYG Real Estate | Studios For Rent And Apartments For Sale',
+      title: 'ayg real estate | Studios For Rent And Apartments For Sale',
       description:
-        'Find furnished studios for rent and apartments for sale in Maadi and Mokattam with AYG Real Estate.',
+        'Find furnished studios for rent and apartments for sale in Maadi and Mokattam with ayg real estate.',
       canonicalPath: '/',
       noIndex: false,
       structuredData: {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'AYG Real Estate',
+        name: 'ayg real estate',
         url: SITE_URL,
       },
     };
@@ -34,7 +34,7 @@ function getSeoForPath(url) {
 
   if (pathname.startsWith('/studio/')) {
     return {
-      title: 'Studio Details | AYG',
+      title: 'Studio Details | ayg',
       description:
         'View full studio details including location, furnishing, and rent terms.',
       canonicalPath: '/studios',
@@ -54,7 +54,7 @@ function getSeoForPath(url) {
 
   if (pathname.startsWith('/apartment-sale/')) {
     return {
-      title: 'Apartment Sale Details | AYG',
+      title: 'Apartment Sale Details | ayg',
       description:
         'Check apartment sale details, photos, and location information before booking a visit.',
       canonicalPath: '/buy-apartments',
@@ -63,7 +63,7 @@ function getSeoForPath(url) {
   }
 
   return {
-    title: 'AYG Real Estate',
+    title: 'ayg real estate',
     description: 'Real estate platform for studios and apartments in Cairo.',
     canonicalPath: pathname,
     noIndex:

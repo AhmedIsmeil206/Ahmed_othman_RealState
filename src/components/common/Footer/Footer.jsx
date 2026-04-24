@@ -10,7 +10,7 @@ const Footer = () => {
     <footer className="landing__footer" id="contact">
       <div className="footer-content">
         <div className="footer-owner">
-          <h3 className="footer-heading">Owner and founder of AYG</h3>
+          <h3 className="footer-heading">Owner and founder of ayg</h3>
           <div className="owner-photo">
             <img src="/founder.png" alt="Owner and Founder" className="founder-img" />
           </div>
@@ -49,7 +49,7 @@ const Footer = () => {
       </div>
       
       <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} <img src={aygLogo} alt="AYG" className="footer-logo-inline" /> All rights reserved.</p>
+        <p>© {new Date().getFullYear()} <img src={aygLogo} alt="ayg" className="footer-logo-inline" /> All rights reserved.</p>
       </div>
     </footer>
   );

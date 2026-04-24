@@ -11,14 +11,14 @@ const AdminLanding = () => {
     <section
         className="admin-hero"
         style={{ backgroundImage: `url(${heroImg})` }}
-        aria-label="AYG — Admin Portal"
+        aria-label="ayg — Admin Portal"
     >
         <div className="admin-hero__overlay" />
 
         <nav className="admin-landing__nav">
           <div className="brand">
-            <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-            <span className="brand-text">AYG</span>
+            <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+            <span className="brand-text">ayg</span>
           </div>
         </nav>
 
@@ -63,7 +63,7 @@ const AdminLanding = () => {
 
       <footer className="admin-landing__footer">
         <p>
-          Secure admin portal for AYG
+          Secure admin portal for ayg
         </p>
       </footer>
     </main>

@@ -37,8 +37,8 @@ function LandingPage() {
       {/* Sticky Navbar */}
       <nav className={`landing__nav ${isNavVisible ? 'nav-visible' : 'nav-hidden'}`}>
         <div className="brand">
-          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-          <span className="brand-text">AYG</span>
+          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+          <span className="brand-text">ayg</span>
         </div>
         <div className="nav-actions">
           <a className="nav-link" href="#options">Services</a>
@@ -50,7 +50,7 @@ function LandingPage() {
       <section
         className="hero"
         style={{ backgroundImage: `url(${heroImg})` }}
-        aria-label="AYG — Real Estate"
+        aria-label="ayg — Real Estate"
       >
         <div className="hero__overlay" />
 
@@ -94,7 +94,7 @@ function LandingPage() {
           <img
             className="option-card__thumb option-card__thumb--brand"
             src={aygLogo}
-            alt="AYG"
+            alt="ayg"
             aria-hidden="true"
           />
           <p className="option-card__text">
@@ -107,7 +107,7 @@ function LandingPage() {
       <footer className="landing__footer" id="contact">
         <div className="footer-content">
           <div className="footer-owner">
-            <h3 className="footer-heading">Owner and founder of AYG</h3>
+            <h3 className="footer-heading">Owner and founder of ayg</h3>
             <div className="owner-photo">
               <img src="/founder.png" alt="Owner and Founder" className="founder-img" />
             </div>
@@ -146,7 +146,7 @@ function LandingPage() {
         </div>
         
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} <img src={aygLogo} alt="AYG" className="footer-logo-inline" /> All rights reserved.</p>
+          <p>© {new Date().getFullYear()} <img src={aygLogo} alt="ayg" className="footer-logo-inline" /> All rights reserved.</p>
         </div>
       </footer>
     </main>

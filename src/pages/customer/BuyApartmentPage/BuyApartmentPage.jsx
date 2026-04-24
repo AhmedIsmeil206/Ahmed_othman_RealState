@@ -121,8 +121,8 @@ const errorMessage = handleApiError(error, 'Failed to load apartments for sale')
       <nav className="apartments-nav">
         <BackButton text="← Back" to="/" />
         <div className="brand">
-          <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-          <span className="brand-text">AYG</span>
+          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+          <span className="brand-text">ayg</span>
         </div>
       </nav>
 

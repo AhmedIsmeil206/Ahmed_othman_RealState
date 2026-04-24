@@ -182,7 +182,7 @@ const ReportsPage = () => {
             text="← Back" 
             variant="transparent"
           />
-          <div className="brand"><img src={aygLogo} alt="AYG Logo" className="brand-logo" /></div>
+          <div className="brand"><img src={aygLogo} alt="ayg logo" className="brand-logo" /></div>
           <div className="nav-actions">
             <button 
               className="logout-btn"

@@ -14,14 +14,9 @@ const resolveApiBaseUrl = () => {
     return '/api/v1';
   }
 
-  // In CRA dev, force same-origin API requests so setupProxy handles backend routing.
+  // In Vite dev server, always use relative URLs so the proxy handles CORS.
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    if (
-      configuredBaseUrl.startsWith('http://localhost:8000') ||
-      configuredBaseUrl.startsWith('http://127.0.0.1:8000')
-    ) {
-      return 'http://127.0.0.1:8000/api/v1';
-    }
+    return '/api/v1';
   }
 
   return configuredBaseUrl.replace(/\/$/, '');

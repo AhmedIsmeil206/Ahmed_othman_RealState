@@ -153,35 +153,14 @@ const errorMessage = handleApiError(error, 'Failed to load your properties');
   const handleStudioAdded = async (studioData) => {
     setIsProcessingStudio(true);
     try {
-
-
-      // Use selectedApartmentId from state, not from studioData
-      const apartmentId = selectedApartmentId || studioData.apartmentId;
-      
-      if (!apartmentId) {
-        throw new Error('No apartment ID available. Please select an apartment first.');
-      }
-
-      // Use the real API to create studio
-      const result = await propertyManager.createStudio(apartmentId, studioData);
-      
-      if (result.success) {
-
-        // Refresh admin's content to show the new studio
-        await fetchAdminContent();
-        
-        // Close modal and reset state after refresh
-        setIsAddStudioModalOpen(false);
-        setSelectedApartmentId(null);
-        
-        // Show success message
-        showSuccess('Studio added successfully!');
-      } else {
-        showError('Failed to add studio: ' + result.message);
-      }
+      // Studio was already created by the modal - just refresh and close
+      await fetchAdminContent();
+      setIsAddStudioModalOpen(false);
+      setSelectedApartmentId(null);
+      showSuccess('Studio added successfully!');
     } catch (error) {
-      showError(error.message || 'Failed to add studio');
-} finally {
+      showError(error.message || 'Failed to refresh after adding studio');
+    } finally {
       setIsProcessingStudio(false);
     }
   };
@@ -189,27 +168,15 @@ const errorMessage = handleApiError(error, 'Failed to load your properties');
   const handleApartmentAdded = async (apartmentData) => {
     setIsProcessingApartment(true);
     try {
-
-      let result;
+      // Apartment was already created by the modal - just refresh and close
       if (adminRole === 'studio_rental') {
-        // Add rental apartment
-        result = await propertyManager.createRentApartment(apartmentData);
         setIsAddApartmentModalOpen(false);
       } else if (adminRole === 'apartment_sale') {
-        // Add sale apartment
-        result = await propertyManager.createSaleApartment(apartmentData);
         setIsAddSaleApartmentModalOpen(false);
       }
-
-      if (result?.success) {
-
-        // Refresh admin's content to show the new apartment
-        await fetchAdminContent();
-      } else {
-// Could show error toast here
-      }
+      await fetchAdminContent();
     } catch (error) {
-} finally {
+    } finally {
       setIsProcessingApartment(false);
     }
   };
@@ -239,8 +206,8 @@ const errorMessage = handleApiError(error, 'Failed to load your properties');
             {/* Navigation */}
             <nav className="admin-nav">
               <div className="admin-brand">
-                <img src={aygLogo} alt="AYG Logo" className="brand-logo" />
-                <span className="brand-text">AYG</span>
+                <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+                <span className="brand-text">ayg</span>
               </div>
               <div className="admin-nav-actions">
                 <button 

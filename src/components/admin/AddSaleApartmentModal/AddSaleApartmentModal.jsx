@@ -232,12 +232,11 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
         bathrooms: formData.bathrooms, // API expects enum string: 'private' or 'shared' ONLY
         
         // === OPTIONAL FIELDS ===
-        description: formData.description.trim() || '', // Optional description text
-        photos_url: [], // Empty array - photos uploaded separately via /api/v1/uploads/photos
-        location_on_map: formData.mapUrl ? formData.mapUrl.trim() : '', // Google Maps URL
+        description: formData.description.trim() || null, // Optional description text
+        location_on_map: formData.mapUrl ? formData.mapUrl.trim() : null, // Google Maps URL
         facilities_amenities: formData.facilities && formData.facilities.length > 0 
           ? formData.facilities.join(', ') 
-          : '' // API expects comma-separated string, not array
+          : null // API expects comma-separated string, not array
       };
 
       // STEP 1: Create the apartment first
@@ -338,15 +337,17 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="location">Location *</label>
-              <input
-                type="text"
+              <select
                 id="location"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
                 className={errors.location ? 'error' : ''}
-                placeholder="e.g., Nasr City - Zone 5"
-              />
+              >
+                <option value="">Select location</option>
+                <option value="maadi">Maadi</option>
+                <option value="mokkattam">Mokkattam</option>
+              </select>
               {errors.location && <span className="error-text">{errors.location}</span>}
             </div>
 
