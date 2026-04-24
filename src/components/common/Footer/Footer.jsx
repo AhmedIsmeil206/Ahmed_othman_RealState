@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebook, faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 import './Footer.css';
 
 const Footer = () => {
@@ -10,7 +10,7 @@ const Footer = () => {
     <footer className="landing__footer" id="contact">
       <div className="footer-content">
         <div className="footer-owner">
-          <h3 className="footer-heading">Owner and founder of ayg</h3>
+          <h3 className="footer-heading">Owner and founder of AYG</h3>
           <div className="owner-photo">
             <img src="/founder.png" alt="Owner and Founder" className="founder-img" />
           </div>
@@ -38,18 +38,18 @@ const Footer = () => {
         <div className="footer-info">
           <h3 className="footer-heading">How to find us</h3>
           <div className="info-item">
-            <p className="info-text">مواعيد العمل من ١١ صباح ل ٩ مساءا</p>
+            <p className="info-text">Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø§Ù„Ø¹Ù…Ù„ Ù…Ù† Ù¡Ù¡ ØµØ¨Ø§Ø­ Ù„ Ù© Ù…Ø³Ø§Ø¡Ø§</p>
           </div>
           <div className="info-item">
-            <p className="info-text">العنوان : الهضبة الوسطي - المقطم - شارع الجامعة الحديثة</p>
-            <p className="info-text">مبني رقم 6458 امام شركة الحمد</p>
-            <p className="info-text">الدور الاول</p>
+            <p className="info-text">Ø§Ù„Ø¹Ù†ÙˆØ§Ù† : Ø§Ù„Ù‡Ø¶Ø¨Ø© Ø§Ù„ÙˆØ³Ø·ÙŠ - Ø§Ù„Ù…Ù‚Ø·Ù… - Ø´Ø§Ø±Ø¹ Ø§Ù„Ø¬Ø§Ù…Ø¹Ø© Ø§Ù„Ø­Ø¯ÙŠØ«Ø©</p>
+            <p className="info-text">Ù…Ø¨Ù†ÙŠ Ø±Ù‚Ù… 6458 Ø§Ù…Ø§Ù… Ø´Ø±ÙƒØ© Ø§Ù„Ø­Ù…Ø¯</p>
+            <p className="info-text">Ø§Ù„Ø¯ÙˆØ± Ø§Ù„Ø§ÙˆÙ„</p>
           </div>
         </div>
       </div>
       
       <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} <img src={aygLogo} alt="ayg" className="footer-logo-inline" /> All rights reserved.</p>
+        <p>Â© {new Date().getFullYear()} <img src={AYGLogo} alt="AYG" className="footer-logo-inline" /> All rights reserved.</p>
       </div>
     </footer>
   );

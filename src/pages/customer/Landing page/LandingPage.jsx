@@ -1,11 +1,11 @@
-import './Landingpage.css';
+﻿import './Landingpage.css';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebook, faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 function LandingPage() {
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -37,8 +37,8 @@ function LandingPage() {
       {/* Sticky Navbar */}
       <nav className={`landing__nav ${isNavVisible ? 'nav-visible' : 'nav-hidden'}`}>
         <div className="brand">
-          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-          <span className="brand-text">ayg</span>
+          <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+          <span className="brand-text">AYG</span>
         </div>
         <div className="nav-actions">
           <a className="nav-link" href="#options">Services</a>
@@ -50,7 +50,7 @@ function LandingPage() {
       <section
         className="hero"
         style={{ backgroundImage: `url(${heroImg})` }}
-        aria-label="ayg — Real Estate"
+        aria-label="AYG â€” Real Estate"
       >
         <div className="hero__overlay" />
 
@@ -88,13 +88,13 @@ function LandingPage() {
         <article className="option-card">
           <div
             className="option-card__media option-card__media--brand"
-            style={{ backgroundImage: `url(${aygLogo})` }}
+            style={{ backgroundImage: `url(${AYGLogo})` }}
             aria-hidden
           />
           <img
             className="option-card__thumb option-card__thumb--brand"
-            src={aygLogo}
-            alt="ayg"
+            src={AYGLogo}
+            alt="AYG"
             aria-hidden="true"
           />
           <p className="option-card__text">
@@ -107,7 +107,7 @@ function LandingPage() {
       <footer className="landing__footer" id="contact">
         <div className="footer-content">
           <div className="footer-owner">
-            <h3 className="footer-heading">Owner and founder of ayg</h3>
+            <h3 className="footer-heading">Owner and founder of AYG</h3>
             <div className="owner-photo">
               <img src="/founder.png" alt="Owner and Founder" className="founder-img" />
             </div>
@@ -135,18 +135,18 @@ function LandingPage() {
           <div className="footer-info">
             <h3 className="footer-heading">How to find us</h3>
             <div className="info-item">
-              <p className="info-text">مواعيد العمل من ١١ صباح ل ٩ مساءا</p>
+              <p className="info-text">Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø§Ù„Ø¹Ù…Ù„ Ù…Ù† Ù¡Ù¡ ØµØ¨Ø§Ø­ Ù„ Ù© Ù…Ø³Ø§Ø¡Ø§</p>
             </div>
             <div className="info-item">
-              <p className="info-text">العنوان : الهضبة الوسطي - المقطم - شارع الجامعة الحديثة</p>
-              <p className="info-text">مبني رقم 6458 امام شركة الحمد</p>
-              <p className="info-text">الدور الاول</p>
+              <p className="info-text">Ø§Ù„Ø¹Ù†ÙˆØ§Ù† : Ø§Ù„Ù‡Ø¶Ø¨Ø© Ø§Ù„ÙˆØ³Ø·ÙŠ - Ø§Ù„Ù…Ù‚Ø·Ù… - Ø´Ø§Ø±Ø¹ Ø§Ù„Ø¬Ø§Ù…Ø¹Ø© Ø§Ù„Ø­Ø¯ÙŠØ«Ø©</p>
+              <p className="info-text">Ù…Ø¨Ù†ÙŠ Ø±Ù‚Ù… 6458 Ø§Ù…Ø§Ù… Ø´Ø±ÙƒØ© Ø§Ù„Ø­Ù…Ø¯</p>
+              <p className="info-text">Ø§Ù„Ø¯ÙˆØ± Ø§Ù„Ø§ÙˆÙ„</p>
             </div>
           </div>
         </div>
         
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} <img src={aygLogo} alt="ayg" className="footer-logo-inline" /> All rights reserved.</p>
+          <p>Â© {new Date().getFullYear()} <img src={AYGLogo} alt="AYG" className="footer-logo-inline" /> All rights reserved.</p>
         </div>
       </footer>
     </main>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import StudioCard from '../../../components/customer/StudioCard/StudioCard';
@@ -6,7 +6,7 @@ import Footer from '../../../components/common/Footer';
 import { apartmentPartsApi, rentApartmentsApi, handleApiError } from '../../../services/api';
 import { convertFromApiEnum, getValidOptions } from '../../../utils/apiEnums';
 import './StudiosListPage.css';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const FALLBACK_STUDIO_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="200"%3E%3Crect width="300" height="200" fill="%23e2e8f0"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="%23718096"%3ENo Image Available%3C/text%3E%3C/svg%3E';
 
@@ -297,10 +297,10 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
   return (
     <div className="studios-list-page">
       <nav className="studios-nav">
-        <BackButton text="← Back" to="/" />
+        <BackButton text="â† Back" to="/" />
         <div className="brand">
-          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-          <span className="brand-text">ayg</span>
+          <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+          <span className="brand-text">AYG</span>
         </div>
       </nav>
 

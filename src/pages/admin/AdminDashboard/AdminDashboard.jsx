@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../hooks/useAdminAuth';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
@@ -12,7 +12,7 @@ import { myContentApi, handleApiError } from '../../../services/api';
 import { useToast } from '../../../contexts/ToastContext';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './AdminDashboard.css';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -206,15 +206,15 @@ const errorMessage = handleApiError(error, 'Failed to load your properties');
             {/* Navigation */}
             <nav className="admin-nav">
               <div className="admin-brand">
-                <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-                <span className="brand-text">ayg</span>
+                <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+                <span className="brand-text">AYG</span>
               </div>
               <div className="admin-nav-actions">
                 <button 
                   onClick={() => navigate('/admin/rental-alerts')}
                   className="rental-alerts-btn"
                 >
-                  🔔 Rental Alerts
+                  ðŸ”” Rental Alerts
                 </button>
                 
                 <button 

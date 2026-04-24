@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import ImageGallery from '../../../components/customer/ImageGallery/ImageGallery';
@@ -7,7 +7,7 @@ import MapViewer from '../../../components/common/MapViewer';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import { saleApartmentsApi } from '../../../services/api';
 import './ApartmentSaleDetailsPage.css';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const ApartmentSaleDetailsPage = () => {
   const { id } = useParams();
@@ -97,13 +97,13 @@ setError('Failed to load apartment details');
 
   const getBackText = () => {
     if (navigationSource === 'master-admin-dashboard') {
-      return '← Back to Master Admin Dashboard';
+      return 'â† Back to Master Admin Dashboard';
     } else if (navigationSource === 'admin-dashboard') {
-      return '← Back to Admin Dashboard';
+      return 'â† Back to Admin Dashboard';
     } else if (navigationSource === 'customer-apartments') {
-      return '← Back to Apartments for Sale';
+      return 'â† Back to Apartments for Sale';
     }
-    return '← Back to Admin Dashboard'; // Default fallback
+    return 'â† Back to Admin Dashboard'; // Default fallback
   };
 
   // Loading state
@@ -161,7 +161,7 @@ setError('Failed to load apartment details');
           to={navigationSource === 'master-admin-dashboard' ? '/master-admin/dashboard' : '/admin/dashboard'} 
           className="brand"
         >
-          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
+          <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
         </Link>
       </nav>
 
@@ -182,7 +182,7 @@ setError('Failed to load apartment details');
               justifyContent: 'center',
               borderRadius: '8px'
             }}>
-              <p style={{ color: '#666', fontSize: '18px' }}>📷 No images available</p>
+              <p style={{ color: '#666', fontSize: '18px' }}>ðŸ“· No images available</p>
             </div>
           )}
         </div>
@@ -200,7 +200,7 @@ setError('Failed to load apartment details');
             </div>
 
             <div className="apartment-location" onClick={openGoogleMaps}>
-              📍 {apartment.location}
+              ðŸ“ {apartment.location}
               <span className="location-link">See location</span>
             </div>
 
@@ -212,11 +212,11 @@ setError('Failed to load apartment details');
             {navigationSource === 'master-admin-dashboard' && apartment.createdBy && (
               <div className="creator-info-section">
                 <div className="creator-info">
-                  <span className="creator-label">👤 Created by Admin:</span>
+                  <span className="creator-label">ðŸ‘¤ Created by Admin:</span>
                   <span className="creator-value">{apartment.createdBy}</span>
                 </div>
                 <div className="creator-date">
-                  <span className="creator-label">📅 Created on:</span>
+                  <span className="creator-label">ðŸ“… Created on:</span>
                   <span className="creator-value">
                     {apartment.listedAt ? new Date(apartment.listedAt).toLocaleDateString() : 'N/A'}
                   </span>
@@ -228,42 +228,42 @@ setError('Failed to load apartment details');
               <h2>Property Highlights</h2>
               <div className="highlights-grid">
                 <div className="highlight-item">
-                  <div className="highlight-icon">🏢</div>
+                  <div className="highlight-icon">ðŸ¢</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Type</div>
                     <div className="highlight-value">Apartment for Sale</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">#️⃣</div>
+                  <div className="highlight-icon">#ï¸âƒ£</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Apartment Number</div>
                     <div className="highlight-value">{apartment.apartmentNumber || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">📏</div>
+                  <div className="highlight-icon">ðŸ“</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Area</div>
                     <div className="highlight-value">{apartment.area ? `${apartment.area} sq ft` : 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🛏️</div>
+                  <div className="highlight-icon">ðŸ›ï¸</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bedrooms</div>
                     <div className="highlight-value">{apartment.bedrooms || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">🚿</div>
+                  <div className="highlight-icon">ðŸš¿</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Bathrooms</div>
                     <div className="highlight-value">{apartment.bathrooms || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
-                  <div className="highlight-icon">💰</div>
+                  <div className="highlight-icon">ðŸ’°</div>
                   <div className="highlight-content">
                     <div className="highlight-label">Price</div>
                     <div className="highlight-value">{formatPrice(apartment.price)}</div>
@@ -309,7 +309,7 @@ setError('Failed to load apartment details');
                 <div className="facilities-grid">
                   {apartment.facilities.map((facility, index) => (
                     <div key={index} className="facility-item">
-                      <span className="facility-icon">✓</span>
+                      <span className="facility-icon">âœ“</span>
                       <span className="facility-name">{facility}</span>
                     </div>
                   ))}
@@ -327,9 +327,9 @@ setError('Failed to load apartment details');
             <div className="location-section">
               <h2>Location</h2>
               <div className="location-info">
-                <div className="location-text">📍 {apartment.location}</div>
+                <div className="location-text">ðŸ“ {apartment.location}</div>
                 <button className="location-button" onClick={openGoogleMaps}>
-                  🗺️ See location
+                  ðŸ—ºï¸ See location
                 </button>
               </div>
               
@@ -343,9 +343,9 @@ setError('Failed to load apartment details');
                   />
                 ) : (
                   <div className="map-placeholder">
-                    <p>📍 {apartment.location}</p>
+                    <p>ðŸ“ {apartment.location}</p>
                     <button className="location-button" onClick={openGoogleMaps}>
-                      🗺️ View on Google Maps
+                      ðŸ—ºï¸ View on Google Maps
                     </button>
                   </div>
                 )}
@@ -357,8 +357,8 @@ setError('Failed to load apartment details');
             <div className="contact-card">
               <h3>Listed by agency</h3>
               <div className="agency-info">
-                <div className="agency-name">ayg</div>
-                <div className="agency-rating">⭐ 4 C</div>
+                <div className="agency-name">AYG</div>
+                <div className="agency-rating">â­ 4 C</div>
                 <div className="agency-member">Member since Sept 2024</div>
               </div>
               

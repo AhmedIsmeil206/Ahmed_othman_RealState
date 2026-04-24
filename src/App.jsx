@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from './store';
 import { useEffect } from 'react';
@@ -160,7 +160,7 @@ function AppContent({ RouterComponent, routerProps }) {
                   <>
                     <Seo
                       title="AYG"
-                      description="Find furnished studios for rent and apartments for sale in Maadi and Mokattam with ayg real estate."
+                      description="Find furnished studios for rent and apartments for sale in Maadi and Mokattam with AYG real estate."
                       canonicalPath="/"
                       structuredData={websiteStructuredData}
                     />

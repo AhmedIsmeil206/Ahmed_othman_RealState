@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterAuth } from '../../../hooks/useRedux';
 import { apartmentPartsApi, rentalContractsApi, rentApartmentsApi } from '../../../services/api';
 import BackButton from '../../../components/common/BackButton';
 import RentalAlerts from '../../../components/admin/RentalAlerts/RentalAlerts';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './MasterAdminRentalAlertsPage.css';
 
@@ -94,14 +94,14 @@ const MasterAdminRentalAlertsPage = () => {
             <nav className="master-alerts-nav">
               <div className="master-alerts-nav-actions">
                 <BackButton 
-                  text="← Back to Master Admin Dashboard"
+                  text="â† Back to Master Admin Dashboard"
                   onClick={() => navigate('/master-admin/dashboard')}
                   variant="transparent"
                 />
               </div>
               <div className="master-alerts-brand">
-                <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-                <span className="brand-text">ayg</span>
+                <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+                <span className="brand-text">AYG</span>
               </div>
             </nav>
 
@@ -142,7 +142,7 @@ const MasterAdminRentalAlertsPage = () => {
       <div className="master-alerts-main-section">
         <div className="master-alerts-container">
           <div className="master-alerts-section-header">
-            <h3>🔔 Active Rental Alerts</h3>
+            <h3>ðŸ”” Active Rental Alerts</h3>
             <p>All rental contracts requiring attention across the system</p>
           </div>
           

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -19,7 +19,7 @@ import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpi
 import Footer from '../../../components/common/Footer';
 import { saleApartmentsApi } from '../../../services/api';
 import './ApartmentSaleDetailsPage.css';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const ApartmentSaleDetailsPage = () => {
   const { id } = useParams();
@@ -124,11 +124,11 @@ setError('Failed to load apartment details');
           className="back-to-apartments-btn" 
           onClick={() => navigate('/buy-apartments')}
         >
-          ← Back to Apartments
+          â† Back to Apartments
         </button>
         <div className="brand">
-          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-          <span className="brand-text">ayg</span>
+          <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+          <span className="brand-text">AYG</span>
         </div>
       </nav>
 
@@ -200,7 +200,7 @@ setError('Failed to load apartment details');
                   <div className="highlight-icon"><FontAwesomeIcon icon={faRuler} /></div>
                   <div className="highlight-content">
                     <div className="highlight-label">Area</div>
-                    <div className="highlight-value">{apartment.area ? `${apartment.area} m²` : 'N/A'}</div>
+                    <div className="highlight-value">{apartment.area ? `${apartment.area} mÂ²` : 'N/A'}</div>
                   </div>
                 </div>
                 <div className="highlight-item">
@@ -268,7 +268,7 @@ setError('Failed to load apartment details');
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Listed By</span>
-                  <span className="detail-value">{apartment.created_by || 'ayg'}</span>
+                  <span className="detail-value">{apartment.created_by || 'AYG'}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Property Type</span>

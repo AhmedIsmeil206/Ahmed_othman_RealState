@@ -1,4 +1,4 @@
-const fs = require('node:fs/promises');
+﻿const fs = require('node:fs/promises');
 const express = require('express');
 
 const SITE_URL = process.env.VITE_SITE_URL || 'http://localhost:3000';
@@ -8,15 +8,15 @@ function getSeoForPath(url) {
 
   if (pathname === '/') {
     return {
-      title: 'ayg real estate | Studios For Rent And Apartments For Sale',
+      title: 'AYG real estate | Studios For Rent And Apartments For Sale',
       description:
-        'Find furnished studios for rent and apartments for sale in Maadi and Mokattam with ayg real estate.',
+        'Find furnished studios for rent and apartments for sale in Maadi and Mokattam with AYG real estate.',
       canonicalPath: '/',
       noIndex: false,
       structuredData: {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'ayg real estate',
+        name: 'AYG real estate',
         url: SITE_URL,
       },
     };
@@ -34,7 +34,7 @@ function getSeoForPath(url) {
 
   if (pathname.startsWith('/studio/')) {
     return {
-      title: 'Studio Details | ayg',
+      title: 'Studio Details | AYG',
       description:
         'View full studio details including location, furnishing, and rent terms.',
       canonicalPath: '/studios',
@@ -54,7 +54,7 @@ function getSeoForPath(url) {
 
   if (pathname.startsWith('/apartment-sale/')) {
     return {
-      title: 'Apartment Sale Details | ayg',
+      title: 'Apartment Sale Details | AYG',
       description:
         'Check apartment sale details, photos, and location information before booking a visit.',
       canonicalPath: '/buy-apartments',
@@ -63,7 +63,7 @@ function getSeoForPath(url) {
   }
 
   return {
-    title: 'ayg real estate',
+    title: 'AYG real estate',
     description: 'Real estate platform for studios and apartments in Cairo.',
     canonicalPath: pathname,
     noIndex:

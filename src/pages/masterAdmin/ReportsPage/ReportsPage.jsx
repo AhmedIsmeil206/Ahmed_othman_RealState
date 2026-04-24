@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faEye, faChartBar, faDollarSign } from '@fortawesome/free-solid-svg-icons';
@@ -8,7 +8,7 @@ import BackButton from '../../../components/common/BackButton';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './ReportsPage.css';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const ReportsPage = () => {
   const navigate = useNavigate();
@@ -179,10 +179,10 @@ const ReportsPage = () => {
         {/* Navigation */}
         <nav className="reports-nav">
           <BackButton 
-            text="← Back" 
+            text="â† Back" 
             variant="transparent"
           />
-          <div className="brand"><img src={aygLogo} alt="ayg logo" className="brand-logo" /></div>
+          <div className="brand"><img src={AYGLogo} alt="AYG logo" className="brand-logo" /></div>
           <div className="nav-actions">
             <button 
               className="logout-btn"
@@ -281,7 +281,7 @@ const ReportsPage = () => {
               className="btn btn--primary refresh-btn"
               onClick={loadReportsData}
             >
-              🔄 Refresh Data
+              ðŸ”„ Refresh Data
             </button>
           </div>
         </div>
@@ -387,9 +387,9 @@ const ReportsPage = () => {
                           {stat.performanceScore}
                         </div>
                         <div className="performance-badge">
-                          {stat.performanceScore >= 80 ? '🏆 Excellent' :
+                          {stat.performanceScore >= 80 ? 'ðŸ† Excellent' :
                            stat.performanceScore >= 60 ? <><FontAwesomeIcon icon={faStar} /> Good</> :
-                           stat.performanceScore >= 40 ? '📈 Average' : '📉 Needs Improvement'}
+                           stat.performanceScore >= 40 ? 'ðŸ“ˆ Average' : 'ðŸ“‰ Needs Improvement'}
                         </div>
                       </div>
                     </td>
@@ -422,7 +422,7 @@ const ReportsPage = () => {
             <h2 className="section-title">Performance Insights</h2>
           <div className="insights-grid">
             <div className="insight-card">
-              <h3>🏆 Top Performer</h3>
+              <h3>ðŸ† Top Performer</h3>
               <div className="insight-content">
                 <div className="performer-name">
                   {adminStats[0]?.admin.name || adminStats[0]?.admin.email?.split('@')[0]}

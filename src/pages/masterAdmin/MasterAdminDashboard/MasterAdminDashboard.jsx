@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -28,7 +28,7 @@ import AddSaleApartmentModal from '../../../components/admin/AddSaleApartmentMod
 import { formatPhoneForAPI, validateEgyptianPhone, normalizePhoneInput } from '../../../utils/phoneUtils';
 import './MasterAdminDashboard.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const MasterAdminDashboard = () => {
   const navigate = useNavigate();
@@ -653,19 +653,19 @@ let errorMsg = response.error || response.message || 'Failed to create admin acc
               });
               
               if (matchingEmail && matchingPhone && matchingEmail.id === matchingPhone.id) {
-                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
+                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} â€¢ Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
               } else if (matchingEmail) {
-                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
+                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} â€¢ Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
               } else if (matchingPhone) {
-                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
+                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} â€¢ Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
               } else {
-                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} • Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
+                errorMsg = `Backend detected a duplicate but it's not showing in our admin list. This might be a database sync issue. Tried to create: Email: ${apiData.email} â€¢ Phone: ${apiData.phone}. Try refreshing the page or use completely different values.`;
               }
             } else {
-              errorMsg = `❌ Backend says duplicate exists but could not fetch admin list to identify the issue.\n\nPlease try different email and phone number.`;
+              errorMsg = `âŒ Backend says duplicate exists but could not fetch admin list to identify the issue.\n\nPlease try different email and phone number.`;
             }
           } catch (fetchError) {
-            errorMsg = `❌ Backend detected duplicate values but could not verify details.\n\nPlease try different email and phone number.`;
+            errorMsg = `âŒ Backend detected duplicate values but could not verify details.\n\nPlease try different email and phone number.`;
           }
         }
         
@@ -839,8 +839,8 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
         
         <nav className="dashboard-nav">
           <div className="nav-left">
-            <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-            <span className="brand-text">ayg</span>
+            <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+            <span className="brand-text">AYG</span>
           </div>
           
           <div className="nav-right">
@@ -1026,7 +1026,7 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
           <div className="modal-content admin-management-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Edit Profile</h2>
-              <button className="modal-close-btn" onClick={closeEditProfileModal}>×</button>
+              <button className="modal-close-btn" onClick={closeEditProfileModal}>Ã—</button>
             </div>
             
             <form onSubmit={handleProfileSubmit} className="modal-form">
@@ -1182,14 +1182,14 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
           <div className="modal-content admin-management-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Manage Admin Accounts</h2>
-              <button className="modal-close-btn" onClick={closeManageAdminsModal}>×</button>
+              <button className="modal-close-btn" onClick={closeManageAdminsModal}>Ã—</button>
             </div>
             
             <div className="admin-management-content">
               {/* Existing Admins Section */}
               <div className="tab-section" style={{backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '24px'}}>
                 <h3 style={{fontSize: '1.1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  👥 Existing Admin Accounts ({existingAdmins.length})
+                  ðŸ‘¥ Existing Admin Accounts ({existingAdmins.length})
                   <button 
                     type="button" 
                     onClick={async () => {
@@ -1214,7 +1214,7 @@ showToast('Failed to refresh admin list', 'error');
                       marginLeft: 'auto'
                     }}
                   >
-                    🔄 Refresh
+                    ðŸ”„ Refresh
                   </button>
                 </h3>
                 {existingAdmins.length === 0 ? (
@@ -1244,7 +1244,7 @@ showToast('Failed to refresh admin list', 'error');
                                 backgroundColor: admin.role === 'super_admin' ? '#fef3c7' : '#dbeafe',
                                 color: admin.role === 'super_admin' ? '#92400e' : '#1e40af'
                               }}>
-                                {admin.role === 'super_admin' ? '★ Super Admin' : 
+                                {admin.role === 'super_admin' ? 'â˜… Super Admin' : 
                                  admin.role === 'studio_rental' ? <><FontAwesomeIcon icon={faBuilding} /> Studio Rental</> : <><FontAwesomeIcon icon={faHome} /> Apt Sales</>}
                               </span>
                             </td>
@@ -1303,7 +1303,7 @@ showToast('Failed to refresh admin list', 'error');
                         if (matchingAdmin) {
                           setAdminErrors(prev => ({
                             ...prev,
-                            email: `⚠️ Email already used by: ${matchingAdmin.full_name || matchingAdmin.name || 'existing admin'}`
+                            email: `âš ï¸ Email already used by: ${matchingAdmin.full_name || matchingAdmin.name || 'existing admin'}`
                           }));
                         } else {
                           // Clear email error if it was previously set
@@ -1379,7 +1379,7 @@ showToast('Failed to refresh admin list', 'error');
 
                             setAdminErrors(prev => ({
                               ...prev,
-                              mobile: `⚠️ Phone already used by: ${matchingAdmin.full_name || matchingAdmin.name}`
+                              mobile: `âš ï¸ Phone already used by: ${matchingAdmin.full_name || matchingAdmin.name}`
                             }));
                           } else {
 
@@ -1452,7 +1452,7 @@ showToast('Failed to refresh admin list', 'error');
                         showToast('Form cleared!', 'success');
                       }}
                     >
-                      🗑️ Clear Form
+                      ðŸ—‘ï¸ Clear Form
                     </button>
                     <button 
                       type="button" 
@@ -1469,7 +1469,7 @@ showToast('Failed to refresh admin list', 'error');
                         }
                       }}
                     >
-                      🔄 Refresh List
+                      ðŸ”„ Refresh List
                     </button>
                     <button type="submit" className="btn-primary" disabled={isAdminSubmitting}>
                       {isAdminSubmitting ? 'Creating...' : 'Create Admin'}

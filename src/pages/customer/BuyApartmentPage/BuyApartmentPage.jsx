@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/common/BackButton';
 import ApartmentSaleCard from '../../../components/customer/ApartmentSaleCard/ApartmentSaleCard';
 import Footer from '../../../components/common/Footer';
 import { saleApartmentsApi, handleApiError } from '../../../services/api';
 import './BuyApartmentPage.css';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const BuyApartmentPage = () => {
   const [allSaleApartments, setAllSaleApartments] = useState([]);
@@ -119,10 +119,10 @@ const errorMessage = handleApiError(error, 'Failed to load apartments for sale')
   return (
     <div className="buy-apartment-page">
       <nav className="apartments-nav">
-        <BackButton text="← Back" to="/" />
+        <BackButton text="â† Back" to="/" />
         <div className="brand">
-          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-          <span className="brand-text">ayg</span>
+          <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+          <span className="brand-text">AYG</span>
         </div>
       </nav>
 

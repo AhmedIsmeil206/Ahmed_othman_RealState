@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useParams, Link, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -24,7 +24,7 @@ import Footer from '../../../components/common/Footer';
 import { apartmentPartsApi, rentApartmentsApi, rentalContractsApi } from '../../../services/api';
 import { useToast } from '../../../contexts/ToastContext';
 import './StudioDetailsPage.css';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const StudioDetailsPage = () => {
   const { id } = useParams();
@@ -359,19 +359,19 @@ setError('Failed to load studio details');
 
   const getBackText = () => {
     if (navigationSource === 'master-admin-dashboard') {
-      return '← Back to Master Admin Dashboard';
+      return 'â† Back to Master Admin Dashboard';
     } else if (navigationSource === 'admin-dashboard') {
-      return '← Back to Admin Dashboard';
+      return 'â† Back to Admin Dashboard';
     } else if (navigationSource === 'admin-tracking') {
-      return '← Back to Admin Tracking';
+      return 'â† Back to Admin Tracking';
     } else if (navigationSource === 'admin-rental-alerts') {
-      return '← Back to Admin Rental Alerts';
+      return 'â† Back to Admin Rental Alerts';
     } else if (navigationSource === 'master-admin-rental-alerts') {
-      return '← Back to Master Admin Rental Alerts';
+      return 'â† Back to Master Admin Rental Alerts';
     } else if (navigationSource === 'customer-studios') {
-      return '← Back to Studios';
+      return 'â† Back to Studios';
     }
-    return '← Back to Studios'; // Default fallback
+    return 'â† Back to Studios'; // Default fallback
   };
 
   const openGoogleMaps = () => {
@@ -450,8 +450,8 @@ setError('Failed to load studio details');
           to={navigationSource === 'master-admin' ? '/master-admin/dashboard' : '/'} 
           className="brand"
         >
-          <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-          <span className="brand-text">ayg</span>
+          <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+          <span className="brand-text">AYG</span>
         </Link>
       </nav>
 
@@ -492,11 +492,11 @@ setError('Failed to load studio details');
             {navigationSource === 'master-admin-dashboard' && studio.created_by && (
               <div className="creator-info-section">
                 <div className="creator-info">
-                  <span className="creator-label">👤 Created by Admin:</span>
+                  <span className="creator-label">ðŸ‘¤ Created by Admin:</span>
                   <span className="creator-value">{studio.created_by}</span>
                 </div>
                 <div className="creator-date">
-                  <span className="creator-label">📅 Created on:</span>
+                  <span className="creator-label">ðŸ“… Created on:</span>
                   <span className="creator-value">
                     {studio.created_at ? new Date(studio.created_at).toLocaleDateString() : 'N/A'}
                   </span>
@@ -520,7 +520,7 @@ setError('Failed to load studio details');
                           Processing...
                         </>
                       ) : (
-                        '📋 Book This Studio'
+                        'ðŸ“‹ Book This Studio'
                       )}
                     </button>
                   ) : (
@@ -529,7 +529,7 @@ setError('Failed to load studio details');
                       disabled
                       style={{ background: '#059669', cursor: 'not-allowed' }}
                     >
-                      ✅ Studio Already Booked
+                      âœ… Studio Already Booked
                     </button>
                   )}
                   
@@ -543,7 +543,7 @@ setError('Failed to load studio details');
                         <LoadingSpinner size="small" color="white" inline />
                       </>
                     ) : (
-                      '✏️ Edit Studio'
+                      'âœï¸ Edit Studio'
                     )}
                   </button>
                 </div>
@@ -570,7 +570,7 @@ setError('Failed to load studio details');
                 <div className="highlight-item">
                   <div className="highlight-icon"><FontAwesomeIcon icon={faRuler} /></div>
                   <div className="highlight-content">
-                    <div className="highlight-label">Area (m²)</div>
+                    <div className="highlight-label">Area (mÂ²)</div>
                     <div className="highlight-value">{studio.area || 'N/A'}</div>
                   </div>
                 </div>
@@ -701,7 +701,7 @@ setError('Failed to load studio details');
                     </div>
 
                     <div className="financial-summary">
-                      <h4>💰 Financial Summary</h4>
+                      <h4>ðŸ’° Financial Summary</h4>
                       <div className="financial-grid">
                         <div className="financial-item">
                           <span className="financial-label">Monthly Rent:</span>
@@ -724,7 +724,7 @@ setError('Failed to load studio details');
 
                     {studioBooking.notes && (
                       <div className="contract-info">
-                        <h4>� Notes</h4>
+                        <h4>ï¿½ Notes</h4>
                         <p>{studioBooking.notes}</p>
                       </div>
                     )}
@@ -738,15 +738,15 @@ setError('Failed to load studio details');
             <div className="contact-card">
               <h3>Listed by agency</h3>
               <div className="agency-info">
-                <div className="agency-name">ayg</div>
-                <div className="agency-rating">⭐ 4 C</div>
+                <div className="agency-name">AYG</div>
+                <div className="agency-rating">â­ 4 C</div>
                 <div className="agency-member">Member since Sept 2024</div>
               </div>
               
               <div className="contact-actions">
                 {/* WhatsApp Button Logic:
-                    - If admin/master admin viewing + has booking → Customer's phone
-                    - Otherwise → Agency/Admin phone for inquiries
+                    - If admin/master admin viewing + has booking â†’ Customer's phone
+                    - Otherwise â†’ Agency/Admin phone for inquiries
                 */}
                 {(navigationSource === 'admin-dashboard' || 
                   navigationSource === 'master-admin-dashboard' || 

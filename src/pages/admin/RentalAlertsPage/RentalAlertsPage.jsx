@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../hooks/useAdminAuth';
 import { apartmentPartsApi, rentalContractsApi, rentApartmentsApi } from '../../../services/api';
@@ -7,7 +7,7 @@ import RentalAlerts from '../../../components/admin/RentalAlerts/RentalAlerts';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './RentalAlertsPage.css';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const RentalAlertsPage = () => {
   const navigate = useNavigate();
@@ -103,14 +103,14 @@ const RentalAlertsPage = () => {
             <nav className="alerts-nav">
               <div className="alerts-nav-actions">
                 <BackButton 
-                  text="← Back to Admin Dashboard"
+                  text="â† Back to Admin Dashboard"
                   onClick={() => navigate('/admin/dashboard')}
                   variant="transparent"
                 />
               </div>
               <div className="alerts-brand">
-                <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-                <span className="brand-text">ayg</span>
+                <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+                <span className="brand-text">AYG</span>
               </div>
             </nav>
 
@@ -151,7 +151,7 @@ const RentalAlertsPage = () => {
       <div className="alerts-main-section">
         <div className="alerts-container">
           <div className="alerts-section-header">
-            <h3>🔔 Active Rental Alerts</h3>
+            <h3>ðŸ”” Active Rental Alerts</h3>
             <p>Studios requiring attention for rental renewals or status updates</p>
           </div>
           

@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import './AdminLanding.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
-import aygLogo from '../../../assets/images/logo/AYG.png';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 
 const AdminLanding = () => {
   return (
@@ -11,14 +11,14 @@ const AdminLanding = () => {
     <section
         className="admin-hero"
         style={{ backgroundImage: `url(${heroImg})` }}
-        aria-label="ayg — Admin Portal"
+        aria-label="AYG â€” Admin Portal"
     >
         <div className="admin-hero__overlay" />
 
         <nav className="admin-landing__nav">
           <div className="brand">
-            <img src={aygLogo} alt="ayg logo" className="brand-logo" />
-            <span className="brand-text">ayg</span>
+            <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+            <span className="brand-text">AYG</span>
           </div>
         </nav>
 
@@ -35,7 +35,7 @@ const AdminLanding = () => {
 
           <div className="admin-options">
             <div className="admin-option-card">
-              <div className="admin-option-icon">👨‍💼</div>
+              <div className="admin-option-icon">ðŸ‘¨â€ðŸ’¼</div>
               <h2>Admin Login</h2>
               <p>
                 Access the admin dashboard to manage your properties, handle rental applications,
@@ -47,7 +47,7 @@ const AdminLanding = () => {
             </div>
 
             <div className="admin-option-card">
-              <div className="admin-option-icon">🔐</div>
+              <div className="admin-option-icon">ðŸ”</div>
               <h2>Master Admin</h2>
               <p>
                 Full system access for master administrators to manage all users, properties,
@@ -63,7 +63,7 @@ const AdminLanding = () => {
 
       <footer className="admin-landing__footer">
         <p>
-          Secure admin portal for ayg
+          Secure admin portal for AYG
         </p>
       </footer>
     </main>
