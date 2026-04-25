@@ -146,6 +146,9 @@ export const API_CONSTANTS = {
     FACEBOOK: 'facebook',
     INSTAGRAM: 'instagram',
     GOOGLE: 'google',
+    BAYUT: 'Bayut',
+    AQAR_MAP: 'Aqar map',
+    DUBIZZLE: 'Dubizzle',
     REFERRAL: 'referral',
     WALK_IN: 'walk_in',
     OTHER: 'other'

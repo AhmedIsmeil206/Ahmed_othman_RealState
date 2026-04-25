@@ -337,17 +337,15 @@ const AddSaleApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="location">Location *</label>
-              <select
+              <input
+                type="text"
                 id="location"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
                 className={errors.location ? 'error' : ''}
-              >
-                <option value="">Select location</option>
-                <option value="maadi">Maadi</option>
-                <option value="mokkattam">Mokkattam</option>
-              </select>
+                placeholder="e.g., Nasr City - Zone 5"
+              />
               {errors.location && <span className="error-text">{errors.location}</span>}
             </div>
 

@@ -4,7 +4,7 @@ import BackButton from '../../../components/common/BackButton';
 import StudioCard from '../../../components/customer/StudioCard/StudioCard';
 import Footer from '../../../components/common/Footer';
 import { apartmentPartsApi, rentApartmentsApi, handleApiError } from '../../../services/api';
-import { convertFromApiEnum, getValidOptions } from '../../../utils/apiEnums';
+import { convertFromApiEnum } from '../../../utils/apiEnums';
 import './StudiosListPage.css';
 import AYGLogo from '../../../assets/images/logo/AYG.png';
 
@@ -25,6 +25,22 @@ const StudiosListPage = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
+
+  const locationOptions = React.useMemo(() => {
+    const uniqueLocations = new Map();
+
+    allStudios.forEach((studio) => {
+      const location = String(studio.location || '').trim();
+      if (!location) return;
+
+      const key = location.toLowerCase();
+      if (!uniqueLocations.has(key)) {
+        uniqueLocations.set(key, location);
+      }
+    });
+
+    return Array.from(uniqueLocations.values()).sort((a, b) => a.localeCompare(b));
+  }, [allStudios]);
   
   // Pagination state
   const [displayedStudios, setDisplayedStudios] = useState([]);
@@ -211,8 +227,8 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
       
       // Location filter - use enum values for comparison
       if (locationFilter !== 'all') {
-        const studioLocationEnum = studio.locationEnum || studio.location?.toLowerCase();
-        if (!studioLocationEnum || studioLocationEnum !== locationFilter) return false;
+        const studioLocation = String(studio.location || '').trim().toLowerCase();
+        if (!studioLocation || studioLocation !== locationFilter.toLowerCase()) return false;
       }
       
       return true;
@@ -344,9 +360,9 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
                 className="filter-select"
               >
                 <option value="all">All Locations</option>
-                {getValidOptions.locations().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {locationOptions.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
                   </option>
                 ))}
               </select>

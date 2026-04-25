@@ -748,8 +748,8 @@ setError('Failed to load studio details');
               
               <div className="contact-actions">
                 {/* WhatsApp Button Logic:
-                    - If admin/master admin viewing + has booking â†’ Customer's phone
-                    - Otherwise â†’ Agency/Admin phone for inquiries
+                    - If admin/master admin viewing + has booking -> Customer's phone
+                    - Otherwise -> Agency/Admin phone for inquiries
                 */}
                 {(navigationSource === 'admin-dashboard' || 
                   navigationSource === 'master-admin-dashboard' || 

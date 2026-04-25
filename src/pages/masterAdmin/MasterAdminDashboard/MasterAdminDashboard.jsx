@@ -1028,7 +1028,7 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
           <div className="modal-content admin-management-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Edit Profile</h2>
-              <button className="modal-close-btn" onClick={closeEditProfileModal}>Ã—</button>
+              <button className="modal-close-btn" onClick={closeEditProfileModal}>×</button>
             </div>
             
             <form onSubmit={handleProfileSubmit} className="modal-form">
@@ -1184,7 +1184,7 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
           <div className="modal-content admin-management-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Manage Admin Accounts</h2>
-              <button className="modal-close-btn" onClick={closeManageAdminsModal}>Ã—</button>
+              <button className="modal-close-btn" onClick={closeManageAdminsModal}>×</button>
             </div>
             
             <div className="admin-management-content">
@@ -1246,7 +1246,7 @@ showToast('Failed to refresh admin list', 'error');
                                 backgroundColor: admin.role === 'super_admin' ? '#fef3c7' : '#dbeafe',
                                 color: admin.role === 'super_admin' ? '#92400e' : '#1e40af'
                               }}>
-                                {admin.role === 'super_admin' ? 'â˜… Super Admin' : 
+                                  {admin.role === 'super_admin' ? '★ Super Admin' : 
                                  admin.role === 'studio_rental' ? <><FontAwesomeIcon icon={faBuilding} /> Studio Rental</> : <><FontAwesomeIcon icon={faHome} /> Apt Sales</>}
                               </span>
                             </td>

@@ -261,7 +261,7 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
       // NOTE: Photos are uploaded AFTER apartment creation using /api/v1/uploads/photos
       const apiData = {
         name: (formData.name && formData.name.trim()) || 'Unnamed Apartment', // REQUIRED: Never empty
-        location: (formData.location && formData.location.trim()) || 'maadi', // REQUIRED: enum 'maadi' or 'mokkattam'
+        location: (formData.location && formData.location.trim()) || 'Unknown Location', // REQUIRED: free-text string
         address: (formData.address && formData.address.trim()) || 'Address not provided', // REQUIRED: Never empty
         area: (formData.area && formData.area.toString().trim()) || '50', // REQUIRED: Never empty, default 50 sqm
         number: (formData.number && formData.number.trim()) || 'APT-001', // REQUIRED: Never empty
@@ -385,17 +385,15 @@ const AddApartmentModal = ({ isOpen, onApartmentAdded, onClose }) => {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="location">Location *</label>
-              <select
+              <input
+                type="text"
                 id="location"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
                 className={errors.location ? 'error' : ''}
-              >
-                <option value="">Select location</option>
-                <option value="maadi">Maadi</option>
-                <option value="mokkattam">Mokkattam</option>
-              </select>
+                placeholder="e.g., Fifth Settlement Block 9"
+              />
               {errors.location && <span className="error-text">{errors.location}</span>}
             </div>
 

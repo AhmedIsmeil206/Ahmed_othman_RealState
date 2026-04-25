@@ -16,6 +16,22 @@ const BuyApartmentPage = () => {
   const [bedroomFilter, setBedroomFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
 
+  const locationOptions = React.useMemo(() => {
+    const uniqueLocations = new Map();
+
+    allSaleApartments.forEach((apartment) => {
+      const location = String(apartment.location || '').trim();
+      if (!location) return;
+
+      const key = location.toLowerCase();
+      if (!uniqueLocations.has(key)) {
+        uniqueLocations.set(key, location);
+      }
+    });
+
+    return Array.from(uniqueLocations.values()).sort((a, b) => a.localeCompare(b));
+  }, [allSaleApartments]);
+
   // Transform API apartment data to frontend format
   const transformSaleApartmentData = (apiApartment) => ({
     id: apiApartment.id,
@@ -166,8 +182,11 @@ const errorMessage = handleApiError(error, 'Failed to load apartments for sale')
                 className="filter-select"
               >
                 <option value="all">All Locations</option>
-                <option value="maadi">Maadi</option>
-                <option value="mokkattam">Mokkattam</option>
+                {locationOptions.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
               </select>
             </div>
             

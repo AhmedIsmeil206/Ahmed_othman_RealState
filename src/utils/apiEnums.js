@@ -11,7 +11,7 @@ export const ADMIN_ROLES = {
   APARTMENT_SALE: 'apartment_sale'
 };
 
-// Location Enums (lowercase required by API)
+// Location presets for UI only (backend now accepts free-text location strings)
 export const LOCATIONS = {
   MAADI: 'maadi',
   MOKKATTAM: 'mokkattam'
@@ -48,6 +48,9 @@ export const CUSTOMER_SOURCES = {
   FACEBOOK: 'facebook',
   INSTAGRAM: 'instagram',
   GOOGLE: 'google',
+  BAYUT: 'Bayut',
+  AQAR_MAP: 'Aqar map',
+  DUBIZZLE: 'Dubizzle',
   REFERRAL: 'referral',
   WALK_IN: 'walk_in',
   OTHER: 'other'
@@ -107,16 +110,7 @@ export const getEnumKey = (value, enumObject) => {
 // Convert frontend display values to API enum values
 export const convertToApiEnum = {
   location: (displayValue) => {
-    const normalizedValue = displayValue?.toLowerCase();
-    switch (normalizedValue) {
-      case 'maadi':
-        return LOCATIONS.MAADI;
-      case 'mokkattam':
-      case 'mokattam':
-        return LOCATIONS.MOKKATTAM;
-      default:
-        return normalizedValue;
-    }
+    return String(displayValue || '').trim();
   },
 
   bathrooms: (displayValue) => {
@@ -172,7 +166,8 @@ export const convertToApiEnum = {
   },
 
   customerSource: (displayValue) => {
-    const normalizedValue = displayValue?.toLowerCase();
+    const rawValue = String(displayValue || '').trim();
+    const normalizedValue = rawValue.toLowerCase();
     switch (normalizedValue) {
       case 'facebook':
       case 'fb':
@@ -184,6 +179,14 @@ export const convertToApiEnum = {
       case 'google':
       case 'search':
         return CUSTOMER_SOURCES.GOOGLE;
+      case 'bayut':
+        return CUSTOMER_SOURCES.BAYUT;
+      case 'aqar map':
+      case 'aqarmap':
+      case 'aqar_map':
+        return CUSTOMER_SOURCES.AQAR_MAP;
+      case 'dubizzle':
+        return CUSTOMER_SOURCES.DUBIZZLE;
       case 'referral':
       case 'friend':
       case 'recommendation':
@@ -241,14 +244,9 @@ export const convertToApiEnum = {
 // Convert API enum values to frontend display values
 export const convertFromApiEnum = {
   location: (apiValue) => {
-    switch (apiValue) {
-      case LOCATIONS.MAADI:
-        return 'Maadi';
-      case LOCATIONS.MOKKATTAM:
-        return 'Mokkattam';
-      default:
-        return apiValue?.charAt(0).toUpperCase() + apiValue?.slice(1) || 'Unknown';
-    }
+    return typeof apiValue === 'string' && apiValue.trim()
+      ? apiValue.trim()
+      : 'Unknown';
   },
 
   bathrooms: (apiValue) => {
@@ -294,6 +292,12 @@ export const convertFromApiEnum = {
         return 'Instagram';
       case CUSTOMER_SOURCES.GOOGLE:
         return 'Google';
+      case CUSTOMER_SOURCES.BAYUT:
+        return 'Bayut';
+      case CUSTOMER_SOURCES.AQAR_MAP:
+        return 'Aqar map';
+      case CUSTOMER_SOURCES.DUBIZZLE:
+        return 'Dubizzle';
       case CUSTOMER_SOURCES.REFERRAL:
         return 'Referral';
       case CUSTOMER_SOURCES.WALK_IN:
@@ -333,7 +337,7 @@ export const convertFromApiEnum = {
 };
 
 // Validation helpers
-export const isValidLocation = (value) => Object.values(LOCATIONS).includes(value);
+export const isValidLocation = (value) => typeof value === 'string' && value.trim().length > 0;
 export const isValidBathroomType = (value) => Object.values(BATHROOM_TYPES).includes(value);
 export const isValidFurnishedStatus = (value) => Object.values(FURNISHED_STATUS).includes(value);
 export const isValidBalconyType = (value) => Object.values(BALCONY_TYPES).includes(value);
