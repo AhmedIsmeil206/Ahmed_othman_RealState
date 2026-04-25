@@ -1480,7 +1480,7 @@ showToast('Failed to refresh admin list', 'error');
                 </form>
               </div>
 
-              <div className="tab-section delete-admin-section">
+              <div className="delete-admin-section">
                 <h3>Delete Admin Account</h3>
                 {deleteAdminMessage.text && (
                   <div className={`modal-message ${deleteAdminMessage.type}`}>
