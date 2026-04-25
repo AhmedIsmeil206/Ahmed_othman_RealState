@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faEye, faChartBar, faDollarSign } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faEye, faChartBar, faDollarSign, faSyncAlt, faTrophy } from '@fortawesome/free-solid-svg-icons';
 import { useMasterAuth, useProperty, useAdminAuth } from '../../../hooks/useRedux';
 import { useToast } from '../../../contexts/ToastContext';
 import BackButton from '../../../components/common/BackButton';
@@ -179,7 +179,7 @@ const ReportsPage = () => {
         {/* Navigation */}
         <nav className="reports-nav">
           <BackButton 
-            text="â† Back" 
+            text="← Back" 
             variant="transparent"
           />
           <div className="brand"><img src={AYGLogo} alt="AYG logo" className="brand-logo" /></div>
@@ -281,7 +281,7 @@ const ReportsPage = () => {
               className="btn btn--primary refresh-btn"
               onClick={loadReportsData}
             >
-              ðŸ”„ Refresh Data
+              <FontAwesomeIcon icon={faSyncAlt} /> Refresh Data
             </button>
           </div>
         </div>
@@ -387,9 +387,9 @@ const ReportsPage = () => {
                           {stat.performanceScore}
                         </div>
                         <div className="performance-badge">
-                          {stat.performanceScore >= 80 ? 'ðŸ† Excellent' :
+                          {stat.performanceScore >= 80 ? '★ Excellent' :
                            stat.performanceScore >= 60 ? <><FontAwesomeIcon icon={faStar} /> Good</> :
-                           stat.performanceScore >= 40 ? 'ðŸ“ˆ Average' : 'ðŸ“‰ Needs Improvement'}
+                           stat.performanceScore >= 40 ? '↑ Average' : '↓ Needs Improvement'}
                         </div>
                       </div>
                     </td>
@@ -422,7 +422,7 @@ const ReportsPage = () => {
             <h2 className="section-title">Performance Insights</h2>
           <div className="insights-grid">
             <div className="insight-card">
-              <h3>ðŸ† Top Performer</h3>
+              <h3><FontAwesomeIcon icon={faTrophy} /> Top Performer</h3>
               <div className="insight-content">
                 <div className="performer-name">
                   {adminStats[0]?.admin.name || adminStats[0]?.admin.email?.split('@')[0]}

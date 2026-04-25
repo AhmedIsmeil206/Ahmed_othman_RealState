@@ -8,6 +8,8 @@ import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpi
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './RentalAlertsPage.css';
 import AYGLogo from '../../../assets/images/logo/AYG.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBell } from '@fortawesome/free-solid-svg-icons';
 
 const RentalAlertsPage = () => {
   const navigate = useNavigate();
@@ -103,7 +105,7 @@ const RentalAlertsPage = () => {
             <nav className="alerts-nav">
               <div className="alerts-nav-actions">
                 <BackButton 
-                  text="â† Back to Admin Dashboard"
+                  text="← Back to Admin Dashboard"
                   onClick={() => navigate('/admin/dashboard')}
                   variant="transparent"
                 />
@@ -151,7 +153,7 @@ const RentalAlertsPage = () => {
       <div className="alerts-main-section">
         <div className="alerts-container">
           <div className="alerts-section-header">
-            <h3>ðŸ”” Active Rental Alerts</h3>
+            <h3><FontAwesomeIcon icon={faBell} /> Active Rental Alerts</h3>
             <p>Studios requiring attention for rental renewals or status updates</p>
           </div>
           

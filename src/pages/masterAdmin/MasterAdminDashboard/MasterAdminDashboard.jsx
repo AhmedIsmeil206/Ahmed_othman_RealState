@@ -15,7 +15,9 @@ import {
   faCheckCircle,
   faTimesCircle,
   faBuilding,
-  faHome
+  faHome,
+  faSyncAlt,
+  faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import { useMasterAuth, useAdminAuth } from '../../../hooks/useRedux';
 import { usePropertyManagement } from '../../../hooks/usePropertyManagement';
@@ -1189,7 +1191,7 @@ const errorMessage = error.data?.detail || error.message || 'Failed to delete ad
               {/* Existing Admins Section */}
               <div className="tab-section" style={{backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '24px'}}>
                 <h3 style={{fontSize: '1.1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  ðŸ‘¥ Existing Admin Accounts ({existingAdmins.length})
+                  <FontAwesomeIcon icon={faUsers} /> Existing Admin Accounts ({existingAdmins.length})
                   <button 
                     type="button" 
                     onClick={async () => {
@@ -1214,7 +1216,7 @@ showToast('Failed to refresh admin list', 'error');
                       marginLeft: 'auto'
                     }}
                   >
-                    ðŸ”„ Refresh
+                    <FontAwesomeIcon icon={faSyncAlt} /> Refresh
                   </button>
                 </h3>
                 {existingAdmins.length === 0 ? (
@@ -1452,7 +1454,7 @@ showToast('Failed to refresh admin list', 'error');
                         showToast('Form cleared!', 'success');
                       }}
                     >
-                      ðŸ—‘ï¸ Clear Form
+                      <FontAwesomeIcon icon={faTrash} /> Clear Form
                     </button>
                     <button 
                       type="button" 
@@ -1469,7 +1471,7 @@ showToast('Failed to refresh admin list', 'error');
                         }
                       }}
                     >
-                      ðŸ”„ Refresh List
+                      <FontAwesomeIcon icon={faSyncAlt} /> Refresh List
                     </button>
                     <button type="submit" className="btn-primary" disabled={isAdminSubmitting}>
                       {isAdminSubmitting ? 'Creating...' : 'Create Admin'}

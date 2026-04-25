@@ -6,6 +6,8 @@ import BackButton from '../../../components/common/BackButton';
 import RentalAlerts from '../../../components/admin/RentalAlerts/RentalAlerts';
 import LoadingSpinner from '../../../components/common/LoadingSpinner/LoadingSpinner';
 import AYGLogo from '../../../assets/images/logo/AYG.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBell } from '@fortawesome/free-solid-svg-icons';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './MasterAdminRentalAlertsPage.css';
 
@@ -94,7 +96,7 @@ const MasterAdminRentalAlertsPage = () => {
             <nav className="master-alerts-nav">
               <div className="master-alerts-nav-actions">
                 <BackButton 
-                  text="â† Back to Master Admin Dashboard"
+                  text="← Back to Master Admin Dashboard"
                   onClick={() => navigate('/master-admin/dashboard')}
                   variant="transparent"
                 />
@@ -142,7 +144,7 @@ const MasterAdminRentalAlertsPage = () => {
       <div className="master-alerts-main-section">
         <div className="master-alerts-container">
           <div className="master-alerts-section-header">
-            <h3>ðŸ”” Active Rental Alerts</h3>
+            <h3><FontAwesomeIcon icon={faBell} /> Active Rental Alerts</h3>
             <p>All rental contracts requiring attention across the system</p>
           </div>
           

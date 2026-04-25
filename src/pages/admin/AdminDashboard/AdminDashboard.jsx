@@ -13,6 +13,8 @@ import { useToast } from '../../../contexts/ToastContext';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import './AdminDashboard.css';
 import AYGLogo from '../../../assets/images/logo/AYG.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBell } from '@fortawesome/free-solid-svg-icons';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -214,7 +216,7 @@ const errorMessage = handleApiError(error, 'Failed to load your properties');
                   onClick={() => navigate('/admin/rental-alerts')}
                   className="rental-alerts-btn"
                 >
-                  ðŸ”” Rental Alerts
+                  <FontAwesomeIcon icon={faBell} /> Rental Alerts
                 </button>
                 
                 <button 

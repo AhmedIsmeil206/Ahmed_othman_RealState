@@ -1,5 +1,7 @@
 ﻿import React from 'react';
 import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserTie, faLock } from '@fortawesome/free-solid-svg-icons';
 import './AdminLanding.css';
 import heroImg from '../../../assets/images/backgrounds/LP.jpg';
 import AYGLogo from '../../../assets/images/logo/AYG.png';
@@ -11,7 +13,7 @@ const AdminLanding = () => {
     <section
         className="admin-hero"
         style={{ backgroundImage: `url(${heroImg})` }}
-        aria-label="AYG â€” Admin Portal"
+        aria-label="AYG — Admin Portal"
     >
         <div className="admin-hero__overlay" />
 
@@ -35,7 +37,7 @@ const AdminLanding = () => {
 
           <div className="admin-options">
             <div className="admin-option-card">
-              <div className="admin-option-icon">ðŸ‘¨â€ðŸ’¼</div>
+              <div className="admin-option-icon"><FontAwesomeIcon icon={faUserTie} /></div>
               <h2>Admin Login</h2>
               <p>
                 Access the admin dashboard to manage your properties, handle rental applications,
@@ -47,7 +49,7 @@ const AdminLanding = () => {
             </div>
 
             <div className="admin-option-card">
-              <div className="admin-option-icon">ðŸ”</div>
+              <div className="admin-option-icon"><FontAwesomeIcon icon={faLock} /></div>
               <h2>Master Admin</h2>
               <p>
                 Full system access for master administrators to manage all users, properties,

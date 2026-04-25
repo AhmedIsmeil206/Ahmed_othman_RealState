@@ -146,7 +146,7 @@ function LandingPage() {
         </div>
         
         <div className="footer-bottom">
-          <p>Â© {new Date().getFullYear()} <img src={AYGLogo} alt="AYG" className="footer-logo-inline" /> All rights reserved.</p>
+          <p>© {new Date().getFullYear()} <img src={AYGLogo} alt="AYG" className="footer-logo-inline" /> All rights reserved.</p>
         </div>
       </footer>
     </main>

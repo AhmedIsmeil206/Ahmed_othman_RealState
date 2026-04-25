@@ -297,7 +297,7 @@ const errorMessage = handleApiError(error, 'Failed to load studios');
   return (
     <div className="studios-list-page">
       <nav className="studios-nav">
-        <BackButton text="â† Back" to="/" />
+        <BackButton text="← Back" to="/" />
         <div className="brand">
           <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
           <span className="brand-text">AYG</span>

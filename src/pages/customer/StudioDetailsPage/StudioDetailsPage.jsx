@@ -12,7 +12,10 @@ import {
   faCheck,
   faCouch,
   faClipboardList,
-  faTrash
+  faTrash,
+  faUser,
+  faCalendarAlt,
+  faDollarSign
 } from '@fortawesome/free-solid-svg-icons';
 import BackButton from '../../../components/common/BackButton';
 import ImageGallery from '../../../components/customer/ImageGallery/ImageGallery';
@@ -359,19 +362,19 @@ setError('Failed to load studio details');
 
   const getBackText = () => {
     if (navigationSource === 'master-admin-dashboard') {
-      return 'â† Back to Master Admin Dashboard';
+      return '← Back to Master Admin Dashboard';
     } else if (navigationSource === 'admin-dashboard') {
-      return 'â† Back to Admin Dashboard';
+      return '← Back to Admin Dashboard';
     } else if (navigationSource === 'admin-tracking') {
-      return 'â† Back to Admin Tracking';
+      return '← Back to Admin Tracking';
     } else if (navigationSource === 'admin-rental-alerts') {
-      return 'â† Back to Admin Rental Alerts';
+      return '← Back to Admin Rental Alerts';
     } else if (navigationSource === 'master-admin-rental-alerts') {
-      return 'â† Back to Master Admin Rental Alerts';
+      return '← Back to Master Admin Rental Alerts';
     } else if (navigationSource === 'customer-studios') {
-      return 'â† Back to Studios';
+      return '← Back to Studios';
     }
-    return 'â† Back to Studios'; // Default fallback
+    return '← Back to Studios'; // Default fallback
   };
 
   const openGoogleMaps = () => {
@@ -492,11 +495,11 @@ setError('Failed to load studio details');
             {navigationSource === 'master-admin-dashboard' && studio.created_by && (
               <div className="creator-info-section">
                 <div className="creator-info">
-                  <span className="creator-label">ðŸ‘¤ Created by Admin:</span>
+                  <span className="creator-label"><FontAwesomeIcon icon={faUser} /> Created by Admin:</span>
                   <span className="creator-value">{studio.created_by}</span>
                 </div>
                 <div className="creator-date">
-                  <span className="creator-label">ðŸ“… Created on:</span>
+                  <span className="creator-label"><FontAwesomeIcon icon={faCalendarAlt} /> Created on:</span>
                   <span className="creator-value">
                     {studio.created_at ? new Date(studio.created_at).toLocaleDateString() : 'N/A'}
                   </span>
@@ -520,7 +523,7 @@ setError('Failed to load studio details');
                           Processing...
                         </>
                       ) : (
-                        'ðŸ“‹ Book This Studio'
+                        'Book This Studio'
                       )}
                     </button>
                   ) : (
@@ -701,7 +704,7 @@ setError('Failed to load studio details');
                     </div>
 
                     <div className="financial-summary">
-                      <h4>ðŸ’° Financial Summary</h4>
+                      <h4><FontAwesomeIcon icon={faDollarSign} /> Financial Summary</h4>
                       <div className="financial-grid">
                         <div className="financial-item">
                           <span className="financial-label">Monthly Rent:</span>

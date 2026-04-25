@@ -124,7 +124,7 @@ setError('Failed to load apartment details');
           className="back-to-apartments-btn" 
           onClick={() => navigate('/buy-apartments')}
         >
-          â† Back to Apartments
+          ← Back to Apartments
         </button>
         <div className="brand">
           <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
