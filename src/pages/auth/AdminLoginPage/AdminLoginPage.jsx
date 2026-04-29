@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../hooks/useAdminAuth';
 import BackButton from '../../../components/common/BackButton';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 import './AdminLoginPage.css';
 
 const AdminLoginPage = () => {
@@ -78,6 +79,10 @@ const AdminLoginPage = () => {
       <div className="admin-login-container">
         <div className="login-card">
           <div className="login-header">
+            <div className="brand">
+              <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+              <span className="brand-text">AYG</span>
+            </div>
             <h1>Admin Login</h1>
             <p>Sign in to your admin account</p>
           </div>

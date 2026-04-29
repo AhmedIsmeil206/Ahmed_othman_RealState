@@ -37,8 +37,9 @@
 
 .nav-left {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 4px;
 }
 
 .nav-left .brand-logo {

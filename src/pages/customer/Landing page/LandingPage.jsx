@@ -109,7 +109,7 @@ function LandingPage() {
           <div className="footer-owner">
             <h3 className="footer-heading">Owner and founder of AYG</h3>
             <div className="owner-photo">
-              <img src="/founder.png" alt="Owner and Founder" className="founder-img" />
+              <img src="/founder1.jpeg" alt="Owner and Founder" className="founder-img" />
             </div>
               <h3>Dr. Ahmed Yasser</h3>
           </div>
@@ -135,12 +135,12 @@ function LandingPage() {
           <div className="footer-info">
             <h3 className="footer-heading">How to find us</h3>
             <div className="info-item">
-              <p className="info-text">Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø§Ù„Ø¹Ù…Ù„ Ù…Ù† Ù¡Ù¡ ØµØ¨Ø§Ø­ Ù„ Ù© Ù…Ø³Ø§Ø¡Ø§</p>
+              <p className="info-text">مواعيد العمل من ١١ صباح ل ٩ مساءا</p>
             </div>
             <div className="info-item">
-              <p className="info-text">Ø§Ù„Ø¹Ù†ÙˆØ§Ù† : Ø§Ù„Ù‡Ø¶Ø¨Ø© Ø§Ù„ÙˆØ³Ø·ÙŠ - Ø§Ù„Ù…Ù‚Ø·Ù… - Ø´Ø§Ø±Ø¹ Ø§Ù„Ø¬Ø§Ù…Ø¹Ø© Ø§Ù„Ø­Ø¯ÙŠØ«Ø©</p>
-              <p className="info-text">Ù…Ø¨Ù†ÙŠ Ø±Ù‚Ù… 6458 Ø§Ù…Ø§Ù… Ø´Ø±ÙƒØ© Ø§Ù„Ø­Ù…Ø¯</p>
-              <p className="info-text">Ø§Ù„Ø¯ÙˆØ± Ø§Ù„Ø§ÙˆÙ„</p>
+              <p className="info-text">العنوان : الهضبة الوسطي - المقطم - شارع الجامعة الحديثة</p>
+              <p className="info-text">مبني رقم 6458 امام شركة الحمد</p>
+              <p className="info-text">الدور الاول</p>
             </div>
           </div>
         </div>

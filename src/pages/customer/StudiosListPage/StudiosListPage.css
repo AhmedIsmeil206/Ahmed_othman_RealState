@@ -38,6 +38,13 @@
   transition: var(--transition-fast);
 }
 
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
 .brand:hover {
   color: var(--primary-teal);
   transform: scale(1.05);

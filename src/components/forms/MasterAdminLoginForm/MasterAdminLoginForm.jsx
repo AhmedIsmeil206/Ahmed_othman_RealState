@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMasterAuth } from '../../../hooks/useRedux';
 import { loginMasterAdmin } from '../../../store/slices/masterAuthSlice';
 import BackButton from '../../common/BackButton';
+import AYGLogo from '../../../assets/images/logo/AYG.png';
 import './MasterAdminLoginForm.css';
 
 const MasterAdminLoginForm = () => {
@@ -143,6 +144,10 @@ setErrors({
               />
               
               <div className="master-login-header">
+                <div className="brand">
+                  <img src={AYGLogo} alt="AYG logo" className="brand-logo" />
+                  <span className="brand-text">AYG</span>
+                </div>
                 <h1>Master Admin Login</h1>
                 <p>Sign in with your email or mobile phone</p>
               </div>

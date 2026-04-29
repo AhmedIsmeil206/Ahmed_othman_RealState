@@ -12,7 +12,7 @@ const Footer = () => {
         <div className="footer-owner">
           <h3 className="footer-heading">Owner and founder of AYG</h3>
           <div className="owner-photo">
-            <img src="/founder.png" alt="Owner and Founder" className="founder-img" />
+            <img src="/founder1.jpeg" alt="Owner and Founder" className="founder-img" />
           </div>
           <h3>Dr. Ahmed Yasser</h3>
         </div>
